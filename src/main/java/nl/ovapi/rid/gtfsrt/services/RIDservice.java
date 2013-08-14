@@ -50,7 +50,6 @@ public class RIDservice {
 	private static final Logger _log = LoggerFactory.getLogger(RIDservice.class);
 
 	private ScheduledExecutorService _scheduler;
-	private Connection conn = null;
 	private static final String url = "jdbc:postgresql://localhost/ridprod";
 	private static final String user = "rid";
 	private static final String password = "bliksem";
@@ -58,6 +57,7 @@ public class RIDservice {
 	private HashFunction hf = Hashing.crc32();
 
 	private Map<String, Journey> journeys = Maps.newHashMapWithExpectedSize(0);
+	private Map<String, ArrayList<Journey>> trains = Maps.newHashMapWithExpectedSize(0);
 	private Map<String, TimeDemandGroup> timedemandgroups = Maps.newHashMapWithExpectedSize(0);
 	private Map<String, JourneyPattern> journeypatterns = Maps.newHashMapWithExpectedSize(0);
 	private Map<String, StopPoint> stoppoints = Maps.newHashMapWithExpectedSize(0);
@@ -69,10 +69,17 @@ public class RIDservice {
 
 	public Journey getJourney(String id){
 		String key = hf.hashString(id).toString();
-		if (journeys.containsKey(key)){
-			return journeys.get(key);
+		return journeys.get(key);
+	}
+
+	public ArrayList<Journey> getTrains(String id){
+		String key = hf.hashString(id).toString();
+		if (trains.containsKey(key)){
+			return trains.get(key);
 		}
-		return null;
+		ArrayList<Journey> journey = new ArrayList<Journey>();
+		journey.add(journeys.get(key));
+		return journey;
 	}
 
 	public Map<String, Journey> getJourneys(){
@@ -82,7 +89,7 @@ public class RIDservice {
 	public void deleteJourney(String id){
 		journeys.remove(id);
 	}
-	
+
 	public ArrayList<String> getLineIds(DataOwnerCode daow, String linePlanningNumber){
 		String id = String.format("%s:%s", daow.name(),linePlanningNumber);
 		if (lines.containsKey(id)){
@@ -113,46 +120,51 @@ public class RIDservice {
 
 	public ArrayList<KV15message> getActiveKV15messages() throws SQLException{
 		ArrayList<KV15message> messages = new ArrayList<KV15message>();
-		PreparedStatement st = getConn().prepareStatement(Database.kv15Query);
-		ResultSet rs = st.executeQuery();
-		while (rs.next()) {
-			KV15message message = new KV15message();
-			message.setIsDelete(false);
-			message.setDataOwnerCode(DataOwnerCode.valueOf(rs.getString(1)));
-			message.setMessageCodeDate(rs.getString(2));
-			message.setMessageCodeNumber(rs.getInt(3));
-			if (rs.getString(4) != null){
-				for (String userstopcode : rs.getString(4).split(";")){
-					message.addUserstopCode(userstopcode);
+		Connection conn = getConn();
+		try{
+			PreparedStatement st = conn.prepareStatement(Database.kv15Query);
+			ResultSet rs = st.executeQuery();
+			while (rs.next()) {
+				KV15message message = new KV15message();
+				message.setIsDelete(false);
+				message.setDataOwnerCode(DataOwnerCode.valueOf(rs.getString(1)));
+				message.setMessageCodeDate(rs.getString(2));
+				message.setMessageCodeNumber(rs.getInt(3));
+				if (rs.getString(4) != null){
+					for (String userstopcode : rs.getString(4).split(";")){
+						message.addUserstopCode(userstopcode);
+					}
 				}
-			}
-			message.setMessagePriority(MessagePriority.valueOf(rs.getString(5)));
-			message.setMessageType(MessageType.valueOf(rs.getString(6)));
-			message.setMessageDurationType(MessageDurationType.valueOf(rs.getString(7)));
-			message.setMessageStartTime(DateUtils.parse(rs.getString(8)));
-			message.setMessageEndTime(DateUtils.parse(rs.getString(9)));
-			message.setMessageContent(rs.getString(10));
-			message.setReasonType(ReasonType.parse(rs.getString(11)));
-			message.setSubReasonType(SubReasonType.parse(rs.getString(12)));
-			message.setReasonContent(rs.getString(13));
-			message.setEffectType(EffectType.parse(rs.getString(14)));
-			message.setSubEffectType(SubEffectType.parse(rs.getString(15)));
-			message.setEffectContent(rs.getString(16));
-			message.setAdviceType(AdviceType.parse(rs.getString(17)));
-			message.setSubAdviceType(SubAdviceType.parse(rs.getString(18)));
-			message.setAdviceContent(rs.getString(19));
-			message.setMessageTimeStamp(DateUtils.parse(rs.getString(20)));
-			if (rs.getString(21) != null)
-				message.setMeasureType(Integer.parseInt(rs.getString(21)));
-			message.setSubMeasureType(SubMeasureType.parse(rs.getString(22)));
-			message.setMeasureContent(rs.getString(23));
-			if (rs.getString(24) != null){
-				for (String linePlanningNumber : rs.getString(24).split(";")){
-					message.addLinePlanningNumber(linePlanningNumber);
+				message.setMessagePriority(MessagePriority.valueOf(rs.getString(5)));
+				message.setMessageType(MessageType.valueOf(rs.getString(6)));
+				message.setMessageDurationType(MessageDurationType.valueOf(rs.getString(7)));
+				message.setMessageStartTime(DateUtils.parse(rs.getString(8)));
+				message.setMessageEndTime(DateUtils.parse(rs.getString(9)));
+				message.setMessageContent(rs.getString(10));
+				message.setReasonType(ReasonType.parse(rs.getString(11)));
+				message.setSubReasonType(SubReasonType.parse(rs.getString(12)));
+				message.setReasonContent(rs.getString(13));
+				message.setEffectType(EffectType.parse(rs.getString(14)));
+				message.setSubEffectType(SubEffectType.parse(rs.getString(15)));
+				message.setEffectContent(rs.getString(16));
+				message.setAdviceType(AdviceType.parse(rs.getString(17)));
+				message.setSubAdviceType(SubAdviceType.parse(rs.getString(18)));
+				message.setAdviceContent(rs.getString(19));
+				message.setMessageTimeStamp(DateUtils.parse(rs.getString(20)));
+				if (rs.getString(21) != null)
+					message.setMeasureType(Integer.parseInt(rs.getString(21)));
+				message.setSubMeasureType(SubMeasureType.parse(rs.getString(22)));
+				message.setMeasureContent(rs.getString(23));
+				if (rs.getString(24) != null){
+					for (String linePlanningNumber : rs.getString(24).split(";")){
+						message.addLinePlanningNumber(linePlanningNumber);
+					}
 				}
-			}
 
-			messages.add(message);
+				messages.add(message);
+			}
+		}finally{
+			conn.close();
 		}
 		return messages;
 	}
@@ -185,13 +197,27 @@ public class RIDservice {
 
 	public void update(){
 		try {
-			PreparedStatement st = getConn().prepareStatement(Database.timepatternQuery);
+			Connection conn = getConn();
+			try{
+				update(conn);
+			}finally {
+				conn.close();
+			}
+		} catch (SQLException e) {
+			_log.error("Loading SQL crash", e);
+		}
+	}
+
+	public void update(Connection  conn){
+		try {
+			PreparedStatement st = conn.prepareStatement(Database.timepatternQuery);
 			ResultSet rs = st.executeQuery();
 			String timedemandgroupref = null;
 			TimeDemandGroup group = null;
 			Map<String, TimeDemandGroup> newTimedemandgroups = Maps.newHashMapWithExpectedSize(10000);
 			Map<String, JourneyPattern> newJourneypatterns = Maps.newHashMapWithExpectedSize(5000);
 			Map<String, Journey> newJourneys = Maps.newHashMapWithExpectedSize(0);
+			Map<String, ArrayList<Journey>> newTrains = Maps.newHashMapWithExpectedSize(0);
 			while (rs.next()) {
 				//timedemandgroupref,pointorder,totaldrivetime,stopwaittime
 				String curRef = rs.getString(1).intern();
@@ -212,7 +238,7 @@ public class RIDservice {
 					group.points.add(point);
 			}
 			timedemandgroups.put(timedemandgroupref, group);
-			st = getConn().prepareStatement(Database.journeyPatternQuery);
+			st = conn.prepareStatement(Database.journeyPatternQuery);
 			rs = st.executeQuery();
 			String journeypatternRef = null;
 			JourneyPattern jp = null;
@@ -238,7 +264,7 @@ public class RIDservice {
 				jp.points.add(point);
 			}
 			journeypatterns.put(journeypatternRef, jp);
-			st = getConn().prepareStatement(Database.journeyQuery);
+			st = conn.prepareStatement(Database.journeyQuery);
 			_log.info("Start query for journeys");
 			rs = st.executeQuery();
 			while (rs.next()) {
@@ -257,9 +283,22 @@ public class RIDservice {
 				}
 				journey.setAgencyId(rs.getString(7));
 				journey.setOperatingDay(rs.getString(8));
-				newJourneys.put(key, journey);
+				if (newJourneys.containsKey(key)){ //Trains can have multiple journeys under same trainnumer
+					if (rs.getString(1).contains("ARR")){ 
+						continue;//But Arriva is just mucking around ;)
+					}
+					if (newTrains.containsKey(key)){
+						newTrains.get(key).add(journey);
+					}else{
+						ArrayList<Journey> trains = new ArrayList<Journey>();
+						trains.add(journey);
+						newTrains.put(key, trains);
+					}
+				}else{
+					newJourneys.put(key, journey);
+				}
 			}
-			st = getConn().prepareStatement(Database.stoppointQuery);
+			st = conn.prepareStatement(Database.stoppointQuery);
 			rs = st.executeQuery();
 			while (rs.next()) {
 				StopPoint sp = new StopPoint();
@@ -277,7 +316,7 @@ public class RIDservice {
 				if (!stoppoints.containsKey(rs.getLong(1)))
 					stoppoints.put((rs.getString(1).intern()), sp);
 			}
-			st = getConn().prepareStatement(Database.lineQuery);
+			st = conn.prepareStatement(Database.lineQuery);
 			rs = st.executeQuery();
 			while (rs.next()) {
 				String lineOperatorId = rs.getString(2);
@@ -294,7 +333,8 @@ public class RIDservice {
 			journeypatterns = newJourneypatterns;
 			timedemandgroups = newTimedemandgroups;
 			journeys = newJourneys;
-		} catch (Exception e) {
+			trains = newTrains;
+		}catch (Exception e) {
 			System.out.println(e.getMessage());
 			System.out.println(e.getStackTrace());
 			_log.error("Loading SQL crash", e);
@@ -311,10 +351,7 @@ public class RIDservice {
 	}
 
 	private Connection getConn() throws SQLException{
-		if (conn == null || conn.isClosed()){
-			conn = DriverManager.getConnection(url, user, password);
-		}
-		return conn;
+		return DriverManager.getConnection(url, user, password);
 	}
 
 	private String simpleStats(){
