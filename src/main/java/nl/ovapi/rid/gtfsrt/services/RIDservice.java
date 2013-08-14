@@ -323,7 +323,7 @@ public class RIDservice {
 				}else{
 					ArrayList<String> ids = new ArrayList<String>();
 					ids.add(lineId);
-					lines.put(lineId, ids);
+					lines.put(lineOperatorId, ids);
 				}
 			}
 			journeypatterns = newJourneypatterns;
