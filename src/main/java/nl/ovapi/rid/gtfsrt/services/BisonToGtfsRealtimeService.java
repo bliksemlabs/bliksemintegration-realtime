@@ -120,7 +120,7 @@ public class BisonToGtfsRealtimeService {
 	public void setRIDService(RIDservice ridService) {
 		_ridService = ridService;
 	}
-	
+
 	private class ProcessKV15Task implements Runnable{
 		private ArrayList<KV15message> messages;
 		public ProcessKV15Task(ArrayList<KV15message> messages){
@@ -365,11 +365,19 @@ public class BisonToGtfsRealtimeService {
 	}
 
 	private String getId(KV6posinfo posinfo){
-		return String.format("%s:%s:%s:%s", 
+		String id = String.format("%s:%s:%s:%s", 
 				posinfo.getOperatingday(),
 				posinfo.getDataownercode().name(),
 				posinfo.getLineplanningnumber(),
 				posinfo.getJourneynumber());
+		if (posinfo.getDataownercode() == DataOwnerCode.GVB){
+			String newId = _ridService.getGVBdeltaId(id);
+			if (newId != null){
+				return newId;
+			}
+			_log.info("GVB delta ID not found {}",id);
+		}
+		return id;
 	}
 	private class ProcessKV6Task implements Runnable{
 		private ArrayList<KV6posinfo> posinfos;
@@ -398,8 +406,7 @@ public class BisonToGtfsRealtimeService {
 							journey = _ridService.getJourney(id);
 						}
 						if (journey == null){ //Double check for the CXX workaround
-							if (posinfo.getDataownercode() != DataOwnerCode.GVB) //GVB is fucked via GOVI
-								_log.info("Journey {} not found",id);
+							_log.info("Journey {} not found",id);
 							continue; //Trip not in database
 						}
 					}

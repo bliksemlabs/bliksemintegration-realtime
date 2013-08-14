@@ -3,7 +3,7 @@ package nl.ovapi.rid;
 public class Database {
 
 	public final static String journeyQuery = 
-			"SELECT validdate||':'||journey.privatecode as key,journey.id,journeypatternref,timedemandgroupref,departuretime,(lowfloor or hasliftorramp) as wheelchairaccessible,o.privatecode,validdate::text "+
+			"SELECT validdate||':'||journey.privatecode as key,journey.id,journeypatternref,timedemandgroupref,departuretime,(lowfloor or hasliftorramp) as wheelchairaccessible,o.privatecode,validdate::text \n" +
 					"FROM journey LEFT JOIN availabilityconditionday USING (availabilityconditionref) LEFT JOIN journeypattern as j ON (j.id = journeypatternref) LEFT JOIN route as r ON (r.id = routeref) LEFT JOIN line as l ON (l.id = lineref) LEFT JOIN operator as o ON (operatorref = o.id) "+
 					"WHERE isavailable = true AND validdate in (date 'yesterday',date 'today',date 'tomorrow') AND monitored = true;";
 
@@ -20,6 +20,9 @@ public class Database {
 	public final static String stoppointQuery = "SELECT id,latitude,longitude,operator_id FROM stoppoint";
 	
 	public final static String lineQuery = "SELECT id,operator_id FROM line";
+	
+	public final static String gvbJourneyQuery = "select concat_ws(':',validdate,olddataownercode,oldlineplanningnumber,oldjourneynumber) as oldprivatecode,concat_ws(':',validdate,dataownercode,lineplanningnumber,journeynumber) as privatecode \n"+
+                  "from gvb_journeynumber_mapping where validdate in (date 'yesterday', date 'today', date 'tomorrow');";
 
 
 	public final static String kv15Query = "SELECT dataownercode,messagecodedate,messagecodenumber,userstopcodes,messagepriority,messagetype,messagedurationtype,messagestarttime,messageendtime,messagecontent,reasontype,subreasontype,reasoncontent,effecttype,subeffecttype,effectcontent,advicetype,subadvicetype,advicecontent,messagetimestamp,measuretype,submeasuretype,measurecontent,lineplanningnumbers "+

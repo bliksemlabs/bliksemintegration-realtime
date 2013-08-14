@@ -63,6 +63,7 @@ public class RIDservice {
 	private Map<String, StopPoint> stoppoints = Maps.newHashMapWithExpectedSize(0);
 	private Map<String, ArrayList<Long>> userstops = Maps.newHashMapWithExpectedSize(50000);
 	private Map<String, ArrayList<String>> lines = Maps.newHashMapWithExpectedSize(500);
+	private Map<String, String> gvbJourneys = Maps.newHashMapWithExpectedSize(0);
 	private final static int HOUR_TO_RUN_UPDATE = 2;
 
 	public RIDservice(){}
@@ -71,6 +72,12 @@ public class RIDservice {
 		String key = hf.hashString(id).toString();
 		return journeys.get(key);
 	}
+	
+	public String getGVBdeltaId(String oldId){
+		String key = hf.hashString(oldId).toString();
+		return gvbJourneys.get(key);
+	}
+
 
 	public ArrayList<Journey> getTrains(String id){
 		String key = hf.hashString(id).toString();
@@ -326,9 +333,19 @@ public class RIDservice {
 					lines.put(lineOperatorId, ids);
 				}
 			}
+			//TODO remove when GVB get their shit in order
+			Map<String, String> newgvbJourneys = Maps.newHashMapWithExpectedSize(30000);
+			st = conn.prepareStatement(Database.gvbJourneyQuery);
+			rs = st.executeQuery();
+			while (rs.next()) {
+				String key = hf.hashString(rs.getString(1)).toString();
+				String deltaId = rs.getString(2);
+				newgvbJourneys.put(key, deltaId);
+			}
 			journeypatterns = newJourneypatterns;
 			timedemandgroups = newTimedemandgroups;
 			journeys = newJourneys;
+			gvbJourneys = newgvbJourneys;
 			trains = newTrains;
 		}catch (Exception e) {
 			System.out.println(e.getMessage());
