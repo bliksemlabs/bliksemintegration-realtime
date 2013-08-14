@@ -120,6 +120,7 @@ public class BisonToGtfsRealtimeService {
 	public void setRIDService(RIDservice ridService) {
 		_ridService = ridService;
 	}
+	
 	private class ProcessKV15Task implements Runnable{
 		private ArrayList<KV15message> messages;
 		public ProcessKV15Task(ArrayList<KV15message> messages){
@@ -160,6 +161,14 @@ public class BisonToGtfsRealtimeService {
 					text.setText(BisonToGtfsUtils.text(msg));
 					translation.addTranslation(text);
 					alert.setDescriptionText(translation);
+					if (msg.getMessageContent() != null){
+						translation = TranslatedString.newBuilder();
+						text = Translation.newBuilder();
+						text.setLanguage("nl");
+						text.setText(msg.getMessageContent());
+						translation.addTranslation(text);
+						alert.setHeaderText(translation);
+					}
 					for (String userstopcode : msg.getUserstopCodes()){
 						ArrayList<Long> stopIds = _ridService.getStopIds(msg.getDataOwnerCode(), userstopcode);
 						if (stopIds != null){
@@ -239,7 +248,7 @@ public class BisonToGtfsRealtimeService {
 					vehiclePosition.setStopId(point.getPointref().toString());
 					vehiclePosition.setCurrentStatus(VehicleStopStatus.STOPPED_AT);
 					StopPoint sp = _ridService.getStopPoint(point.getPointref());
-					if (posinfo.getRd_x() == null && sp != null){
+					if ((posinfo.getRd_x() == null || posinfo.getRd_x() == -1) && sp != null){
 						Builder position = Position.newBuilder();
 						position.setLatitude(sp.getLatitude());
 						position.setLongitude(sp.getLongitude());
