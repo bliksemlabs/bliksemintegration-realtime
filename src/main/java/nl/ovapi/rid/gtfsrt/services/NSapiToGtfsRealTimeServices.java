@@ -154,7 +154,7 @@ public class NSapiToGtfsRealTimeServices {
 				translation.setText(String.format("Vertrekspoor gewijzigd naar %s", a.getDeparturePlatform()));
 				string.addTranslation(translation);
 				translation = Translation.newBuilder();
-				translation.setText(String.format("Departureplatform changed to %s", a.getDeparturePlatform()));
+				translation.setText(String.format("Departure platform changed to %s", a.getDeparturePlatform()));
 				string.addTranslation(translation);
 				alert.setHeaderText(string);
 			}else if (a.getRemarks() != null && a.getRemarks().length() > 0){
