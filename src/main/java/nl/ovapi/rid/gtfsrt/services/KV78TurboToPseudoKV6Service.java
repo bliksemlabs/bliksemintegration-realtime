@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import nl.ovapi.ZeroMQUtils;
+import nl.ovapi.bison.model.DataOwnerCode;
 import nl.ovapi.bison.model.DatedPasstime;
 import nl.ovapi.bison.model.JourneyStopType;
 import nl.ovapi.bison.model.KV6posinfo;
@@ -133,7 +134,12 @@ public class KV78TurboToPseudoKV6Service {
 		posinfo.setTimestamp(pt.getLastUpdateTimeStamp());
 		posinfo.setRd_x(-1);
 		posinfo.setRd_y(-1);
-		posinfo.setUserstopcode(pt.getUserStopCode());
+		if (pt.getDataOwnerCode() == DataOwnerCode.GVB){
+			String stopCode = pt.getUserStopCode();
+			posinfo.setUserstopcode(stopCode.substring(0,stopCode.length()-1));
+		}else{
+			posinfo.setUserstopcode(pt.getUserStopCode());
+		}
 		posinfo.setDataownercode(pt.getDataOwnerCode());
 		posinfo.setLineplanningnumber(pt.getLinePlanningNumber());
 		posinfo.setJourneynumber(pt.getJourneyNumber());
@@ -171,8 +177,8 @@ public class KV78TurboToPseudoKV6Service {
 							if (pt.getJourneyStopType() == JourneyStopType.INFOPOINT)
 								continue;
 							switch (pt.getDataOwnerCode()){
-							case EBS:
 							case GVB:
+							case EBS:
 							case SYNTUS:
 								break;
 							default:
