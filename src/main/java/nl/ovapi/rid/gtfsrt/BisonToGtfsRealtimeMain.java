@@ -74,12 +74,12 @@ public class BisonToGtfsRealtimeMain {
 	public void setKV78TurboToPseudoKV6Service(KV78TurboToPseudoKV6Service kv78TurboToPseudoKV6Service) {
 		_kv78TurboToPseudoKV6Service = kv78TurboToPseudoKV6Service;
 	}
-	/*
+
 	@Inject
 	public void setNSApiToGtfsRealTimeServices(NSapiToGtfsRealTimeServices nsApiToGtfsRealTimeServices) {
 		_nsApiToGtfsRealTimeServices = nsApiToGtfsRealTimeServices;
 	}
-	*/
+
 	@Inject
 	public void setVehiclePositionsSource(@VehiclePositions	GtfsRealtimeSource vehiclePositionsSource) {
 		_vehiclePositionsSource = vehiclePositionsSource;

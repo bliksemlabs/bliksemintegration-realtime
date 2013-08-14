@@ -112,10 +112,7 @@ public class RIDservice {
 	}
 
 	public StopPoint getStopPoint(Long id){
-		if (stoppoints.containsKey(id)){
-			return stoppoints.get(id);
-		}
-		return null;
+		return stoppoints.get(id.toString().intern());
 	}
 
 	public ArrayList<KV15message> getActiveKV15messages() throws SQLException{
@@ -313,8 +310,7 @@ public class RIDservice {
 					ids.add(rs.getLong(1));
 					userstops.put(stopId, ids);
 				}
-				if (!stoppoints.containsKey(rs.getLong(1)))
-					stoppoints.put((rs.getString(1).intern()), sp);
+				stoppoints.put(rs.getString(1).intern(), sp);
 			}
 			st = conn.prepareStatement(Database.lineQuery);
 			rs = st.executeQuery();
