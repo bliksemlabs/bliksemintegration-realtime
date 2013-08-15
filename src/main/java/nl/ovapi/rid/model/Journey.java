@@ -5,10 +5,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,17 +17,17 @@ import nl.ovapi.bison.model.KV6posinfo.Type;
 import nl.ovapi.exceptions.StopNotFoundException;
 import nl.ovapi.exceptions.TooEarlyException;
 import nl.ovapi.exceptions.UnknownKV6PosinfoType;
-import nl.ovapi.rid.gtfsrt.services.BisonToGtfsRealtimeService;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Maps;
-import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeEvent;
-import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeEvent.Builder;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
 @ToString()
@@ -136,7 +132,14 @@ public class Journey {
 	public long getDepartureEpoch(){
 		try {
 			Calendar c = Calendar.getInstance();
-			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(posinfo.getOperatingday()));
+			if (posinfo.getOperatingday() != null)
+				c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(posinfo.getOperatingday()));
+			else 
+				_log.error("Operatingday == null");
+			c.set(Calendar.HOUR, 0);
+			c.set(Calendar.MINUTE, 0);
+			c.set(Calendar.SECOND, 0);
+			c.set(Calendar.MILLISECOND, 0);
 			c.add(Calendar.SECOND, getDeparturetime());
 			return c.getTimeInMillis();
 		} catch (ParseException e) {
@@ -348,7 +351,7 @@ public class Journey {
 			}
 		}
 		int posinfoAge = (posinfo == null) ? Integer.MAX_VALUE : 
-			                                 (int)((System.currentTimeMillis()-posinfo.getTimestamp()) / 1000);
+			(int)((System.currentTimeMillis()-posinfo.getTimestamp()) / 1000);
 		if (posinfo != null && posinfoAge < 120){
 			TripUpdate.Builder timeUpdate = updateTimes(posinfo);
 			timeUpdate.setTimestamp(cvlinfos.get(0).getTimestamp());
