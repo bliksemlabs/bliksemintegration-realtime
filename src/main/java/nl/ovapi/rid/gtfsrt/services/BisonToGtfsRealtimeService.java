@@ -467,23 +467,28 @@ public class BisonToGtfsRealtimeService {
 		public void run() {
 			HashMap<String,ArrayList<KV17cvlinfo>> map = new HashMap<String,ArrayList<KV17cvlinfo>>();
 			GtfsRealtimeIncrementalUpdate tripUpdates = new GtfsRealtimeIncrementalUpdate();
-			for (KV17cvlinfo cvlinfo : cvlinfos){
-				String id = String.format("%s:%s:%s:%s", cvlinfo.getOperatingday(),cvlinfo.getDataownercode().name(),cvlinfo.getLineplanningnumber(),cvlinfo.getJourneynumber());
-				if (!map.containsKey(id)){
-					map.put(id, new ArrayList<KV17cvlinfo>());
+			try{
+				for (KV17cvlinfo cvlinfo : cvlinfos){
+					String id = String.format("%s:%s:%s:%s", cvlinfo.getOperatingday(),cvlinfo.getDataownercode().name(),cvlinfo.getLineplanningnumber(),cvlinfo.getJourneynumber());
+					if (!map.containsKey(id)){
+						map.put(id, new ArrayList<KV17cvlinfo>());
+					}
+					map.get(id).add(cvlinfo);
 				}
-				map.get(id).add(cvlinfo);
-			}
-			for (String id : map.keySet()){
-				ArrayList<KV17cvlinfo> cvlinfos = map.get(id);
-				Journey journey = _ridService.getJourney(id);
-				if (journey == null){
-					continue; //Journey not found
+				for (String id : map.keySet()){
+					ArrayList<KV17cvlinfo> cvlinfos = map.get(id);
+					Journey journey = _ridService.getJourney(id);
+					if (journey == null){
+						_log.info("KV17: journey {} not found",id);
+						continue; //Journey not found
+					}
+					FeedEntity.Builder tripUpdate = FeedEntity.newBuilder();
+					tripUpdate.setTripUpdate(journey.update(cvlinfos));
+					tripUpdate.setId(id);
+					tripUpdates.addUpdatedEntity(tripUpdate.build());
 				}
-				FeedEntity.Builder tripUpdate = FeedEntity.newBuilder();
-				tripUpdate.setTripUpdate(journey.update(cvlinfos));
-				tripUpdate.setId(id);
-				tripUpdates.addUpdatedEntity(tripUpdate.build());
+			}catch (Exception e){
+				_log.error("ProcessKV17Task",e);
 			}
 			_tripUpdatesSink.handleIncrementalUpdate(tripUpdates);
 		}
@@ -526,7 +531,7 @@ public class BisonToGtfsRealtimeService {
 								xr.parse(s);
 								process(handler.getPosinfos());
 							} catch (Exception e) {
-								e.printStackTrace();
+								_log.error("KV6 parsing {}",m[1]);
 							}
 						} else if (m[0].toLowerCase().endsWith("kv17cvlinfo")) {
 							InputSource s = new InputSource(new StringReader(m[1]));
@@ -536,7 +541,7 @@ public class BisonToGtfsRealtimeService {
 								xr.parse(s);
 								_executor.submit(new ProcessKV17Task(handler.getCvlinfos()));
 							} catch (Exception e) {
-								e.printStackTrace();
+								_log.error("KV17 parsing {}",m[1]);
 							}
 						} else if (m[0].toLowerCase().endsWith("kv15messages")) {
 							InputSource s = new InputSource(new StringReader(m[1]));
@@ -546,10 +551,10 @@ public class BisonToGtfsRealtimeService {
 								xr.parse(s);
 								_executor.submit(new ProcessKV15Task(handler.getMessages()));
 							} catch (Exception e) {
-								e.printStackTrace();
+								_log.error("KV15 parsing {}",m[1]);
 							}
 						} else {
-							System.out.println(m[0]);
+							_log.error("Unknown URL {}",m[0]);
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
