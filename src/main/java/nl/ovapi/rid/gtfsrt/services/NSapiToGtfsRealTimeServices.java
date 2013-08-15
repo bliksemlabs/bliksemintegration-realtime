@@ -96,6 +96,9 @@ public class NSapiToGtfsRealTimeServices {
 	private EntitySelector.Builder entitySelector(Journey j, String station, AVT avt){
 		EntitySelector.Builder entitySelector = EntitySelector.newBuilder();
 		String stationId = null;
+		if (j.getJourneypattern().points == null){
+			_log.info("JourneyPatternPoints null {}",j);
+		}
 		for (int i = 0; i < j.getJourneypattern().points.size();i++){
 			JourneyPatternPoint pt = j.getJourneypattern().points.get(i);
 			if (pt.getOperatorpointref().split(":")[0].equals(station)){
@@ -138,7 +141,7 @@ public class NSapiToGtfsRealTimeServices {
 			String jid = String.format("%s:IFF:%s",sdf.format(c.getTime()),a.getJourneynumber());
 			ArrayList<Journey> journeys = _ridService.getTrains(jid);
 			Alert.Builder alert = Alert.newBuilder();
-			if (journeys.size() == 0){
+			if (journeys == null || journeys.size() == 0){
 				continue;
 			}else{
 				for (Journey j : journeys){
