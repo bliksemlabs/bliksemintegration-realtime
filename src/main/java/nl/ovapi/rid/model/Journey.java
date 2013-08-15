@@ -108,7 +108,6 @@ public class Journey {
 	 */
 
 	public boolean isCurrent(){
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		long endTime = getDepartureEpoch() + (timedemandgroup.points.get(timedemandgroup.points.size()-1).getTotaldrivetime()) * 1000;
 		if (posinfo != null){
 			endTime += Math.abs(posinfo.getPunctuality()*1000);
