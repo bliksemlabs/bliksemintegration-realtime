@@ -72,7 +72,7 @@ public class RIDservice {
 		String key = hf.hashString(id).toString();
 		return journeys.get(key);
 	}
-	
+
 	public String getGVBdeltaId(String oldId){
 		String key = hf.hashString(oldId).toString();
 		return gvbJourneys.get(key);
@@ -85,7 +85,8 @@ public class RIDservice {
 			return trains.get(key);
 		}
 		ArrayList<Journey> journey = new ArrayList<Journey>();
-		journey.add(journeys.get(key));
+		if (journeys.containsKey(key))
+			journey.add(journeys.get(key));
 		return journey;
 	}
 
