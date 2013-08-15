@@ -96,8 +96,8 @@ public class NSapiToGtfsRealTimeServices {
 	private EntitySelector.Builder entitySelector(Journey j, String station, AVT avt){
 		EntitySelector.Builder entitySelector = EntitySelector.newBuilder();
 		String stationId = null;
-		if (j.getJourneypattern().points == null){
-			_log.info("JourneyPatternPoints null {}",j);
+		if (j == null){
+			return null;//Journey does not exist
 		}
 		for (int i = 0; i < j.getJourneypattern().points.size();i++){
 			JourneyPatternPoint pt = j.getJourneypattern().points.get(i);
