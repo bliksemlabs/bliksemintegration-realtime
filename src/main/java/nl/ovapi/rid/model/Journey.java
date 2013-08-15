@@ -98,27 +98,22 @@ public class Journey {
 		stopTimeEvent.setDelay(punctuality);
 		return stopTimeEvent;
 	}
-	
+
 	public boolean hasMutations(){
 		return mutations.size() > 0 || isCanceled;
 	}
-	
+
 	/**
 	 * @return Whether journey is currently planned to ride or is still riding. 
 	 */
-	
+
 	public boolean isCurrent(){
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-		try {
-			long endTime = df.parse(operatingDay).getDate()+(getDeparturetime()*1000);
-			endTime += timedemandgroup.points.get(timedemandgroup.points.size()-1).getTotaldrivetime() * 1000;
-			if (posinfo != null){
-				endTime += Math.abs(posinfo.getPunctuality()*1000);
-			}
-			return (System.currentTimeMillis()+5*60*1000) > endTime; //Whether end-of-trip is 5 minutes ago 
-		} catch (ParseException e) {
-			return false;
+		long endTime = getDepartureEpoch() + (timedemandgroup.points.get(timedemandgroup.points.size()-1).getTotaldrivetime()) * 1000;
+		if (posinfo != null){
+			endTime += Math.abs(posinfo.getPunctuality()*1000);
 		}
+		return (System.currentTimeMillis()+5*60*1000) > endTime; //Whether end-of-trip is 5 minutes ago 
 	}
 
 	public StopTimeEvent.Builder stopTimeEventDeparture(JourneyPatternPoint pt, int punctuality){
@@ -206,7 +201,7 @@ public class Journey {
 				}
 				stopTimeUpdate.setScheduleRelationship(
 						stopcanceled ? StopTimeUpdate.ScheduleRelationship.SKIPPED
-										: StopTimeUpdate.ScheduleRelationship.SCHEDULED);
+								: StopTimeUpdate.ScheduleRelationship.SCHEDULED);
 				if (pt.getIswaitpoint() && punctuality < 0)
 					punctuality = 0;
 				if (tpt.getStopwaittime() != 0) {
