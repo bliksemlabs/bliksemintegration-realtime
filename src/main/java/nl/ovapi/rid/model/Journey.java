@@ -7,6 +7,9 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -18,6 +21,7 @@ import nl.ovapi.bison.model.KV6posinfo.Type;
 import nl.ovapi.exceptions.StopNotFoundException;
 import nl.ovapi.exceptions.TooEarlyException;
 import nl.ovapi.exceptions.UnknownKV6PosinfoType;
+import nl.ovapi.rid.gtfsrt.services.BisonToGtfsRealtimeService;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
 
@@ -84,6 +88,7 @@ public class Journey {
 	private static final int MIN_PUNCTUALITY = -300; // Minimum allowed
 	// punctuality.
 
+	private static final Logger _log = LoggerFactory.getLogger(Journey.class);
 
 	public TripDescriptor.Builder tripDescriptor(){
 		TripDescriptor.Builder tripDescriptor = TripDescriptor.newBuilder();
@@ -129,11 +134,14 @@ public class Journey {
 	}
 
 	public long getDepartureEpoch(){
-		try{
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-			return df.parse(operatingDay).getTime() + (departuretime*1000);
-		}catch (Exception e){}
-		return -1;
+		try {
+			Calendar c = Calendar.getInstance();
+			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(posinfo.getOperatingday()));
+			c.add(Calendar.SECOND, getDeparturetime());
+			return c.getTimeInMillis();
+		} catch (ParseException e) {
+			return -1;
+		}
 	}
 
 	public TripUpdate.Builder updateTimes(KV6posinfo posinfo) {
@@ -335,18 +343,19 @@ public class Journey {
 						break;
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					_log.error("Error applying KV17",e);
 				}
 			}
 		}
-		int posinfoAge = (int)((System.currentTimeMillis()-posinfo.getTimestamp()) / 1000);
+		int posinfoAge = (posinfo == null) ? Integer.MAX_VALUE : 
+			                                 (int)((System.currentTimeMillis()-posinfo.getTimestamp()) / 1000);
 		if (posinfo != null && posinfoAge < 120){
 			TripUpdate.Builder timeUpdate = updateTimes(posinfo);
 			timeUpdate.setTimestamp(cvlinfos.get(0).getTimestamp());
 			return timeUpdate;
 		}else{
 			KV6posinfo posinfo = new KV6posinfo();
-			posinfo.setMessagetype(Type.DELAY);
+			posinfo.setMessagetype(Type.DELAY); //Fake KV6posinfo to get things moving
 			posinfo.setPunctuality(0);
 			posinfo.setTimestamp(cvlinfos.get(0).getTimestamp());
 			return updateTimes(posinfo);
@@ -354,31 +363,26 @@ public class Journey {
 	}
 
 	public TripUpdate.Builder update(KV6posinfo posinfo) throws StopNotFoundException,UnknownKV6PosinfoType, TooEarlyException {
-		Calendar c = Calendar.getInstance();
-		try {
-			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(posinfo.getOperatingday()));
-			c.add(Calendar.SECOND, getDeparturetime());
-			if (System.currentTimeMillis() < c.getTimeInMillis()){
-				int timedifference = (int)((c.getTimeInMillis()- System.currentTimeMillis())/1000);
-				if (timedifference>=3600){
-					switch(posinfo.getMessagetype()){
-					case INIT:
-					case ARRIVAL:
-					case ONSTOP:
-					case DELAY:
-						break;
-					default:
-						throw new TooEarlyException(posinfo.toString());
-					}
+		long departureTime = getDepartureEpoch();
+		if (System.currentTimeMillis() < departureTime){
+			int timedifference = (int)((departureTime- System.currentTimeMillis())/1000);
+			if (timedifference>=3600){
+				switch(posinfo.getMessagetype()){
+				case INIT:
+				case ARRIVAL:
+				case ONSTOP:
+				case DELAY:
+					break;
+				default:
+					throw new TooEarlyException(posinfo.toString());
 				}
 			}
-			if (posinfo.getUserstopcode() != null
-					&& !journeypattern.contains(posinfo.getUserstopcode())) {
-				throw new StopNotFoundException(posinfo.toString());
-			}
-			return updateTimes(posinfo);
-		} catch (ParseException e) {}
-		return null;
+		}
+		if (posinfo.getUserstopcode() != null
+				&& !journeypattern.contains(posinfo.getUserstopcode())) {
+			throw new StopNotFoundException(posinfo.toString());
+		}
+		return updateTimes(posinfo);
 	}
 }
 
