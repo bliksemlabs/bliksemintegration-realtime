@@ -132,10 +132,7 @@ public class Journey {
 	public long getDepartureEpoch(){
 		try {
 			Calendar c = Calendar.getInstance();
-			if (posinfo.getOperatingday() != null)
-				c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(posinfo.getOperatingday()));
-			else 
-				_log.error("Operatingday == null");
+			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(getOperatingDay()));
 			c.set(Calendar.HOUR, 0);
 			c.set(Calendar.MINUTE, 0);
 			c.set(Calendar.SECOND, 0);
