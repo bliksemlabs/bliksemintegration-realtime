@@ -121,7 +121,7 @@ public class Journey {
 		if (mutations.containsKey(pt.getPointorder())){
 			for (Mutation m : mutations.get(pt.getPointorder())){
 				if (m.getMutationtype() == MutationType.LAG){
-					punctuality = Math.min(punctuality, m.getLagtime());
+					punctuality = Math.max(punctuality, m.getLagtime());
 				}
 			}
 		}
