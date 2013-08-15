@@ -365,8 +365,8 @@ public class Journey {
 	public TripUpdate.Builder update(KV6posinfo posinfo) throws StopNotFoundException,UnknownKV6PosinfoType, TooEarlyException {
 		long departureTime = getDepartureEpoch();
 		if (System.currentTimeMillis() < departureTime){
-			int timedifference = (int)((departureTime- System.currentTimeMillis())/1000);
-			if (timedifference>=3600){
+			int timeDeltaSeconds = (int)((departureTime- System.currentTimeMillis())/1000);
+			if (timeDeltaSeconds>=3600){
 				switch(posinfo.getMessagetype()){
 				case INIT:
 				case ARRIVAL:
