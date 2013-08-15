@@ -60,7 +60,7 @@ public class KV17test {
 		File f = new File(url.getFile());
 		xr.parse(new InputSource(new FileInputStream(f)));
 		if (handler.getCvlinfos().size() != 40)
-			fail(handler.getCvlinfos().size() + " messages parsed instead of 1");
+			fail(handler.getCvlinfos().size() + " messages parsed instead of 40");
 		if (handler.getCvlinfos().get(0).getMutations().size() != 1)
 			fail(handler.getCvlinfos().get(0).getMutations().size()
 					+ " messages parsed instead of 19");
