@@ -5,16 +5,16 @@ public class Database {
 	public final static String journeyQuery = 
 			"SELECT validdate||':'||journey.privatecode as key,journey.id,journeypatternref,timedemandgroupref,departuretime,(lowfloor or hasliftorramp) as wheelchairaccessible,o.privatecode,validdate::text \n" +
 					"FROM journey LEFT JOIN availabilityconditionday USING (availabilityconditionref) LEFT JOIN journeypattern as j ON (j.id = journeypatternref) LEFT JOIN route as r ON (r.id = routeref) LEFT JOIN line as l ON (l.id = lineref) LEFT JOIN operator as o ON (operatorref = o.id) "+
-					"WHERE isavailable = true AND validdate in (date 'yesterday',date 'today',date 'tomorrow') AND monitored = true;";
+					"WHERE isavailable = true AND validdate in (date 'yesterday',date 'today',date 'tomorrow') AND monitored != false;";
 
 	public final static String journeyPatternQuery = 
 			"SELECT journeypatternref,pointorder,pointref,s.privatecode,iswaitpoint,distancefromstartroute,isscheduled FROM pointinjourneypattern LEFT JOIN stoppoint as s ON (s.id = pointref) "+
-					"WHERE journeypatternref in (SELECT DISTINCT journeypatternref FROM journey LEFT JOIN availabilityconditionday USING (availabilityconditionref) LEFT JOIN journeypattern as j ON (j.id = journeypatternref) LEFT JOIN route as r ON (r.id = routeref) LEFT JOIN line as l ON (l.id = lineref) WHERE isavailable = true AND validdate in (date 'yesterday',date 'today',date 'tomorrow') AND monitored = true) "+
+					"WHERE journeypatternref in (SELECT DISTINCT journeypatternref FROM journey LEFT JOIN availabilityconditionday USING (availabilityconditionref) LEFT JOIN journeypattern as j ON (j.id = journeypatternref) LEFT JOIN route as r ON (r.id = routeref) LEFT JOIN line as l ON (l.id = lineref) WHERE isavailable = true AND validdate in (date 'yesterday',date 'today',date 'tomorrow') AND monitored != false) "+
 					"ORDER BY journeypatternref,pointorder;";
 
 	public final static String timepatternQuery =
 			"SELECT timedemandgroupref,pointorder,totaldrivetime,stopwaittime FROM pointintimedemandgroup "+
-					"WHERE timedemandgroupref in (SELECT DISTINCT timedemandgroupref FROM journey LEFT JOIN availabilityconditionday USING (availabilityconditionref) LEFT JOIN journeypattern as j ON (j.id = journeypatternref) LEFT JOIN route as r ON (r.id = routeref) LEFT JOIN line as l ON (l.id = lineref) WHERE isavailable = true AND validdate in (date 'yesterday',date 'today',date 'tomorrow') AND monitored = true) "+
+					"WHERE timedemandgroupref in (SELECT DISTINCT timedemandgroupref FROM journey LEFT JOIN availabilityconditionday USING (availabilityconditionref) LEFT JOIN journeypattern as j ON (j.id = journeypatternref) LEFT JOIN route as r ON (r.id = routeref) LEFT JOIN line as l ON (l.id = lineref) WHERE isavailable = true AND validdate in (date 'yesterday',date 'today',date 'tomorrow') AND monitored != false) "+
 					"ORDER BY timedemandgroupref,pointorder;";
 
 	public final static String stoppointQuery = "SELECT id,latitude,longitude,operator_id FROM stoppoint";
