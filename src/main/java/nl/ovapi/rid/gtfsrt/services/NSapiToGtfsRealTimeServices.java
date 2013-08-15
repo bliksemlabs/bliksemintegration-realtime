@@ -197,7 +197,7 @@ public class NSapiToGtfsRealTimeServices {
 			org.zeromq.ZMQ.Poller poller = context.poller();
 			poller.register(subscriber);
 			while (true) {
-				if (poller.poll(60000) > 0){
+				if (poller.poll(60*1000*5) > 0){
 					messagecounter++;
 					if (messagecounter % 1000 == 0){
 						_log.debug(messagecounter + " NS-API messages received");
@@ -211,6 +211,7 @@ public class NSapiToGtfsRealTimeServices {
 						e.printStackTrace();
 					}
 				}else{
+					subscriber.disconnect(nsApiPublishers[addressPointer]);
 					addressPointer++;
 					if (addressPointer >= nsApiPublishers.length){
 						addressPointer = 0;

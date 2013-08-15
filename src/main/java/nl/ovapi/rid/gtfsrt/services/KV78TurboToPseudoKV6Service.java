@@ -164,7 +164,7 @@ public class KV78TurboToPseudoKV6Service {
 			org.zeromq.ZMQ.Poller poller = context.poller();
 			poller.register(subscriber);
 			while (true) {
-				if (poller.poll(60000) > 0){
+				if (poller.poll(60*1000*5) > 0){
 					messagecounter++;
 					if (messagecounter % 1000 == 0){
 						_log.debug(messagecounter + " KV8Turbo messages received");
@@ -211,6 +211,7 @@ public class KV78TurboToPseudoKV6Service {
 						e.printStackTrace();
 					}
 				}else{
+					subscriber.disconnect(kv8turboPublishers[addressPointer]);
 					addressPointer++;
 					if (addressPointer >= kv8turboPublishers.length){
 						addressPointer = 0;
