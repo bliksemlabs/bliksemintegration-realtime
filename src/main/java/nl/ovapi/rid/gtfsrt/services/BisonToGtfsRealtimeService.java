@@ -348,7 +348,7 @@ public class BisonToGtfsRealtimeService {
 							tripUpdates.addDeletedEntity(f.getId());
 							_log.trace("Garbage cleaned -> Journey Null {}",f.getId());
 							tripsCleaned++;
-						}else if (!j.hasMutations() || j.isCurrent()){
+						}else if (!j.hasMutations() || !j.isCurrent()){ //Journey still driving or has a mutation to it
 							tripUpdates.addDeletedEntity(f.getId());
 							_log.trace("Garbage cleaned {}",f.getId());
 							tripsCleaned++;
