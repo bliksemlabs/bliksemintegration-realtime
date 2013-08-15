@@ -103,6 +103,10 @@ public class Journey {
 		return mutations.size() > 0 || isCanceled;
 	}
 	
+	/**
+	 * @return Whether journey is currently planned to ride or is still riding. 
+	 */
+	
 	public boolean isCurrent(){
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		try {
@@ -111,7 +115,7 @@ public class Journey {
 			if (posinfo != null){
 				endTime += Math.abs(posinfo.getPunctuality()*1000);
 			}
-			return (System.currentTimeMillis()+5*60*1000) > endTime;
+			return (System.currentTimeMillis()+5*60*1000) > endTime; //Whether end-of-trip is 5 minutes ago 
 		} catch (ParseException e) {
 			return false;
 		}
