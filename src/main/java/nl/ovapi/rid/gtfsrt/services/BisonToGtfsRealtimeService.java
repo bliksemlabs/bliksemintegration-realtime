@@ -245,7 +245,7 @@ public class BisonToGtfsRealtimeService {
 		case ARRIVAL:
 		case ONSTOP:
 			for (JourneyPatternPoint point : journey.getJourneypattern().points){
-				if (point.operatorpointref.equals(posinfo.getUserstopcode())){
+				if (point.getOperatorpointref().equals(posinfo.getUserstopcode())){
 					vehiclePosition.setStopId(point.getPointref().toString());
 					vehiclePosition.setCurrentStatus(VehicleStopStatus.STOPPED_AT);
 					StopPoint sp = _ridService.getStopPoint(point.getPointref());
@@ -263,7 +263,7 @@ public class BisonToGtfsRealtimeService {
 		case ONROUTE:
 			boolean passed = false;
 			for (JourneyPatternPoint point : journey.getJourneypattern().points){
-				if (point.operatorpointref.equals(posinfo.getUserstopcode())){
+				if (point.getOperatorpointref().equals(posinfo.getUserstopcode())){
 					passed = true;
 					StopPoint sp = _ridService.getStopPoint(point.getPointref());
 					if (posinfo.getMessagetype() == Type.DEPARTURE && sp != null){
@@ -272,7 +272,7 @@ public class BisonToGtfsRealtimeService {
 						position.setLongitude(sp.getLongitude());
 						vehiclePosition.setPosition(position);
 					}
-				}else if (passed && point.isscheduled){
+				}else if (passed && point.isScheduled()){
 					vehiclePosition.setStopId(point.getPointref().toString());
 					vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
 				}

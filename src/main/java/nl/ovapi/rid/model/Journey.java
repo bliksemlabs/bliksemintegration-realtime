@@ -228,13 +228,13 @@ public class Journey {
 					case ARRIVAL:
 						if (RECORD_TIMES)
 							realizedArrivals.put(pt.getPointorder(), posinfo.getTimestamp());
-						if ((pt.iswaitpoint || i == 0)	&& punctuality < 0)
+						if ((pt.isWaitpoint() || i == 0)	&& punctuality < 0)
 							punctuality = 0;
 					case DEPARTURE:
 						if (RECORD_TIMES)
 							realizedDepartures.put(pt.getPointorder(), posinfo.getTimestamp());
 					case ONSTOP:
-						if ((pt.iswaitpoint || i == 0)	&& punctuality < 0)
+						if ((pt.isWaitpoint() || i == 0)	&& punctuality < 0)
 							punctuality = 0;
 						break;
 					default:
@@ -261,7 +261,7 @@ public class Journey {
 				stopTimeUpdate.setScheduleRelationship(
 						stopcanceled ? StopTimeUpdate.ScheduleRelationship.SKIPPED
 								: StopTimeUpdate.ScheduleRelationship.SCHEDULED);
-				if (pt.getIswaitpoint() && punctuality < 0)
+				if (pt.isWaitpoint() && punctuality < 0)
 					punctuality = 0;
 				if (tpt.getStopwaittime() != 0) {
 					int stopwaittime = tpt.getStopwaittime();

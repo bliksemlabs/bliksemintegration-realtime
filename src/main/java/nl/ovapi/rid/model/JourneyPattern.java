@@ -17,22 +17,22 @@ public class JourneyPattern {
 	public static class JourneyPatternPoint {
 		@Getter
 		@Setter
-		public Integer pointorder;
+		private Integer pointorder;
 		@Getter
 		@Setter
-		public Long pointref;
+		private Long pointref;
 		@Getter
 		@Setter
-		public String operatorpointref;
+		private String operatorpointref;
 		@Getter
 		@Setter
-		public Boolean iswaitpoint;
+		public boolean waitpoint;
 		@Getter
 		@Setter
-		public Integer distancefromstartroute;
+		private Integer distancefromstartroute;
 		@Getter
 		@Setter
-		public Boolean isscheduled;
+		private boolean scheduled;
 
 	}
 	
