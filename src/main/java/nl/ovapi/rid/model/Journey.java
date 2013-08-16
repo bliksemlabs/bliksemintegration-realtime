@@ -109,11 +109,7 @@ public class Journey {
 	 */
 
 	public boolean isCurrent(){
-		long endTime = getDepartureEpoch() + (timedemandgroup.points.get(timedemandgroup.points.size()-1).getTotaldrivetime()) * 1000;
-		if (posinfo != null){
-			endTime += Math.abs(posinfo.getPunctuality()*1000);
-		}
-		return (System.currentTimeMillis()+5*60*1000) > endTime; //Whether end-of-trip is 5 minutes ago 
+		return (System.currentTimeMillis()+24*60*60*1000) > getEndEpoch(); //Whether end-of-trip is 24 hours ago 
 	}
 
 	public StopTimeEvent.Builder stopTimeEventDeparture(JourneyPatternPoint pt, int punctuality){
@@ -127,6 +123,25 @@ public class Journey {
 		}
 		stopTimeEvent.setDelay(punctuality);
 		return stopTimeEvent;
+	}
+	
+	public long getEndEpoch(){
+		try {
+			Calendar c = Calendar.getInstance();
+			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(getOperatingDay()));
+			c.set(Calendar.HOUR, 0);
+			c.set(Calendar.MINUTE, 0);
+			c.set(Calendar.SECOND, 0);
+			c.set(Calendar.MILLISECOND, 0);
+			c.add(Calendar.SECOND, getDeparturetime());
+			c.add(Calendar.SECOND, timedemandgroup.points.get(timedemandgroup.points.size()-1).getTotaldrivetime());
+			if (posinfo != null && posinfo.getPunctuality() != null){
+				c.add(Calendar.SECOND, Math.abs(posinfo.getPunctuality()));
+			}
+			return c.getTimeInMillis();
+		} catch (ParseException e) {
+			return -1;
+		}
 	}
 
 	public long getDepartureEpoch(){
