@@ -253,7 +253,7 @@ public class RIDservice {
 					journeypatternRef = curRef;
 					if (journeypatterns.containsKey(journeypatternRef)){ //Recycle
 						journeypatternRef = null;
-						newJourneypatterns.put(journeypatternRef, journeypatterns.get(timedemandgroupref));
+						newJourneypatterns.put(journeypatternRef, journeypatterns.get(journeypatternRef));
 						continue;
 					}
 					jp = new JourneyPattern();
