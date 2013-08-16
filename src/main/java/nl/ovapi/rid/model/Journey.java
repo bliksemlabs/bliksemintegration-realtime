@@ -43,6 +43,13 @@ public class Journey {
 	private TimeDemandGroup timedemandgroup;
 	@Getter
 	@Setter
+	private Map<Integer, Long> realizedArrivals;
+	@Getter
+	@Setter
+	private Map<Integer, Long> realizedDepartures;
+
+	@Getter
+	@Setter
 	private Integer departuretime;
 	@Getter
 	@Setter
@@ -71,7 +78,11 @@ public class Journey {
 	public Journey() {
 		mutations = Maps.newHashMap();
 		reinforcements = Maps.newHashMap();
+		realizedArrivals = Maps.newHashMap();
+		realizedDepartures = Maps.newHashMap();
 	}
+
+	private static final boolean RECORD_TIMES = true;
 
 	private static final int PUNCTUALITY_FLOOR = 15; // seconds
 	private static final int DEFAULT_SPEED = (int) (80 / 3.6); // meters per
@@ -100,6 +111,12 @@ public class Journey {
 		return stopTimeEvent;
 	}
 
+	public StopTimeEvent.Builder stopTimeEventArrival(JourneyPatternPoint pt, long time){
+		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
+		stopTimeEvent.setTime(time);
+		return stopTimeEvent;
+	}
+
 	public boolean hasMutations(){
 		return mutations.size() > 0 || isCanceled;
 	}
@@ -117,7 +134,13 @@ public class Journey {
 		stopTimeEvent.setDelay(punctuality);
 		return stopTimeEvent;
 	}
-	
+
+	public StopTimeEvent.Builder stopTimeEventDeparture(JourneyPatternPoint pt, long time){
+		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
+		stopTimeEvent.setTime(time);
+		return stopTimeEvent;
+	}
+
 	public long getEndEpoch(){
 		try {
 			Calendar c = Calendar.getInstance();
@@ -150,6 +173,20 @@ public class Journey {
 		} catch (ParseException e) {
 			return -1;
 		}
+	}
+
+	private StopTimeUpdate.Builder recordedTimes(JourneyPatternPoint pt){
+		StopTimeUpdate.Builder stopTimeUpdate = StopTimeUpdate.newBuilder();
+		stopTimeUpdate.setStopSequence(pt.getPointorder());
+		stopTimeUpdate.setStopId(pt.getPointref().toString());
+		if (realizedArrivals.containsKey(pt.getPointorder()))
+			stopTimeUpdate.setArrival(stopTimeEventArrival(pt,realizedArrivals.get(pt.getPointorder())));
+		if (realizedDepartures.containsKey(pt.getPointorder()))
+			stopTimeUpdate.setDeparture(stopTimeEventDeparture(pt,realizedDepartures.get(pt.getPointorder())));
+		if (stopTimeUpdate.hasArrival() || stopTimeUpdate.hasDeparture()){
+			return stopTimeUpdate;
+		}
+		return null;
 	}
 
 	public TripUpdate.Builder updateTimes(KV6posinfo posinfo) {
@@ -189,11 +226,14 @@ public class Journey {
 					passed = false;
 					switch (posinfo.getMessagetype()) {
 					case ARRIVAL:
-					case ONSTOP:
+						if (RECORD_TIMES)
+							realizedArrivals.put(pt.getPointorder(), posinfo.getTimestamp());
 						if ((pt.iswaitpoint || i == 0)	&& punctuality < 0)
 							punctuality = 0;
-						break;
 					case DEPARTURE:
+						if (RECORD_TIMES)
+							realizedDepartures.put(pt.getPointorder(), posinfo.getTimestamp());
+					case ONSTOP:
 						if ((pt.iswaitpoint || i == 0)	&& punctuality < 0)
 							punctuality = 0;
 						break;
@@ -201,7 +241,11 @@ public class Journey {
 						break;
 					}
 				}
-			} else if (!passed) {
+				StopTimeUpdate.Builder recorded = recordedTimes(pt);
+				if (recorded != null){
+					tripUpdate.addStopTimeUpdate(recorded);
+				}
+			} else if (!passed) { //Stops not visted by the vehicle
 				StopTimeUpdate.Builder stopTimeUpdate = StopTimeUpdate.newBuilder();
 				stopTimeUpdate.setStopSequence(tpt.getPointorder());
 				stopTimeUpdate.setStopId(pt.getPointref().toString());
@@ -256,6 +300,11 @@ public class Journey {
 				}
 				if (Math.abs(punctuality) < PUNCTUALITY_FLOOR) {
 					punctuality = 0;
+				}
+			}else{ //JourneyPatternPoint has been passed.
+				StopTimeUpdate.Builder recorded = recordedTimes(pt);
+				if (recorded != null){
+					tripUpdate.addStopTimeUpdate(recorded);
 				}
 			}
 		}
