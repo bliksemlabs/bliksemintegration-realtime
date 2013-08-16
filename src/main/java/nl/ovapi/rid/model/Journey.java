@@ -104,13 +104,6 @@ public class Journey {
 		return mutations.size() > 0 || isCanceled;
 	}
 
-	/**
-	 * @return Whether journey is currently planned to ride or is still riding. 
-	 */
-
-	public boolean isCurrent(){
-		return (System.currentTimeMillis()+24*60*60*1000) > getEndEpoch(); //Whether end-of-trip is 24 hours ago 
-	}
 
 	public StopTimeEvent.Builder stopTimeEventDeparture(JourneyPatternPoint pt, int punctuality){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();

@@ -82,6 +82,7 @@ public class BisonToGtfsRealtimeService {
 	private static final Logger _log = LoggerFactory.getLogger(BisonToGtfsRealtimeService.class);
 	private final static int GARBAGE_COLLECTOR_INTERVAL_SECONDS = 60;
 	private final static int POSINFO_MAX_AGE_SECONDS = 120;
+	private final static int TRIPUPDATE_EXPIRATION_HOURS = 12;
 
 	private GtfsRealtimeSource _tripUpdatesSource;
 	private GtfsRealtimeSource _vehiclePositionsSource;
@@ -348,7 +349,7 @@ public class BisonToGtfsRealtimeService {
 							tripUpdates.addDeletedEntity(f.getId());
 							_log.trace("Garbage cleaned -> Journey Null {}",f.getId());
 							tripsCleaned++;
-						}else if (!j.isCurrent()){ //Journey still driving or has a mutation to it
+						}else if (j.getEndEpoch() < (System.currentTimeMillis()+TRIPUPDATE_EXPIRATION_HOURS*60*60*1000)){ //
 							tripUpdates.addDeletedEntity(f.getId());
 							_log.trace("Garbage cleaned {}",f.getId());
 							tripsCleaned++;
