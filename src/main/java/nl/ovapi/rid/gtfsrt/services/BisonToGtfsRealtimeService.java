@@ -348,7 +348,7 @@ public class BisonToGtfsRealtimeService {
 							tripUpdates.addDeletedEntity(f.getId());
 							_log.trace("Garbage cleaned -> Journey Null {}",f.getId());
 							tripsCleaned++;
-						}else if (!j.hasMutations() || !j.isCurrent()){ //Journey still driving or has a mutation to it
+						}else if (!j.isCurrent()){ //Journey still driving or has a mutation to it
 							tripUpdates.addDeletedEntity(f.getId());
 							_log.trace("Garbage cleaned {}",f.getId());
 							tripsCleaned++;
@@ -540,6 +540,7 @@ public class BisonToGtfsRealtimeService {
 							try {
 								xr.parse(s);
 								_executor.submit(new ProcessKV17Task(handler.getCvlinfos()));
+								System.out.println(m[1]);
 							} catch (Exception e) {
 								_log.error("KV17 parsing {}",m[1]);
 							}
