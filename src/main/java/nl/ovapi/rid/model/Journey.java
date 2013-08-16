@@ -179,6 +179,8 @@ public class Journey {
 		StopTimeUpdate.Builder stopTimeUpdate = StopTimeUpdate.newBuilder();
 		stopTimeUpdate.setStopSequence(pt.getPointorder());
 		stopTimeUpdate.setStopId(pt.getPointref().toString());
+		if (!pt.isScheduled())
+			return null; // Dummy point
 		if (realizedArrivals.containsKey(pt.getPointorder()))
 			stopTimeUpdate.setArrival(stopTimeEventArrival(pt,realizedArrivals.get(pt.getPointorder())));
 		if (realizedDepartures.containsKey(pt.getPointorder()))
@@ -246,6 +248,8 @@ public class Journey {
 					tripUpdate.addStopTimeUpdate(recorded);
 				}
 			} else if (!passed) { //Stops not visted by the vehicle
+				if (!pt.isScheduled())
+					continue;//Dummy point
 				StopTimeUpdate.Builder stopTimeUpdate = StopTimeUpdate.newBuilder();
 				stopTimeUpdate.setStopSequence(tpt.getPointorder());
 				stopTimeUpdate.setStopId(pt.getPointref().toString());
