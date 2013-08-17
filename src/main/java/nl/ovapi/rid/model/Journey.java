@@ -216,6 +216,8 @@ public class Journey {
 			this.posinfo = posinfo;
 			return null;
 		case OFFROUTE:
+			if (getPosinfo() != null && getPosinfo().getMessagetype() != Type.OFFROUTE)
+				return null; //We've already sent out NO_DATE
 			for (int i = 0; i < timedemandgroup.points.size(); i++) {
 				TimeDemandGroupPoint tpt = timedemandgroup.points.get(i);
 				JourneyPatternPoint pt = journeypattern.getPoint(tpt.pointorder);
