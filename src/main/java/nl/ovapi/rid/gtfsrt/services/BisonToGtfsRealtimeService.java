@@ -329,7 +329,7 @@ public class BisonToGtfsRealtimeService {
 					Journey j = _ridService.getJourney(id);
 					if (!f.hasVehicle() || f.getVehicle().getTimestamp() < threshold){
 						if (j != null && idParts.length == 4){
-							j.setPosinfo(null);
+							j.clearKV6();
 						}else if (j != null && idParts.length == 5){
 							Integer reinforcementNumber = Integer.valueOf(idParts[4]);
 							j.getReinforcements().remove(reinforcementNumber);
@@ -416,7 +416,7 @@ public class BisonToGtfsRealtimeService {
 						id += ":"+posinfo.getReinforcementnumber().toString(); // Key for reinforcement
 					if (posinfo.getMessagetype() == Type.END){
 						if (posinfo.getReinforcementnumber() == 0)
-							journey.setPosinfo(null); //Primary vehicle finished
+							journey.clearKV6(); //Primary vehicle finished
 						else if (journey.getReinforcements().containsKey(posinfo.getReinforcementnumber()))
 							journey.getReinforcements().remove(posinfo.getReinforcementnumber()); //Remove reinforcement
 						vehicleUpdates.addDeletedEntity(id);
@@ -432,7 +432,6 @@ public class BisonToGtfsRealtimeService {
 						}
 					}
 					if (posinfo.getReinforcementnumber() == 0){ //Primary vehicle, BISON can currently not yet support schedules for reinforcments
-						journey.setPosinfo(posinfo);
 						try{
 							if (posinfo.getMessagetype() == Type.OFFROUTE){
 								tripUpdates.addDeletedEntity(id); //OFFROUTE can't predict time

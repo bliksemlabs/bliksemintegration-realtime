@@ -62,7 +62,6 @@ public class Journey {
 	private String operatingDay;
 
 	@Getter
-	@Setter
 	private KV6posinfo posinfo;
 
 	@Getter
@@ -80,6 +79,10 @@ public class Journey {
 		reinforcements = Maps.newHashMap();
 		realizedArrivals = Maps.newHashMap();
 		realizedDepartures = Maps.newHashMap();
+	}
+	
+	public void clearKV6(){
+		posinfo = null;
 	}
 
 	private static final boolean RECORD_TIMES = true;
@@ -210,6 +213,7 @@ public class Journey {
 		switch (posinfo.getMessagetype()) {// These types do not contain // information regarding punctuality
 		case INIT:
 		case END:
+			this.posinfo = posinfo;
 			return null;
 		case OFFROUTE:
 			for (int i = 0; i < timedemandgroup.points.size(); i++) {
@@ -228,6 +232,7 @@ public class Journey {
 					tripUpdate.addStopTimeUpdate(noData);
 				}
 			}
+			this.posinfo = posinfo;
 			return tripUpdate;
 		default:
 			break;
@@ -331,6 +336,7 @@ public class Journey {
 				}
 			}
 		}
+		this.posinfo = posinfo;
 		if (tripUpdate.getStopTimeUpdateCount() > 0)
 			return tripUpdate;
 		else
