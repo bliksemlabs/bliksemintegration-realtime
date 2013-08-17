@@ -176,6 +176,8 @@ public class Journey {
 	}
 
 	private StopTimeUpdate.Builder recordedTimes(JourneyPatternPoint pt){
+		if (!RECORD_TIMES)
+			return null;
 		StopTimeUpdate.Builder stopTimeUpdate = StopTimeUpdate.newBuilder();
 		stopTimeUpdate.setStopSequence(pt.getPointorder());
 		stopTimeUpdate.setStopId(pt.getPointref().toString());
@@ -208,7 +210,24 @@ public class Journey {
 		switch (posinfo.getMessagetype()) {// These types do not contain // information regarding punctuality
 		case INIT:
 		case END:
+			return null;
 		case OFFROUTE:
+			for (int i = 0; i < timedemandgroup.points.size(); i++) {
+				TimeDemandGroupPoint tpt = timedemandgroup.points.get(i);
+				JourneyPatternPoint pt = journeypattern.getPoint(tpt.pointorder);
+				StopTimeUpdate.Builder recordedTimes = recordedTimes(pt);
+				if (!pt.isScheduled())
+					continue;
+				if (recordedTimes != null){
+					tripUpdate.addStopTimeUpdate(recordedTimes);
+				}else{
+					StopTimeUpdate.Builder noData = StopTimeUpdate.newBuilder();
+					noData.setStopSequence(pt.getPointorder());
+					noData.setStopId(pt.getPointref().toString());
+					noData.setScheduleRelationship(StopTimeUpdate.ScheduleRelationship.NO_DATA);
+					tripUpdate.addStopTimeUpdate(noData);
+				}
+			}
 			return tripUpdate;
 		default:
 			break;
@@ -312,7 +331,10 @@ public class Journey {
 				}
 			}
 		}
-		return tripUpdate;
+		if (tripUpdate.getStopTimeUpdateCount() > 0)
+			return tripUpdate;
+		else
+			return null;
 	}
 
 	public int decayeddelay(int delay, int elapsedtime) {
