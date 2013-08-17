@@ -64,6 +64,7 @@ import com.google.transit.realtime.GtfsRealtime.TranslatedString;
 import com.google.transit.realtime.GtfsRealtime.TranslatedString.Translation;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
+import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition.VehicleStopStatus;
 
@@ -436,10 +437,13 @@ public class BisonToGtfsRealtimeService {
 							if (posinfo.getMessagetype() == Type.OFFROUTE){
 								tripUpdates.addDeletedEntity(id); //OFFROUTE can't predict time
 							}else{
-								FeedEntity.Builder tripUpdate = FeedEntity.newBuilder();
-								tripUpdate.setId(id);
-								tripUpdate.setTripUpdate(journey.update(posinfo)); //Get update created from KV6
-								tripUpdates.addUpdatedEntity(tripUpdate.build());
+								TripUpdate.Builder tripUpdate = journey.update(posinfo);
+								if (tripUpdate != null){
+									FeedEntity.Builder tripEntity = FeedEntity.newBuilder();
+									tripEntity.setId(id);
+									tripEntity.setTripUpdate(tripUpdate); //Get update created from KV6
+									tripUpdates.addUpdatedEntity(tripEntity.build());
+								}
 							}
 						}catch (StopNotFoundException e){
 							_log.error("Trip {} userstop {} not found", id,posinfo.getUserstopcode());
