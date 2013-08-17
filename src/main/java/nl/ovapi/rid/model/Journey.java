@@ -261,9 +261,9 @@ public class Journey {
 			for (int i = 0; i < timedemandgroup.points.size(); i++) {
 				TimeDemandGroupPoint tpt = timedemandgroup.points.get(i);
 				JourneyPatternPoint pt = journeypattern.getPoint(tpt.pointorder);
-				StopTimeUpdate.Builder recordedTimes = recordedTimes(pt);
 				if (!pt.isScheduled())
 					continue;
+				StopTimeUpdate.Builder recordedTimes = recordedTimes(pt);
 				if (recordedTimes != null){
 					tripUpdate.addStopTimeUpdate(recordedTimes);
 				}else if (posinfo.getMessagetype() == Type.OFFROUTE){
