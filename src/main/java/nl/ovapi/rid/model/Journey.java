@@ -18,6 +18,7 @@ import nl.ovapi.bison.model.KV6posinfo.Type;
 import nl.ovapi.exceptions.StopNotFoundException;
 import nl.ovapi.exceptions.TooEarlyException;
 import nl.ovapi.exceptions.UnknownKV6PosinfoType;
+import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
 
@@ -110,9 +111,10 @@ public class Journey {
 		return tripDescriptor;
 	}
 
-	public StopTimeEvent.Builder stopTimeEventArrival(JourneyPatternPoint pt, int punctuality){
+	public StopTimeEvent.Builder stopTimeEventArrival(TimeDemandGroupPoint tpt,JourneyPatternPoint pt, int punctuality){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
-		stopTimeEvent.setDelay(punctuality);
+		//stopTimeEvent.setDelay(punctuality);
+		stopTimeEvent.setTime(getDepartureEpoch()+tpt.getTotaldrivetime()+punctuality);
 		return stopTimeEvent;
 	}
 
@@ -127,7 +129,7 @@ public class Journey {
 	}
 
 
-	public StopTimeEvent.Builder stopTimeEventDeparture(JourneyPatternPoint pt, int punctuality){
+	public StopTimeEvent.Builder stopTimeEventDeparture(TimeDemandGroupPoint tpt,JourneyPatternPoint pt, int punctuality){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 		if (mutations.containsKey(pt.getPointorder())){
 			for (Mutation m : mutations.get(pt.getPointorder())){
@@ -136,7 +138,8 @@ public class Journey {
 				}
 			}
 		}
-		stopTimeEvent.setDelay(punctuality);
+		//stopTimeEvent.setDelay(punctuality);
+		stopTimeEvent.setTime(getDepartureEpoch()+((tpt.getTotaldrivetime()+tpt.getStopwaittime()+punctuality)*1000));
 		return stopTimeEvent;
 	}
 
@@ -145,6 +148,10 @@ public class Journey {
 		stopTimeEvent.setTime(time);
 		return stopTimeEvent;
 	}
+	
+	/**
+	 * @return POSIX time when journey end in seconds since January 1st 1970 00:00:00 UTC
+	 */
 
 	public long getEndEpoch(){
 		try {
@@ -159,11 +166,15 @@ public class Journey {
 			if (posinfo != null && posinfo.getPunctuality() != null){
 				c.add(Calendar.SECOND, Math.abs(posinfo.getPunctuality()));
 			}
-			return c.getTimeInMillis();
+			return c.getTimeInMillis()/1000;
 		} catch (ParseException e) {
 			return -1;
 		}
 	}
+	
+	/**
+	 * @return POSIX time when journey is scheduled to start in seconds since January 1st 1970 00:00:00 UTC
+	 */
 
 	public long getDepartureEpoch(){
 		try {
@@ -174,7 +185,7 @@ public class Journey {
 			c.set(Calendar.SECOND, 0);
 			c.set(Calendar.MILLISECOND, 0);
 			c.add(Calendar.SECOND, getDeparturetime());
-			return c.getTimeInMillis();
+			return c.getTimeInMillis()/1000;
 		} catch (ParseException e) {
 			return -1;
 		}
@@ -320,7 +331,7 @@ public class Journey {
 				StopTimeUpdate.Builder stopTimeUpdate = StopTimeUpdate.newBuilder();
 				stopTimeUpdate.setStopSequence(tpt.getPointorder());
 				stopTimeUpdate.setStopId(pt.getPointref().toString());
-				stopTimeUpdate.setArrival(stopTimeEventArrival(pt,punctuality));
+				stopTimeUpdate.setArrival(stopTimeEventArrival(tpt,pt,punctuality));
 				boolean stopcanceled = isCanceled;
 				if (mutations.containsKey(tpt.getPointorder())){ // Check if mutation exists with cancel
 					for (Mutation m : mutations.get(tpt.getPointorder())){
@@ -341,7 +352,7 @@ public class Journey {
 						punctuality = Math.max(0, punctuality);
 					}
 				}
-				stopTimeUpdate.setDeparture(stopTimeEventDeparture(pt,punctuality));
+				stopTimeUpdate.setDeparture(stopTimeEventDeparture(tpt,pt,punctuality));
 				if (!nullterminated || Math.abs(punctuality) > 0 || stopcanceled){
 					if (punctuality == 0){
 						nullterminated = true;
@@ -480,7 +491,7 @@ public class Journey {
 			}
 		}
 		int posinfoAge = (posinfo == null) ? Integer.MAX_VALUE : 
-			(int)((System.currentTimeMillis()-posinfo.getTimestamp()) / 1000);
+			(int)(Utils.currentTimeSecs()-posinfo.getTimestamp());
 		if (posinfo != null && posinfoAge < 120){
 			TripUpdate.Builder timeUpdate = updateTimes(posinfo);
 			timeUpdate.setTimestamp(cvlinfos.get(0).getTimestamp());
@@ -496,8 +507,8 @@ public class Journey {
 
 	public TripUpdate.Builder update(KV6posinfo posinfo) throws StopNotFoundException,UnknownKV6PosinfoType, TooEarlyException {
 		long departureTime = getDepartureEpoch();
-		if (System.currentTimeMillis() < departureTime){
-			int timeDeltaSeconds = (int)((departureTime- System.currentTimeMillis())/1000);
+		if (Utils.currentTimeSecs() < departureTime){
+			int timeDeltaSeconds = (int)(departureTime-Utils.currentTimeSecs());
 			if (timeDeltaSeconds>=3600){
 				switch(posinfo.getMessagetype()){
 				case INIT:

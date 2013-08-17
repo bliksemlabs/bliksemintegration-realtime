@@ -55,17 +55,6 @@ public class KV6SAXHandler extends DefaultHandler {
 	public void endDocument() throws SAXException {
 	}
 
-	public long parse(String time) {
-		// NOTE: SimpleDateFormat uses GMT[-+]hh:mm for the TZ which breaks
-		// things a bit. Before we go on we have to repair this.
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-		try {
-			return df.parse(time).getTime();
-		} catch (Exception e) {
-			return -1;
-		}
-	}
-
 	@Override
 	public void endElement(String uri, String localName, String name)
 			throws SAXException {
@@ -79,7 +68,7 @@ public class KV6SAXHandler extends DefaultHandler {
 		} else if ("reinforcementnumber".equals(localName)) {
 			posinfo.setReinforcementnumber(Integer.valueOf(builder.toString()));
 		} else if ("timestamp".equals(localName)) {
-			posinfo.setTimestamp(parse(builder.toString()));
+			posinfo.setTimestamp(DateUtils.parse(builder.toString()));
 		} else if ("operatingday".equals(localName)) {
 			posinfo.setOperatingday(builder.toString());
 		} else if ("source".equals(localName)) {

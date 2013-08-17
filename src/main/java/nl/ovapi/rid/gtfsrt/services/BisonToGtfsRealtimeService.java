@@ -35,6 +35,7 @@ import nl.ovapi.bison.sax.KV6SAXHandler;
 import nl.ovapi.exceptions.StopNotFoundException;
 import nl.ovapi.exceptions.TooEarlyException;
 import nl.ovapi.exceptions.UnknownKV6PosinfoType;
+import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.Journey;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.StopPoint;
@@ -316,7 +317,7 @@ public class BisonToGtfsRealtimeService {
 			//Delete vehicle updates that haven't received KV6 in 2 minutes.
 			GtfsRealtimeIncrementalUpdate vehicleUpdates = new GtfsRealtimeIncrementalUpdate();
 			GtfsRealtimeIncrementalUpdate tripUpdates = new GtfsRealtimeIncrementalUpdate();
-			long threshold = System.currentTimeMillis() - (1000 * POSINFO_MAX_AGE_SECONDS);
+			long threshold = Utils.currentTimeSecs() - POSINFO_MAX_AGE_SECONDS;
 			int vehiclesCleaned = 0;
 			int tripsCleaned = 0;
 			for (FeedEntity f : _vehiclePositionsSource.getFeed().getEntityList()){		
@@ -350,7 +351,7 @@ public class BisonToGtfsRealtimeService {
 							tripUpdates.addDeletedEntity(f.getId());
 							_log.trace("Garbage cleaned -> Journey Null {}",f.getId());
 							tripsCleaned++;
-						}else if (j.getEndEpoch() < (System.currentTimeMillis()+TRIPUPDATE_EXPIRATION_HOURS*60*60*1000)){ //
+						}else if (j.getEndEpoch() < (Utils.currentTimeSecs()+TRIPUPDATE_EXPIRATION_HOURS*60*60)){ //
 							tripUpdates.addDeletedEntity(f.getId());
 							_log.trace("Garbage cleaned {}",f.getId());
 							tripsCleaned++;

@@ -1,6 +1,5 @@
 package nl.ovapi.bison.sax;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import lombok.Getter;
@@ -16,7 +15,6 @@ import nl.ovapi.bison.model.SubAdviceType;
 import nl.ovapi.bison.model.SubEffectType;
 import nl.ovapi.bison.model.SubMeasureType;
 import nl.ovapi.bison.model.SubReasonType;
-import nl.ovapi.rid.gtfsrt.services.KV78TurboToPseudoKV6Service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,17 +63,6 @@ public class KV15SAXHandler extends DefaultHandler {
 
 	@Override
 	public void endDocument() throws SAXException {
-	}
-
-	public long parse(String time) {
-		// NOTE: SimpleDateFormat uses GMT[-+]hh:mm for the TZ which breaks
-		// things a bit. Before we go on we have to repair this.
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-		try {
-			return df.parse(time).getTime();
-		} catch (Exception e) {
-			return -1;
-		}
 	}
 
 	@Override

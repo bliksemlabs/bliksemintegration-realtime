@@ -22,6 +22,7 @@ import nl.ovapi.bison.model.JourneyStopType;
 import nl.ovapi.bison.model.KV6posinfo;
 import nl.ovapi.bison.model.KV6posinfo.Type;
 import nl.ovapi.bison.model.TripStopStatus;
+import nl.ovapi.rid.gtfsrt.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +60,7 @@ public class KV78TurboToPseudoKV6Service {
 	private class RefreshTask implements Runnable{
 		@Override
 		public void run() {
-			long threshold = System.currentTimeMillis() - (1000 * 90);
+			long threshold = Utils.currentTimeSecs() - 90;
 			ArrayList<String> removeIds = new ArrayList<String>();
 			ArrayList<KV6posinfo> refreshedPosinfos = new ArrayList<KV6posinfo>();
 			for (String key : new HashSet<String>(livePasstimes.keySet())){
@@ -69,9 +70,9 @@ public class KV78TurboToPseudoKV6Service {
 						if (pt.getJourneyStopType() != JourneyStopType.LAST){
 							if (pt.getTripStopStatus() != TripStopStatus.PLANNED && pt.getTripStopStatus() != TripStopStatus.UNKNOWN && pt.getTripStopStatus() != TripStopStatus.CANCEL){
 								SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-								long departureEpoch = df.parse(pt.getOperationDate()).getTime() + (1000*pt.getExpectedArrivalTime());
-								if (System.currentTimeMillis() < departureEpoch){
-									pt.setLastUpdateTimeStamp(System.currentTimeMillis());
+								long departureEpoch = df.parse(pt.getOperationDate()).getTime()/1000 + pt.getExpectedArrivalTime();
+								if (Utils.currentTimeSecs() < departureEpoch){
+									pt.setLastUpdateTimeStamp(Utils.currentTimeSecs());
 									refreshedPosinfos.add(makePseudoKV6(pt));
 								}
 							}
