@@ -420,9 +420,6 @@ public class BisonToGtfsRealtimeService {
 						else if (journey.getReinforcements().containsKey(posinfo.getReinforcementnumber()))
 							journey.getReinforcements().remove(posinfo.getReinforcementnumber()); //Remove reinforcement
 						vehicleUpdates.addDeletedEntity(id);
-						if (!journey.hasMutations())
-							tripUpdates.addDeletedEntity(id);
-						continue; //Vehicle finished and garbage collected
 					}
 					FeedEntity vehiclePosition = vehiclePosition(id,journey,posinfo);
 					if (vehiclePosition != null){
