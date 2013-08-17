@@ -214,7 +214,7 @@ public class Journey {
 					if (lastTime == -1 || eta > lastTime){
 						lastTime = eta;
 					}else{
-						System.out.println(tripUpdate.build());
+						_log.trace("Non-sequential trip-update filterd {}",tripUpdate.build());
 						update.clearArrival();
 					}
 				}
