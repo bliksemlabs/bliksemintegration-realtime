@@ -1,6 +1,5 @@
 package nl.ovapi.bison.sax;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import lombok.Getter;

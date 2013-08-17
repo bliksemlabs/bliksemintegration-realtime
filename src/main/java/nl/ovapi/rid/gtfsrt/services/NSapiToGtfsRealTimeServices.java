@@ -17,7 +17,6 @@ import javax.inject.Singleton;
 
 import nl.ovapi.ZeroMQUtils;
 import nl.ovapi.rid.model.Journey;
-import nl.ovapi.rid.model.StopPoint;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.trein.model.AVT;
 
@@ -37,7 +36,6 @@ import com.google.transit.realtime.GtfsRealtime.EntitySelector;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.TranslatedString;
 import com.google.transit.realtime.GtfsRealtime.TranslatedString.Translation;
-import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 
 @Singleton
 public class NSapiToGtfsRealTimeServices {
