@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.Map;
 
 import lombok.Getter;
@@ -29,6 +30,7 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelations
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeEvent;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
+import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdateOrBuilder;
 import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
 @ToString()
 public class Journey {
@@ -80,7 +82,7 @@ public class Journey {
 		realizedArrivals = Maps.newHashMap();
 		realizedDepartures = Maps.newHashMap();
 	}
-	
+
 	public void clearKV6(){
 		posinfo = null;
 	}
@@ -196,6 +198,44 @@ public class Journey {
 		return null;
 	}
 
+	public TripUpdate.Builder filter(TripUpdate.Builder tripUpdate){
+		if (tripUpdate.getStopTimeUpdateCount() == 0)
+			return tripUpdate;
+		tripUpdate.getStopTimeUpdateOrBuilderList();
+		long lastTime = -1;
+		for (Iterator<StopTimeUpdate.Builder> iter = tripUpdate.getStopTimeUpdateBuilderList().iterator(); iter.hasNext();){
+			StopTimeUpdate.Builder update = iter.next();
+			if (update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.NO_DATA){
+				continue; //No stoptime updates
+			}
+			if (update.hasArrival()){
+				if (update.getArrivalOrBuilder().hasTime()){
+					long eta = 	update.getArrivalOrBuilder().getTime();
+					if (lastTime == -1 || eta > lastTime){
+						lastTime = eta;
+					}else{
+						System.out.println(tripUpdate.build());
+						update.clearArrival();
+					}
+				}
+			}
+			if (update.hasDeparture()){
+				if (update.getDepartureOrBuilder().hasTime()){
+					long etd = 	update.getDepartureOrBuilder().getTime();
+					if (lastTime == -1 || etd >= lastTime){
+						lastTime = etd;
+					}else{
+						update.clearArrival();
+					}
+				}
+			}
+			if (!update.hasArrival() && !update.hasDeparture()){
+				iter.remove();
+			}
+		}
+		return tripUpdate;
+	}
+
 	public TripUpdate.Builder updateTimes(KV6posinfo posinfo) {
 		boolean passed = posinfo.getMessagetype() != KV6posinfo.Type.DELAY;
 		int punctuality = Math
@@ -235,7 +275,7 @@ public class Journey {
 				}
 			}
 			this.posinfo = posinfo;
-			return tripUpdate;
+			return filter(tripUpdate);
 		default:
 			break;
 		}
@@ -340,7 +380,7 @@ public class Journey {
 		}
 		this.posinfo = posinfo;
 		if (tripUpdate.getStopTimeUpdateCount() > 0)
-			return tripUpdate;
+			return filter(tripUpdate);
 		else
 			return null;
 	}
