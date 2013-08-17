@@ -139,7 +139,7 @@ public class Journey {
 			}
 		}
 		//stopTimeEvent.setDelay(punctuality);
-		stopTimeEvent.setTime(getDepartureEpoch()+((tpt.getTotaldrivetime()+tpt.getStopwaittime()+punctuality)*1000));
+		stopTimeEvent.setTime(getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime()+punctuality);
 		return stopTimeEvent;
 	}
 
