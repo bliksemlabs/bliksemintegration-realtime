@@ -252,9 +252,9 @@ public class Journey {
 			tripUpdate.setVehicle(vehicleDesc);
 		switch (posinfo.getMessagetype()) {// These types do not contain // information regarding punctuality
 		case INIT:
+			realizedArrivals = Maps.newHashMap();
+			realizedDepartures = Maps.newHashMap();
 		case END:
-			this.posinfo = posinfo;
-			return null;
 		case OFFROUTE:
 			if (getPosinfo() != null && getPosinfo().getMessagetype() != Type.OFFROUTE)
 				return null; //We've already sent out NO_DATE
@@ -266,7 +266,7 @@ public class Journey {
 					continue;
 				if (recordedTimes != null){
 					tripUpdate.addStopTimeUpdate(recordedTimes);
-				}else{
+				}else if (posinfo.getMessagetype() == Type.OFFROUTE){
 					StopTimeUpdate.Builder noData = StopTimeUpdate.newBuilder();
 					noData.setStopSequence(pt.getPointorder());
 					noData.setStopId(pt.getPointref().toString());
