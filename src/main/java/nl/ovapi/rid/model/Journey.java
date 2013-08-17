@@ -105,7 +105,7 @@ public class Journey {
 
 	public TripDescriptor.Builder tripDescriptor(){
 		TripDescriptor.Builder tripDescriptor = TripDescriptor.newBuilder();
-		tripDescriptor.setStartDate(operatingDay);
+		tripDescriptor.setStartDate(operatingDay.replace("-", ""));
 		tripDescriptor.setTripId(id.toString());
 		tripDescriptor.setScheduleRelationship(isCanceled ? ScheduleRelationship.CANCELED : ScheduleRelationship.SCHEDULED);
 		return tripDescriptor;
