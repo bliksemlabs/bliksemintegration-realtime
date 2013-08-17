@@ -115,10 +115,7 @@ public class NSapiToGtfsRealTimeServices {
 			return null;
 		}
 		entitySelector.setStopId(stationId);
-		TripDescriptor.Builder tripDescriptor = TripDescriptor.newBuilder();
-		tripDescriptor.setTripId(j.getId().toString());
-		tripDescriptor.setStartDate(j.getOperatingDay());
-		entitySelector.setTrip(tripDescriptor);
+		entitySelector.setTrip(j.tripDescriptor());
 		return entitySelector;
 	}
 

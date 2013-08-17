@@ -286,13 +286,11 @@ public class BisonToGtfsRealtimeService {
 			if (position != null)
 				vehiclePosition.setPosition(position);
 		}
-		TripDescriptor.Builder tripDescriptor = TripDescriptor.newBuilder();
-		tripDescriptor.setStartDate(posinfo.getOperatingday());
-		tripDescriptor.setScheduleRelationship(
-				posinfo.getReinforcementnumber() == 0 ?
-						ScheduleRelationship.SCHEDULED :
-							ScheduleRelationship.ADDED);
-		vehiclePosition.setTrip(tripDescriptor);
+		TripDescriptor.Builder tripDescription = journey.tripDescriptor();
+		if (posinfo.getReinforcementnumber() > 0){
+			tripDescription.setScheduleRelationship(ScheduleRelationship.ADDED);
+		}
+		vehiclePosition.setTrip(tripDescription);
 		if (posinfo.getVehicleDescription() != null)
 			vehiclePosition.setVehicle(posinfo.getVehicleDescription());
 		vehiclePosition.setTimestamp(posinfo.getTimestamp());
