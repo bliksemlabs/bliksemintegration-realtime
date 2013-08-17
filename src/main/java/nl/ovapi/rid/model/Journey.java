@@ -272,6 +272,7 @@ public class Journey {
 					noData.setStopId(pt.getPointref().toString());
 					noData.setScheduleRelationship(StopTimeUpdate.ScheduleRelationship.NO_DATA);
 					tripUpdate.addStopTimeUpdate(noData);
+					break;
 				}
 			}
 			this.posinfo = posinfo;
