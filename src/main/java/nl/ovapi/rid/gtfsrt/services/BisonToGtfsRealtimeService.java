@@ -433,16 +433,12 @@ public class BisonToGtfsRealtimeService {
 					}
 					if (posinfo.getReinforcementnumber() == 0){ //Primary vehicle, BISON can currently not yet support schedules for reinforcments
 						try{
-							if (posinfo.getMessagetype() == Type.OFFROUTE){
-								tripUpdates.addDeletedEntity(id); //OFFROUTE can't predict time
-							}else{
-								TripUpdate.Builder tripUpdate = journey.update(posinfo);
-								if (tripUpdate != null){
-									FeedEntity.Builder tripEntity = FeedEntity.newBuilder();
-									tripEntity.setId(id);
-									tripEntity.setTripUpdate(tripUpdate); //Get update created from KV6
-									tripUpdates.addUpdatedEntity(tripEntity.build());
-								}
+							TripUpdate.Builder tripUpdate = journey.update(posinfo);
+							if (tripUpdate != null){
+								FeedEntity.Builder tripEntity = FeedEntity.newBuilder();
+								tripEntity.setId(id);
+								tripEntity.setTripUpdate(tripUpdate); //Get update created from KV6
+								tripUpdates.addUpdatedEntity(tripEntity.build());
 							}
 						}catch (StopNotFoundException e){
 							_log.error("Trip {} userstop {} not found", id,posinfo.getUserstopcode());
