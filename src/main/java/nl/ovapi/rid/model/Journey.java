@@ -221,7 +221,7 @@ public class Journey {
 			if (update.hasArrival()){
 				if (update.getArrivalOrBuilder().hasTime()){
 					long eta = 	update.getArrivalOrBuilder().getTime();
-					if (lastTime == -1 || eta > lastTime){
+					if (lastTime == -1 || eta >= lastTime){
 						lastTime = eta;
 					}else{
 						_log.trace("Non-sequential trip-update filterd {}",tripUpdate.build());
@@ -235,7 +235,7 @@ public class Journey {
 					if (lastTime == -1 || etd >= lastTime){
 						lastTime = etd;
 					}else{
-						update.clearArrival();
+						update.clearDeparture();
 					}
 				}
 			}
