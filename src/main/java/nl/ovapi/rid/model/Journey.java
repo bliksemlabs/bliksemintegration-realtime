@@ -309,6 +309,7 @@ public class Journey {
 							realizedArrivals.put(pt.getPointorder(), posinfo.getTimestamp());
 						if ((pt.isWaitpoint() || i == 0)	&& punctuality < 0)
 							punctuality = 0;
+						break;
 					case DEPARTURE:
 						if (RECORD_TIMES)
 							realizedDepartures.put(pt.getPointorder(), posinfo.getTimestamp());
