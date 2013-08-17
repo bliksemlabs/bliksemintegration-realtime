@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
@@ -147,7 +148,7 @@ public class Journey {
 		stopTimeEvent.setTime(time);
 		return stopTimeEvent;
 	}
-	
+
 	/**
 	 * @return POSIX time when journey end in seconds since January 1st 1970 00:00:00 UTC
 	 */
@@ -170,7 +171,7 @@ public class Journey {
 			return -1;
 		}
 	}
-	
+
 	/**
 	 * @return POSIX time when journey is scheduled to start in seconds since January 1st 1970 00:00:00 UTC
 	 */
@@ -213,8 +214,8 @@ public class Journey {
 			return tripUpdate;
 		tripUpdate.getStopTimeUpdateOrBuilderList();
 		long lastTime = -1;
-		for (Iterator<StopTimeUpdate.Builder> iter = tripUpdate.getStopTimeUpdateBuilderList().iterator(); iter.hasNext();){
-			StopTimeUpdate.Builder update = iter.next();
+		ArrayList<StopTimeUpdate.Builder> cleanUpdates = new ArrayList<StopTimeUpdate.Builder>();
+		for (StopTimeUpdate.Builder update : tripUpdate.getStopTimeUpdateBuilderList()){
 			if (update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.NO_DATA){
 				continue; //No stoptime updates
 			}
@@ -239,9 +240,13 @@ public class Journey {
 					}
 				}
 			}
-			if (!update.hasArrival() && !update.hasDeparture()){
-				iter.remove();
+			if (update.hasArrival() || update.hasDeparture()){
+				cleanUpdates.add(update);
 			}
+		}
+		tripUpdate.clearStopTimeUpdate();
+		for (StopTimeUpdate.Builder update: cleanUpdates){
+			tripUpdate.addStopTimeUpdate(update);
 		}
 		return tripUpdate;
 	}
@@ -286,7 +291,9 @@ public class Journey {
 				}
 			}
 			this.posinfo = posinfo;
-			return filter(tripUpdate);
+			tripUpdate = filter(tripUpdate);
+			if (tripUpdate.getStopTimeUpdateCount() > 0)
+				return tripUpdate;
 		default:
 			break;
 		}
@@ -391,8 +398,9 @@ public class Journey {
 			}
 		}
 		this.posinfo = posinfo;
+		tripUpdate = filter(tripUpdate);
 		if (tripUpdate.getStopTimeUpdateCount() > 0)
-			return filter(tripUpdate);
+			return tripUpdate;
 		else
 			return null;
 	}
