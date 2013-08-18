@@ -478,10 +478,13 @@ public class BisonToGtfsRealtimeService {
 						_log.info("KV17: journey {} not found",id);
 						continue; //Journey not found
 					}
-					FeedEntity.Builder tripUpdate = FeedEntity.newBuilder();
-					tripUpdate.setTripUpdate(journey.update(cvlinfos));
-					tripUpdate.setId(id);
-					tripUpdates.addUpdatedEntity(tripUpdate.build());
+					TripUpdate.Builder tripUpdate = journey.update(cvlinfos);
+					if (tripUpdate != null){
+						FeedEntity.Builder entity = FeedEntity.newBuilder();
+						entity.setTripUpdate(journey.update(cvlinfos));
+						entity.setId(id);
+						tripUpdates.addUpdatedEntity(entity.build());
+					}
 				}
 			}catch (Exception e){
 				_log.error("ProcessKV17Task",e);
