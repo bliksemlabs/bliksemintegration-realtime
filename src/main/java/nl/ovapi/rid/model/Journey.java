@@ -216,7 +216,8 @@ public class Journey {
 		long lastTime = -1;
 		ArrayList<StopTimeUpdate.Builder> cleanUpdates = new ArrayList<StopTimeUpdate.Builder>();
 		for (StopTimeUpdate.Builder update : tripUpdate.getStopTimeUpdateBuilderList()){
-			if (update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.NO_DATA){
+			if (update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.NO_DATA || 
+					update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED){
 				continue; //No stoptime updates
 			}
 			if (update.hasArrival()){
