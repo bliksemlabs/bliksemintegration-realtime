@@ -136,8 +136,8 @@ public class NSapiToGtfsRealTimeServices {
 			String jid = String.format("%s:IFF:%s",sdf.format(c.getTime()),a.getJourneynumber());
 			ArrayList<Journey> journeys = _ridService.getTrains(jid);
 			Alert.Builder alert = Alert.newBuilder();
-			_log.info("Train {} not found",jid);
 			if (journeys == null || journeys.size() == 0){
+				_log.info("Train {} not found",jid);
 				continue;
 			}else{
 				for (Journey j : journeys){
