@@ -172,25 +172,36 @@ public class BisonToGtfsRealtimeService {
 						translation.addTranslation(text);
 						alert.setHeaderText(translation);
 					}
-					for (String userstopcode : msg.getUserstopCodes()){
-						ArrayList<Long> stopIds = _ridService.getStopIds(msg.getDataOwnerCode(), userstopcode);
-						if (stopIds != null){
-							for (Long stopId : stopIds) {
-								if (msg.getLinePlanningNumbers().size() == 0){
-									EntitySelector.Builder selector = EntitySelector.newBuilder();
-									selector.setStopId(stopId.toString());
-									alert.addInformedEntity(selector);
-								}else{
-									for (String linePlanningNumber : msg.getLinePlanningNumbers()){
-										ArrayList<String> lineIds = _ridService.getLineIds(msg.getDataOwnerCode(), linePlanningNumber);
-										for (String lineId : lineIds){ //Restrict alert to linenumbers
-											EntitySelector.Builder selector = EntitySelector.newBuilder();
-											selector.setStopId(stopId.toString());
-											selector.setRouteId(lineId);
-											alert.addInformedEntity(selector);
+					if (msg.getUserstopCodes().size() > 0){
+						for (String userstopcode : msg.getUserstopCodes()){
+							ArrayList<Long> stopIds = _ridService.getStopIds(msg.getDataOwnerCode(), userstopcode);
+							if (stopIds != null){
+								for (Long stopId : stopIds) {
+									if (msg.getLinePlanningNumbers().size() == 0){
+										EntitySelector.Builder selector = EntitySelector.newBuilder();
+										selector.setStopId(stopId.toString());
+										alert.addInformedEntity(selector);
+									}else{
+										for (String linePlanningNumber : msg.getLinePlanningNumbers()){
+											ArrayList<String> lineIds = _ridService.getLineIds(msg.getDataOwnerCode(), linePlanningNumber);
+											for (String lineId : lineIds){ //Restrict alert to linenumbers
+												EntitySelector.Builder selector = EntitySelector.newBuilder();
+												selector.setStopId(stopId.toString());
+												selector.setRouteId(lineId);
+												alert.addInformedEntity(selector);
+											}
 										}
 									}
 								}
+							}
+						}
+					}else if (msg.getLinePlanningNumbers().size() > 0){
+						for (String linePlanningNumber : msg.getLinePlanningNumbers()){
+							ArrayList<String> lineIds = _ridService.getLineIds(msg.getDataOwnerCode(), linePlanningNumber);
+							for (String lineId : lineIds){ //Restrict alert to linenumbers
+								EntitySelector.Builder selector = EntitySelector.newBuilder();
+								selector.setRouteId(lineId);
+								alert.addInformedEntity(selector);
 							}
 						}
 					}
