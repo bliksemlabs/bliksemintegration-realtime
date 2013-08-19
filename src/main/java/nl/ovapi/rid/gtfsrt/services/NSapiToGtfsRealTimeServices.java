@@ -179,7 +179,9 @@ public class NSapiToGtfsRealTimeServices {
 		}else{
 			stations.put(id, alertIds);
 		}
-		_alertsSink.handleIncrementalUpdate(update);
+		if (update.getDeletedEntities().size() > 0 || update.getUpdatedEntities().size() > 0){
+			_alertsSink.handleIncrementalUpdate(update);
+		}
 	}
 
 	private class ReceiveTask implements Runnable {

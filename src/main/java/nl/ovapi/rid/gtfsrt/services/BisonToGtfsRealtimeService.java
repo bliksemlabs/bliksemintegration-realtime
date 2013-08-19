@@ -202,7 +202,8 @@ public class BisonToGtfsRealtimeService {
 					_log.error("Processing KV15 {}",msg,e);
 				}
 			}
-			_alertsSink.handleIncrementalUpdate(update);
+			if (update.getDeletedEntities().size() > 0 || update.getUpdatedEntities().size() > 0)
+				_alertsSink.handleIncrementalUpdate(update);
 		}
 	}
 
@@ -360,8 +361,10 @@ public class BisonToGtfsRealtimeService {
 				}
 			}
 			_log.info("GarbageCollector: {} vehicles cleaned, {} trips cleaned",vehiclesCleaned,tripsCleaned);
-			_vehiclePositionsSink.handleIncrementalUpdate(vehicleUpdates);
-			_tripUpdatesSink.handleIncrementalUpdate(tripUpdates);
+			if (vehicleUpdates.getDeletedEntities().size() > 0 || vehicleUpdates.getUpdatedEntities().size() > 0)
+				_vehiclePositionsSink.handleIncrementalUpdate(vehicleUpdates);
+			if (tripUpdates.getDeletedEntities().size() > 0 || tripUpdates.getUpdatedEntities().size() > 0)
+				_tripUpdatesSink.handleIncrementalUpdate(tripUpdates);
 		}
 	}
 
@@ -449,8 +452,10 @@ public class BisonToGtfsRealtimeService {
 					_log.error("Exception {}",posinfo,e);
 				}
 			}
-			_vehiclePositionsSink.handleIncrementalUpdate(vehicleUpdates);
-			_tripUpdatesSink.handleIncrementalUpdate(tripUpdates);
+			if (vehicleUpdates.getDeletedEntities().size() > 0 || vehicleUpdates.getUpdatedEntities().size() > 0)
+				_vehiclePositionsSink.handleIncrementalUpdate(vehicleUpdates);
+			if (tripUpdates.getDeletedEntities().size() > 0 || tripUpdates.getUpdatedEntities().size() > 0)
+				_tripUpdatesSink.handleIncrementalUpdate(tripUpdates);
 		}
 	}
 
@@ -489,7 +494,8 @@ public class BisonToGtfsRealtimeService {
 			}catch (Exception e){
 				_log.error("ProcessKV17Task",e);
 			}
-			_tripUpdatesSink.handleIncrementalUpdate(tripUpdates);
+			if (tripUpdates.getDeletedEntities().size() > 0 || tripUpdates.getUpdatedEntities().size() > 0)
+				_tripUpdatesSink.handleIncrementalUpdate(tripUpdates);
 		}
 	}
 
