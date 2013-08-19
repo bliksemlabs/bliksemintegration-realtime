@@ -129,13 +129,14 @@ public class NSapiToGtfsRealTimeServices {
 			FeedEntity.Builder entity = FeedEntity.newBuilder();
 			entity.setId(id+"/"+a.getJourneynumber());
 			Calendar c = Calendar.getInstance();
-			c.setTimeInMillis(a.getDeparturetime());
+			c.setTimeInMillis(a.getDeparturetime()*1000);
 			if (c.get(Calendar.HOUR_OF_DAY) < 4){
 				c.add(Calendar.DAY_OF_MONTH, -1);
 			}
 			String jid = String.format("%s:IFF:%s",sdf.format(c.getTime()),a.getJourneynumber());
 			ArrayList<Journey> journeys = _ridService.getTrains(jid);
 			Alert.Builder alert = Alert.newBuilder();
+			_log.info("Train {} not found",jid);
 			if (journeys == null || journeys.size() == 0){
 				continue;
 			}else{
@@ -208,7 +209,7 @@ public class NSapiToGtfsRealTimeServices {
 						ArrayList<AVT> avt = AVT.fromCtx(m[1]);
 						makeAlerts(m[0],avt);
 					}catch (Exception e){
-						e.printStackTrace();
+						_log.error("NS-API -> Alert",e);
 					}
 				}else{
 					subscriber.disconnect(nsApiPublishers[addressPointer]);
