@@ -2,44 +2,61 @@ package nl.ovapi.bison.sax;
 
 import nl.ovapi.bison.model.KV15message;
 import nl.ovapi.bison.model.SubEffectType;
+import nl.ovapi.bison.model.SubMeasureType;
+import nl.ovapi.bison.model.SubReasonType;
 
 import com.google.transit.realtime.GtfsRealtime.Alert.Cause;
 import com.google.transit.realtime.GtfsRealtime.Alert.Effect;
 
 public class BisonToGtfsUtils {
+	
+	private static boolean hasCause(KV15message msg){
+		return (msg.getSubReasonType() != null && msg.getSubReasonType() != SubReasonType.Onbekend)
+				|| msg.getReasonContent() != null && !msg.getReasonContent().equals(msg.getMessageContent());
+				
+	}
+	
+	private static boolean hasEffect(KV15message msg){
+		return (msg.getSubEffectType() != null && msg.getSubEffectType() != SubEffectType.UNKNOWN)
+			|| msg.getEffectContent() != null && !msg.getEffectContent().equals(msg.getMessageContent());
+	}
+	
+	private static boolean hasMeasure(KV15message msg){
+		return msg.getSubMeasureType() != null && msg.getSubMeasureType() != SubMeasureType.UNKNOWN || 
+				msg.getMeasureContent() != null && !msg.getMeasureContent().equals(msg.getMessageContent());
+	}
 
 	public static String text(KV15message msg){
 		StringBuilder sb = new StringBuilder();
-		if (msg.getSubReasonType() != null || (msg.getReasonContent() != null && msg.getReasonContent().equals(msg.getMessageContent()))){
+		if (hasCause(msg)){
 			sb.append("Oorzaak : ");
-			if (msg.getSubReasonType() != null){
+			if (msg.getSubReasonType() != null && msg.getSubReasonType() != SubReasonType.Onbekend){
 				sb.append(msg.getSubReasonType());
 				sb.append(" ");
 			}
-			if (msg.getReasonContent() != null && msg.getReasonContent().equals(msg.getMessageContent())){
+			if (msg.getReasonContent() != null && !msg.getReasonContent().equals(msg.getMessageContent())){
 				sb.append(msg.getReasonContent());
 			}
 			sb.append("\n");
 		}
-		if ((msg.getSubEffectType() != null && msg.getSubEffectType() != SubEffectType.UNKNOWN)
-				|| (msg.getEffectContent() != null && msg.getEffectContent().equals(msg.getMessageContent()))){
+		if (hasEffect(msg)){
 			sb.append("Effect : ");
 			if (msg.getSubEffectType() != null && msg.getSubEffectType() != SubEffectType.UNKNOWN){
 				sb.append(msg.getSubEffectType());
 				sb.append(" ");
 			}
-			if (msg.getEffectContent() != null && msg.getEffectContent().equals(msg.getMessageContent())){
+			if (msg.getEffectContent() != null && !msg.getEffectContent().equals(msg.getMessageContent())){
 				sb.append(msg.getEffectContent());
 			}
 			sb.append("\n");
 		}
-		if (msg.getSubMeasureType() != null || msg.getMeasureContent() != null){
+		if (hasMeasure(msg)){
 			sb.append("Maatregelen : ");
-			if (msg.getSubMeasureType() != null){
+			if (msg.getSubMeasureType() != null && msg.getSubMeasureType() != SubMeasureType.UNKNOWN){
 				sb.append(msg.getSubMeasureType());
 				sb.append(" ");
 			}
-			if (msg.getMeasureContent() != null){
+			if (msg.getMeasureContent() != null && !msg.getMeasureContent().equals(msg.getMessageContent())){
 				sb.append(msg.getMeasureContent());
 			}
 			sb.append("\n");
