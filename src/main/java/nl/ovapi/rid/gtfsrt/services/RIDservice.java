@@ -227,11 +227,11 @@ public class RIDservice {
 				//timedemandgroupref,pointorder,totaldrivetime,stopwaittime
 				String curRef = rs.getString(1).intern();
 				if (!curRef.equals(timedemandgroupref)){
+					timedemandgroupref = curRef;
 					if (timedemandgroups.containsKey(timedemandgroupref)){ //Interning
 						newTimedemandgroups.put(timedemandgroupref, timedemandgroups.get(timedemandgroupref));
 						continue;
 					}
-					timedemandgroupref = curRef;
 					group = new TimeDemandGroup();
 					newTimedemandgroups.put(timedemandgroupref, group);
 				}
@@ -250,11 +250,11 @@ public class RIDservice {
 			while (rs.next()) {
 				String curRef = rs.getString(1).intern();
 				if (!curRef.equals(journeypatternRef)){
+					journeypatternRef = curRef;
 					if (journeypatterns.containsKey(journeypatternRef)){ //Recycle
 						newJourneypatterns.put(journeypatternRef, journeypatterns.get(journeypatternRef));
 						continue;
 					}
-					journeypatternRef = curRef;
 					jp = new JourneyPattern();
 					newJourneypatterns.put(journeypatternRef, jp);
 				}
