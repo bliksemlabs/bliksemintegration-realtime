@@ -368,18 +368,18 @@ public class Journey {
 					tripUpdate.addStopTimeUpdate(stopTimeUpdate);
 				}
 				punctuality = stopTimeUpdate.getDeparture().getDelay();
-				if (punctuality > 0 && i != timedemandgroup.points.size() - 1) {
-					TimeDemandGroupPoint ntpt = timedemandgroup.points.get(i+1);
-					JourneyPatternPoint npt = journeypattern.getPoint(ntpt.pointorder);
-					int distanceToNext = npt.getDistancefromstartroute() - pt.getDistancefromstartroute();
-					int secondsToNext = ntpt.getTotaldrivetime() - (tpt.getTotaldrivetime()+tpt.getStopwaittime());
-					int speed = DEFAULT_SPEED;
-					if (distanceToNext > 10000) {
-						speed = LONGHAUL_SPEED;
-					} else if (distanceToNext < 1000) {
-						speed = SHORTHAUL_SPEED;
-					}
-					int fastest = distanceToNext / speed;
+				TimeDemandGroupPoint ntpt = timedemandgroup.points.get(i+1);
+				JourneyPatternPoint npt = journeypattern.getPoint(ntpt.pointorder);
+				int distanceToNext = npt.getDistancefromstartroute() - pt.getDistancefromstartroute();
+				int secondsToNext = ntpt.getTotaldrivetime() - (tpt.getTotaldrivetime()+tpt.getStopwaittime());
+				int speed = DEFAULT_SPEED;
+				if (distanceToNext > 10000) {
+					speed = LONGHAUL_SPEED;
+				} else if (distanceToNext < 1000) {
+					speed = SHORTHAUL_SPEED;
+				}
+				int fastest = distanceToNext / speed;
+				if ((punctuality > 0 || secondsToNext < fastest) && i != timedemandgroup.points.size() - 1) {
 					punctuality -= (secondsToNext - fastest);
 					if (punctuality < 0) {
 						punctuality = 0;
