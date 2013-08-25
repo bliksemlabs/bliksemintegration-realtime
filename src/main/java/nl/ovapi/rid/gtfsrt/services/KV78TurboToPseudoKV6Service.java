@@ -23,6 +23,8 @@ import nl.ovapi.bison.model.KV6posinfo;
 import nl.ovapi.bison.model.KV6posinfo.Type;
 import nl.ovapi.bison.model.TripStopStatus;
 import nl.ovapi.rid.gtfsrt.Utils;
+import nl.ovapi.rid.model.Journey;
+import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +42,7 @@ public class KV78TurboToPseudoKV6Service {
 	private static final Logger _log = LoggerFactory.getLogger(KV78TurboToPseudoKV6Service.class);
 	private ScheduledExecutorService _scheduler;
 	private final static String[] kv8turboPublishers = new String[] {"tcp://post.ndovloket.nl:7817"};
-
+	private RIDservice _ridService;
 	private HashMap<String,DatedPasstime> livePasstimes;
 
 	@Inject
@@ -105,8 +107,21 @@ public class KV78TurboToPseudoKV6Service {
 		}
 	}
 
+	@Inject
+	public void setRIDService(RIDservice ridService) {
+		_ridService = ridService;
+	}
+
 	private KV6posinfo makePseudoKV6(DatedPasstime pt){
 		String id = String.format("%s:%s:%s:%s", pt.getOperationDate(),pt.getDataOwnerCode(),pt.getLinePlanningNumber(),pt.getJourneyNumber());
+		Journey j = _ridService.getJourney(id);
+		if (j == null){
+			return null;
+		}
+		if (pt.getDataOwnerCode() == DataOwnerCode.GVB){
+			String stopCode = pt.getUserStopCode();
+			pt.setUserStopCode(stopCode.substring(0,stopCode.length()-1));
+		}
 		KV6posinfo posinfo = new KV6posinfo();
 		switch (pt.getTripStopStatus()){
 		case ARRIVED:
@@ -135,12 +150,7 @@ public class KV78TurboToPseudoKV6Service {
 		posinfo.setTimestamp(pt.getLastUpdateTimeStamp());
 		posinfo.setRd_x(-1);
 		posinfo.setRd_y(-1);
-		if (pt.getDataOwnerCode() == DataOwnerCode.GVB){
-			String stopCode = pt.getUserStopCode();
-			posinfo.setUserstopcode(stopCode.substring(0,stopCode.length()-1));
-		}else{
-			posinfo.setUserstopcode(pt.getUserStopCode());
-		}
+		setUserStopCode(posinfo,pt,j);
 		posinfo.setDataownercode(pt.getDataOwnerCode());
 		posinfo.setLineplanningnumber(pt.getLinePlanningNumber());
 		posinfo.setJourneynumber(pt.getJourneyNumber());
@@ -149,6 +159,40 @@ public class KV78TurboToPseudoKV6Service {
 		posinfo.setNumberofcoaches(posinfo.getNumberofcoaches());
 		posinfo.setPassagesequencenumber(0);
 		return posinfo;
+	}
+
+	private void setUserStopCode(KV6posinfo posinfo, DatedPasstime pt, Journey j){
+		switch (pt.getTripStopStatus()){
+		case ARRIVED:
+		case PASSED:
+			posinfo.setUserstopcode(pt.getUserStopCode());
+			break;
+		case DRIVING:
+			JourneyPatternPoint jpLast = null;
+			if (pt.getJourneyStopType() == JourneyStopType.LAST){
+				posinfo.setUserstopcode(pt.getUserStopCode());
+			}else{
+				for (int i = 0; i < j.getJourneypattern().points.size(); i++){
+					JourneyPatternPoint jp = j.getJourneypattern().points.get(i);
+					if (jp.getOperatorpointref().equals(pt.getUserStopCode())){
+						if (jpLast == null){
+							posinfo.setUserstopcode(jp.getOperatorpointref());
+						}else{
+							posinfo.setUserstopcode(jpLast.getOperatorpointref());
+						}
+					}
+					jpLast = jp;
+				}
+			}
+			break;
+		case OFFROUTE:
+		case PLANNED:
+		case CANCEL:
+		case UNKNOWN:
+		default:
+			_log.info("Unexpected TripStopStatus {}",pt);
+			break;
+		}
 	}
 
 	private class ReceiveTask implements Runnable {
@@ -173,7 +217,8 @@ public class KV78TurboToPseudoKV6Service {
 					try {
 						String[] m = ZeroMQUtils.gunzipMultifameZMsg(ZMsg.recvMsg(subscriber));
 						m = ZeroMQUtils.gunzipMultifameZMsg(ZMsg.recvMsg(subscriber));
-						HashMap<String,DatedPasstime> passtimes = new HashMap<String,DatedPasstime>();
+						HashMap<String,DatedPasstime> passtimesFuture = new HashMap<String,DatedPasstime>();
+						HashMap<String,DatedPasstime> passtimesPassed = new HashMap<String,DatedPasstime>();
 						for (DatedPasstime pt : DatedPasstime.fromCtx(m[1])){
 							if (pt.getJourneyStopType() == JourneyStopType.INFOPOINT)
 								continue;
@@ -186,13 +231,15 @@ public class KV78TurboToPseudoKV6Service {
 								continue;
 							}
 							String id = String.format("%s:%s:%s:%s", pt.getOperationDate(),pt.getDataOwnerCode(),pt.getLinePlanningNumber(),pt.getJourneyNumber());
-							if (!passtimes.containsKey(id) || pt.getUserStopOrderNumber() < passtimes.get(id).getUserStopOrderNumber()){
-								passtimes.put(id, pt);
+							if (pt.getTripStopStatus() == TripStopStatus.PASSED){
+								passtimesPassed.put(id, pt);
+							}else if (!passtimesFuture.containsKey(id) || pt.getUserStopOrderNumber() < passtimesFuture.get(id).getUserStopOrderNumber()){
+								passtimesFuture.put(id, pt);
 							}
 						}
 						ArrayList<KV6posinfo> posinfos = new ArrayList<KV6posinfo>();
 						ArrayList<String> removeIds = new ArrayList<String>();
-						for (DatedPasstime pt : passtimes.values()){
+						for (DatedPasstime pt : passtimesFuture.values()){
 							String id = String.format("%s:%s:%s:%s", pt.getOperationDate(),pt.getDataOwnerCode(),pt.getLinePlanningNumber(),pt.getJourneyNumber());
 							if (pt.getTripStopStatus() == TripStopStatus.UNKNOWN){
 								if (livePasstimes.containsKey(id)){
