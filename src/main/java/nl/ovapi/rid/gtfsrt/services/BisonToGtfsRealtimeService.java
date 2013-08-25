@@ -84,7 +84,7 @@ public class BisonToGtfsRealtimeService {
 	private static final Logger _log = LoggerFactory.getLogger(BisonToGtfsRealtimeService.class);
 	private final static int GARBAGE_COLLECTOR_INTERVAL_SECONDS = 60;
 	private final static int POSINFO_MAX_AGE_SECONDS = 120;
-	private final static int TRIPUPDATE_EXPIRATION_HOURS = 6;
+	private final static int TRIPUPDATE_EXPIRATION_HOURS = 3;
 
 	private GtfsRealtimeSource _tripUpdatesSource;
 	private GtfsRealtimeSource _vehiclePositionsSource;
