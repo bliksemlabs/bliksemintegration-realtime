@@ -234,6 +234,8 @@ public class RIDservice {
 					}
 					group = new TimeDemandGroup();
 					newTimedemandgroups.put(timedemandgroupref, group);
+				}else if (group == null){
+					continue;
 				}
 				TimeDemandGroupPoint point = new TimeDemandGroup.TimeDemandGroupPoint();
 				point.setPointorder(rs.getInt(2));
@@ -257,6 +259,8 @@ public class RIDservice {
 					}
 					jp = new JourneyPattern();
 					newJourneypatterns.put(journeypatternRef, jp);
+				}else if (jp == null){
+					continue;
 				}
 				JourneyPatternPoint point = new JourneyPattern.JourneyPatternPoint();
 				point.setPointorder(rs.getInt(2));
