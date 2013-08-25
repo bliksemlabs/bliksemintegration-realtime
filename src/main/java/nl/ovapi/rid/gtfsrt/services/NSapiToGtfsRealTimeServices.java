@@ -173,8 +173,15 @@ public class NSapiToGtfsRealTimeServices {
 		if (stations.containsKey(id)){
 			ArrayList<String> oldAlertIds = stations.get(id);
 			for (String oldId : oldAlertIds){
-				if (!alertIds.contains(oldId)){
+				boolean contains = false;
+				for (String alertId : alertIds){
+					if (alertId.equals(oldId)){
+						contains = true;
+					}
+				}
+				if (!contains){
 					update.addDeletedEntity(oldId);
+					continue;
 				}
 			}
 		}else{
