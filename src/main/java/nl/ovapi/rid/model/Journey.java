@@ -220,6 +220,17 @@ public class Journey {
 					update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED){
 				continue; //No stoptime updates
 			}
+			if (update.hasArrival() && update.hasDeparture()){
+				if (update.getArrival().hasDelay() && update.getDeparture().hasDelay()){
+					if (update.getArrival().getDelay() == update.getDeparture().getDelay()){
+						update.clearDeparture();
+					}
+				}else if (update.getArrival().hasTime() && update.getDeparture().hasTime()){
+					if (update.getArrival().getTime() == update.getDeparture().getTime()){
+						update.clearDeparture();
+					}
+				}
+			}
 			if (update.hasArrival()){
 				if (update.getArrivalOrBuilder().hasTime()){
 					long eta = 	update.getArrivalOrBuilder().getTime();
