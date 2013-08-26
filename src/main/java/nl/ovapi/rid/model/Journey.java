@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -91,11 +92,11 @@ public class Journey {
 	private static final boolean RECORD_TIMES = true;
 
 	private static final int PUNCTUALITY_FLOOR = 15; // seconds
-	private static final int DEFAULT_SPEED = (int) (80 / 3.6); // meters per
+	private static final int DEFAULT_SPEED = (int) (75 / 3.6); // meters per
 	// seconds
-	private static final int LONGHAUL_SPEED = (int) (100 / 3.6); // meters per
+	private static final int LONGHAUL_SPEED = (int) (95 / 3.6); // meters per
 	// seconds
-	private static final int SHORTHAUL_SPEED = (int) (60 / 3.6); // meters per
+	private static final int SHORTHAUL_SPEED = (int) (45 / 3.6); // meters per
 	// seconds
 
 	private static final int MIN_PUNCTUALITY = -300; // Minimum allowed
@@ -138,7 +139,7 @@ public class Journey {
 				}
 			}
 		}
-		//stopTimeEvent.setDelay(punctuality);
+		stopTimeEvent.setDelay(punctuality);
 		stopTimeEvent.setTime(getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime()+punctuality);
 		return stopTimeEvent;
 	}
@@ -155,7 +156,7 @@ public class Journey {
 
 	public long getEndEpoch(){
 		try {
-			Calendar c = Calendar.getInstance();
+			Calendar c = Calendar.getInstance(TimeZone.getDefault());
 			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(getOperatingDay()));
 			c.set(Calendar.HOUR, 0);
 			c.set(Calendar.MINUTE, 0);
@@ -178,7 +179,7 @@ public class Journey {
 
 	public long getDepartureEpoch(){
 		try {
-			Calendar c = Calendar.getInstance();
+			Calendar c = Calendar.getInstance(TimeZone.getDefault());
 			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(getOperatingDay()));
 			c.set(Calendar.HOUR, 0);
 			c.set(Calendar.MINUTE, 0);
@@ -195,10 +196,23 @@ public class Journey {
 		if (!RECORD_TIMES)
 			return null;
 		StopTimeUpdate.Builder stopTimeUpdate = StopTimeUpdate.newBuilder();
+		boolean stopcanceled = isCanceled;
+		if (mutations.containsKey(pt.getPointorder())){ // Check if mutation exists with cancel
+			for (Mutation m : mutations.get(pt.getPointorder())){
+				System.out.println(m.getMutationtype());
+				if (m.getMutationtype() == MutationType.SHORTEN){
+					stopcanceled = true;
+				}
+			}
+		}
 		stopTimeUpdate.setStopSequence(pt.getPointorder());
 		stopTimeUpdate.setStopId(pt.getPointref().toString());
 		if (!pt.isScheduled())
 			return null; // Dummy point
+		if (stopcanceled){
+			stopTimeUpdate.setScheduleRelationship(StopTimeUpdate.ScheduleRelationship.SKIPPED);
+			return stopTimeUpdate;
+		}
 		if (realizedArrivals.containsKey(pt.getPointorder()))
 			stopTimeUpdate.setArrival(stopTimeEventArrival(pt,realizedArrivals.get(pt.getPointorder())));
 		if (realizedDepartures.containsKey(pt.getPointorder()))
@@ -328,7 +342,7 @@ public class Journey {
 							realizedArrivals.put(pt.getPointorder(), posinfo.getTimestamp());
 						long targetArrivalTime = getDepartureEpoch()+tpt.getTotaldrivetime();
 						int newPunctuality = (int)(posinfo.getTimestamp()-targetArrivalTime);
-						if (newPunctuality > 0 && newPunctuality - punctuality < 600){
+						if (newPunctuality > -60 && newPunctuality - punctuality < 600){
 							punctuality = newPunctuality;
 						}
 						if ((pt.isWaitpoint() || i == 0)	&& punctuality < 0)
@@ -345,7 +359,7 @@ public class Journey {
 							punctuality = 0;
 						long targetDepartureTime = getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
 						newPunctuality = (int)(posinfo.getTimestamp()-targetDepartureTime);
-						if (newPunctuality > 0 && newPunctuality - punctuality < 600){
+						if (newPunctuality > -30 && newPunctuality - punctuality < 600){
 							punctuality = newPunctuality;
 						}
 
@@ -528,15 +542,17 @@ public class Journey {
 		}
 		int posinfoAge = (posinfo == null) ? Integer.MAX_VALUE : 
 			(int)(Utils.currentTimeSecs()-posinfo.getTimestamp());
+		if (timestamp == 0)
+			timestamp = Utils.currentTimeSecs();
 		if (posinfo != null && posinfoAge < 120){
 			TripUpdate.Builder timeUpdate = updateTimes(posinfo);
-			timeUpdate.setTimestamp(cvlinfos.get(0).getTimestamp());
+			timeUpdate.setTimestamp(timestamp);
 			return timeUpdate;
 		}else{
 			KV6posinfo posinfo = new KV6posinfo();
 			posinfo.setMessagetype(Type.DELAY); //Fake KV6posinfo to get things moving
 			posinfo.setPunctuality(0);
-			posinfo.setTimestamp(cvlinfos.get(0).getTimestamp());
+			posinfo.setTimestamp(timestamp);
 			return updateTimes(posinfo);
 		}
 	}
