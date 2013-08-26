@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -220,6 +221,7 @@ public class BisonToGtfsRealtimeService {
 
 	@PostConstruct
 	public void start() {
+		TimeZone.setDefault(TimeZone.getTimeZone("Europe/Amsterdam"));
 		_executor = Executors.newCachedThreadPool();
 		_scheduler = Executors.newScheduledThreadPool(5);
 		_scheduler.scheduleAtFixedRate(new GarbageCollectorTask(), 60, GARBAGE_COLLECTOR_INTERVAL_SECONDS, TimeUnit.SECONDS);
@@ -361,7 +363,7 @@ public class BisonToGtfsRealtimeService {
 							tripUpdates.addDeletedEntity(f.getId());
 							_log.trace("Garbage cleaned -> Journey Null {}",f.getId());
 							tripsCleaned++;
-						}else if (j.getEndEpoch() < (Utils.currentTimeSecs()+TRIPUPDATE_EXPIRATION_HOURS*60*60)){ //
+						}else if (j.getEndEpoch() < (Utils.currentTimeSecs()-TRIPUPDATE_EXPIRATION_HOURS*60*60)){ //
 							tripUpdates.addDeletedEntity(f.getId());
 							_log.trace("Garbage cleaned {}",f.getId());
 							tripsCleaned++;
