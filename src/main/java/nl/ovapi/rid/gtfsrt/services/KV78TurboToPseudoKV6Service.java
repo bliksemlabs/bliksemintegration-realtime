@@ -114,6 +114,14 @@ public class KV78TurboToPseudoKV6Service {
 
 	private KV6posinfo makePseudoKV6(DatedPasstime pt){
 		String id = String.format("%s:%s:%s:%s", pt.getOperationDate(),pt.getDataOwnerCode(),pt.getLinePlanningNumber(),pt.getJourneyNumber());
+		if (pt.getDataOwnerCode() == DataOwnerCode.GVB){
+			String newId = _ridService.getGVBdeltaId(id);
+			if (newId != null){
+				id = newId;
+			}else{
+				_log.info("GVB delta ID not found {}",id);
+			}
+		}
 		Journey j = _ridService.getJourney(id);
 		if (j == null){
 			return null;
@@ -256,7 +264,7 @@ public class KV78TurboToPseudoKV6Service {
 						_bisonToGtfsRealtimeService.process(posinfos);
 						_bisonToGtfsRealtimeService.remove(removeIds);
 					} catch (Exception e) {
-						e.printStackTrace();
+						_log.error("Error in KV78turbo processing",e);
 					}
 				}else{
 					subscriber.disconnect(kv8turboPublishers[addressPointer]);
