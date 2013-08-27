@@ -306,7 +306,7 @@ public class Journey {
 			realizedDepartures = Maps.newHashMap();
 		case END:
 		case OFFROUTE:
-			if (getPosinfo() != null && getPosinfo().getMessagetype() != Type.OFFROUTE)
+			if (getPosinfo() != null && !hasMutations() && getPosinfo().getMessagetype() != Type.OFFROUTE)
 				return null; //We've already sent out NO_DATE
 			for (int i = 0; i < timedemandgroup.points.size(); i++) {
 				TimeDemandGroupPoint tpt = timedemandgroup.points.get(i);
@@ -322,7 +322,8 @@ public class Journey {
 					noData.setStopId(pt.getPointref().toString());
 					noData.setScheduleRelationship(StopTimeUpdate.ScheduleRelationship.NO_DATA);
 					tripUpdate.addStopTimeUpdate(noData);
-					break;
+					if (!hasMutations())
+						break;
 				}
 			}
 			this.posinfo = posinfo;
