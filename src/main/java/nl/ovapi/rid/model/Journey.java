@@ -502,7 +502,8 @@ public class Journey {
 		if (pst == null) {
 			throw new StopNotFoundException(m.toString());
 		}
-		mutations.put(pst.getPointorder(), new ArrayList<Mutation>());
+		if (!mutations.containsKey(pst.getPointorder()))
+			mutations.put(pst.getPointorder(), new ArrayList<Mutation>());
 		switch (m.getMutationtype()) {
 		case CHANGEDESTINATION:
 			break;
