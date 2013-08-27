@@ -231,6 +231,12 @@ public class Journey {
 		for (StopTimeUpdate.Builder update : tripUpdate.getStopTimeUpdateBuilderList()){
 			if (update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.NO_DATA || 
 					update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED){
+				if (update.hasArrival()){
+					update.clearArrival();
+				}
+				if (update.hasDeparture()){
+					update.clearDeparture();
+				}
 				cleanUpdates.add(update); //No data
 			}
 			if (update.hasArrival() && update.hasDeparture()){
