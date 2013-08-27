@@ -1,0 +1,22 @@
+<VV_TM_PUSH xmlns="http://bison.connekt.nl//kv17/msg">
+  <SubscriberID>OVapi</SubscriberID>
+  <Version>BISON 8.1.0.0</Version>
+  <DossierName>KV17cvlinfo</DossierName>
+  <Timestamp>2013-08-06T17:56:36+02:00</Timestamp>
+  <KV17cvlinfo>
+    <KV17JOURNEY>
+        <dataownercode>QBUZZ</dataownercode>
+        <lineplanningnumber>g005</lineplanningnumber>
+        <operatingday>2013-08-27</operatingday>
+        <journeynumber>1034</journeynumber>
+        <reinforcementnumber>0</reinforcementnumber>
+    </KV17JOURNEY>
+    <KV17MUTATEJOURNEY>
+      <timestamp>2013-08-06T17:56:31+02:00</timestamp>
+      <CANCEL>
+        <advicetype>1</advicetype>
+        <subadvicetype>0</subadvicetype>
+      </CANCEL>
+    </KV17MUTATEJOURNEY>
+  </KV17cvlinfo>
+</VV_TM_PUSH>
