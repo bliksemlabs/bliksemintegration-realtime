@@ -15,6 +15,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import nl.ovapi.bison.model.KV17cvlinfo;
 import nl.ovapi.bison.model.KV17cvlinfo.Mutation;
 
 import org.junit.Test;
@@ -30,6 +31,22 @@ public class KV17test {
 		test1();
 		test2();
 		test3();
+		test4();
+	}
+	
+	public void test4() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException{
+		SAXParserFactory spf = SAXParserFactory.newInstance();
+		spf.setNamespaceAware(true);
+		SAXParser sp = spf.newSAXParser();
+		XMLReader xr = sp.getXMLReader();
+		KV17SAXHandler handler = new KV17SAXHandler();
+		xr.setContentHandler(handler);
+		URL url = this.getClass().getResource("kv17-4.xml");
+		File f = new File(url.getFile());
+		xr.parse(new InputSource(new FileInputStream(f)));
+		for (KV17cvlinfo cvlinfo: handler.getCvlinfos()){
+			System.out.println(cvlinfo);
+		}
 	}
 
 	public void test1() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException{
@@ -87,7 +104,5 @@ public class KV17test {
 	    String msg = stringBuilder.toString();
 		InputSource s = new InputSource(new StringReader(msg));
 		xr.parse(s);
-		System.out.println(msg);
-		System.out.println(handler.getCvlinfos().size());
 	}
 }
