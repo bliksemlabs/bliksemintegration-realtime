@@ -23,7 +23,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
-public class KV17test {
+public class KV17Test {
 
 	@Test
 	public void test() throws ParserConfigurationException, SAXException,
@@ -44,9 +44,6 @@ public class KV17test {
 		URL url = this.getClass().getResource("kv17-4.xml");
 		File f = new File(url.getFile());
 		xr.parse(new InputSource(new FileInputStream(f)));
-		for (KV17cvlinfo cvlinfo: handler.getCvlinfos()){
-			System.out.println(cvlinfo);
-		}
 	}
 
 	public void test1() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException{

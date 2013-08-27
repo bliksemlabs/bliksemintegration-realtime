@@ -20,7 +20,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
-public class KV15test {
+public class KV15Test {
 
 	@Test
 	public void test() throws FileNotFoundException, ParserConfigurationException, SAXException, IOException {
@@ -42,9 +42,6 @@ public class KV15test {
 		assertEquals(messages.size(),1);
 		assertFalse(messages.get(0).getIsDelete().booleanValue());
 		assertNotNull(messages.get(0).getMessageContent());
-		for (KV15message m : messages){
-			System.out.println(m);
-		}
 	}
 	
 	public void test1()  throws ParserConfigurationException, SAXException, FileNotFoundException, IOException{
@@ -62,8 +59,5 @@ public class KV15test {
 		assertTrue(messages.get(0).getIsDelete().booleanValue());
 		assertFalse(messages.get(1).getIsDelete().booleanValue());
 		assertNotNull(messages.get(1).getMessageContent());
-		for (KV15message m : messages){
-			System.out.println(m);
-		}
 	}
 }

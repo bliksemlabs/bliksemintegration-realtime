@@ -246,7 +246,6 @@ public class KV17Test {
 			cvlinfos = map.get(id);
 			TripUpdate.Builder tripUpdate = j.update(cvlinfos);
 			assertTrue(j.hasMutations());
-			System.out.println(tripUpdate.build());
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(1).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(2).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
