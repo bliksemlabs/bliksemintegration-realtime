@@ -199,7 +199,6 @@ public class Journey {
 		boolean stopcanceled = isCanceled;
 		if (mutations.containsKey(pt.getPointorder())){ // Check if mutation exists with cancel
 			for (Mutation m : mutations.get(pt.getPointorder())){
-				System.out.println(m.getMutationtype());
 				if (m.getMutationtype() == MutationType.SHORTEN){
 					stopcanceled = true;
 				}
@@ -232,7 +231,7 @@ public class Journey {
 		for (StopTimeUpdate.Builder update : tripUpdate.getStopTimeUpdateBuilderList()){
 			if (update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.NO_DATA || 
 					update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED){
-				continue; //No stoptime updates
+				cleanUpdates.add(update); //No data
 			}
 			if (update.hasArrival() && update.hasDeparture()){
 				if (update.getArrival().hasDelay() && update.getDeparture().hasDelay()){
@@ -257,6 +256,9 @@ public class Journey {
 				}
 			}
 			if (update.hasDeparture()){
+				if (update.getDepartureOrBuilder().hasDelay()){
+					update.getDepartureBuilder().clearDelay();
+				}
 				if (update.getDepartureOrBuilder().hasTime()){
 					long etd = 	update.getDepartureOrBuilder().getTime();
 					if (etd >= lastTime){
@@ -265,6 +267,7 @@ public class Journey {
 						update.clearDeparture();
 					}
 				}
+
 			}
 			if (update.hasArrival() || update.hasDeparture()){
 				cleanUpdates.add(update);
@@ -497,19 +500,13 @@ public class Journey {
 		case CHANGEDESTINATION:
 			break;
 		case CHANGEPASSTIMES:
-			mutations.get(pst.getPointorder()).add(m);
-			break;
 		case LAG:
-			mutations.get(pst.getPointorder()).add(m);
-			break;
-		case MUTATIONMESSAGE:
-			mutations.get(pst.getPointorder()).add(m);
-			break;
-		case SHORTEN:
-			mutations.get(pst.getPointorder()).add(m);
-			break;
 		case RECOVER:
 		case CANCEL:
+			mutations.get(pst.getPointorder()).add(m);
+			mutations.get(pst.getPointorder()).add(m);
+			mutations.get(pst.getPointorder()).add(m);
+			mutations.get(pst.getPointorder()).add(m);
 		default:
 			break;
 		}
@@ -522,6 +519,7 @@ public class Journey {
 		}
 		mutations.clear();
 		for (KV17cvlinfo cvlinfo : cvlinfos) {
+			System.out.println(cvlinfo);
 			for (Mutation mut : cvlinfo.getMutations()) {
 				try {
 					timestamp = Math.max(timestamp, cvlinfo.getTimestamp());
@@ -547,12 +545,14 @@ public class Journey {
 		if (posinfo != null && posinfoAge < 120){
 			TripUpdate.Builder timeUpdate = updateTimes(posinfo);
 			timeUpdate.setTimestamp(timestamp);
+			System.out.println(timeUpdate.build());
 			return timeUpdate;
 		}else{
 			KV6posinfo posinfo = new KV6posinfo();
 			posinfo.setMessagetype(Type.DELAY); //Fake KV6posinfo to get things moving
 			posinfo.setPunctuality(0);
 			posinfo.setTimestamp(timestamp);
+			System.out.println(updateTimes(posinfo).build());
 			return updateTimes(posinfo);
 		}
 	}
