@@ -382,8 +382,6 @@ public class Journey {
 					tripUpdate.addStopTimeUpdate(recorded);
 				}
 			} else if (!passed) { //Stops not visted by the vehicle
-				if (!pt.isScheduled())
-					continue;//Dummy point
 				StopTimeUpdate.Builder stopTimeUpdate = StopTimeUpdate.newBuilder();
 				stopTimeUpdate.setStopSequence(tpt.getPointorder());
 				stopTimeUpdate.setStopId(pt.getPointref().toString());
@@ -413,7 +411,9 @@ public class Journey {
 					if (punctuality == 0){
 						nullterminated = true;
 					}
-					tripUpdate.addStopTimeUpdate(stopTimeUpdate);
+					if (pt.isScheduled()){
+						tripUpdate.addStopTimeUpdate(stopTimeUpdate);
+					}
 				}
 				punctuality = stopTimeUpdate.getDeparture().getDelay();
 				if (i+1 < timedemandgroup.points.size()){
