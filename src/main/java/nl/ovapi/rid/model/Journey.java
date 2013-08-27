@@ -400,9 +400,9 @@ public class Journey {
 								: StopTimeUpdate.ScheduleRelationship.SCHEDULED);
 				if (pt.isWaitpoint() && punctuality < 0)
 					punctuality = 0;
-				if (tpt.getStopwaittime() != 0) {
+				if (tpt.getStopwaittime() != 0 && punctuality > 0) { //Minimize delay by cutting into dwells
 					int stopwaittime = tpt.getStopwaittime();
-					if (stopwaittime > 20 && punctuality > 0) {
+					if (stopwaittime > 20 ) {
 						punctuality -= Math.max(0, stopwaittime - 20);
 						punctuality = Math.max(0, punctuality);
 					}
@@ -506,16 +506,16 @@ public class Journey {
 			mutations.put(pst.getPointorder(), new ArrayList<Mutation>());
 		switch (m.getMutationtype()) {
 		case CHANGEDESTINATION:
-			break;
+			break; //Currently unsupported
 		case CHANGEPASSTIMES:
 		case LAG:
 		case RECOVER:
 		case CANCEL:
+		case SHORTEN:
 			mutations.get(pst.getPointorder()).add(m);
-			mutations.get(pst.getPointorder()).add(m);
-			mutations.get(pst.getPointorder()).add(m);
-			mutations.get(pst.getPointorder()).add(m);
+			break;
 		default:
+			_log.info("Unknown mutationtype {}",m);
 			break;
 		}
 	}
@@ -527,19 +527,16 @@ public class Journey {
 		}
 		mutations.clear();
 		for (KV17cvlinfo cvlinfo : cvlinfos) {
-			System.out.println(cvlinfo);
 			for (Mutation mut : cvlinfo.getMutations()) {
 				try {
 					timestamp = Math.max(timestamp, cvlinfo.getTimestamp());
 					switch (mut.getMessagetype()) {
 					case KV17MUTATEJOURNEY:
 						parseMutateJourney(cvlinfo.getTimestamp(), mut);
-						break;
+						continue;
 					case KV17MUTATEJOURNEYSTOP:
 						parseMutateJourneyStop(cvlinfo.getTimestamp(), mut);
-						break;
-					default:
-						break;
+						continue;
 					}
 				} catch (Exception e) {
 					_log.error("Error applying KV17",e);
@@ -553,14 +550,12 @@ public class Journey {
 		if (posinfo != null && posinfoAge < 120){
 			TripUpdate.Builder timeUpdate = updateTimes(posinfo);
 			timeUpdate.setTimestamp(timestamp);
-			System.out.println(timeUpdate.build());
 			return timeUpdate;
 		}else{
 			KV6posinfo posinfo = new KV6posinfo();
 			posinfo.setMessagetype(Type.DELAY); //Fake KV6posinfo to get things moving
 			posinfo.setPunctuality(0);
 			posinfo.setTimestamp(timestamp);
-			System.out.println(updateTimes(posinfo).build());
 			return updateTimes(posinfo);
 		}
 	}
