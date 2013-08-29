@@ -40,6 +40,7 @@ import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.Journey;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.StopPoint;
+import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
 
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.Alerts;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripUpdates;
@@ -255,8 +256,13 @@ public class BisonToGtfsRealtimeService {
 		VehiclePosition.Builder vehiclePosition = VehiclePosition.newBuilder();
 		switch (posinfo.getMessagetype()){
 		case END:
-		case DELAY:
 			return null;
+		case DELAY:
+			TimeDemandGroupPoint firstTimePoint = journey.getTimedemandgroup().points.get(0);
+			JourneyPatternPoint firstPatternPoint = journey.getJourneypattern().getPoint(firstTimePoint.getPointorder());
+			vehiclePosition.setStopId(firstPatternPoint.getPointref().toString());
+			vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
+			break;
 		case INIT:
 		case ARRIVAL:
 		case ONSTOP:
