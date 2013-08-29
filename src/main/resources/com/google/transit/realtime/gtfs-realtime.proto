@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc
+// Copyright 2010 Google Inc
 //
 // The content of this file is licensed under the Creative Commons Attribution
 // 3.0 License.
@@ -10,10 +10,12 @@
 // operating, important delays etc), location of their vehicles and expected
 // arrival times.
 //
-// This protocol is published at:
-//   http://developers.google.com/transit/gtfs-realtime/
+// This protocol is published on http://code.google.com/transit/realtime/ .
 
 syntax = "proto2";
+
+//option cc_api_version = 2;
+//option py_api_version = 1;
 
 option java_package = "com.google.transit.realtime";
 package transit_realtime;
@@ -86,6 +88,11 @@ message FeedEntity {
   optional TripUpdate trip_update = 3;
   optional VehiclePosition vehicle = 4;
   optional Alert alert = 5;
+  
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS-realtime specification in order to add and evaluate new features and
+  // modifications to the spec.
+  extensions 1000 to 1999;
 }
 
 //
@@ -232,7 +239,7 @@ message TripUpdate {
   // - stop_sequences 8,9 have delay of 1 min.
   // - stop_sequences 10,... have unknown delay.
   repeated StopTimeUpdate stop_time_update = 2;
-
+  
   // Moment at which the vehicle's real-time progress was measured.  In POSIX
   // time (i.e., the number of seconds since January 1st 1970 00:00:00 UTC).
   optional uint64 timestamp = 4;
