@@ -262,6 +262,7 @@ public class BisonToGtfsRealtimeService {
 			JourneyPatternPoint firstPatternPoint = journey.getJourneypattern().getPoint(firstTimePoint.getPointorder());
 			vehiclePosition.setStopId(firstPatternPoint.getPointref().toString());
 			vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
+			vehiclePosition.setCurrentStopSequence(firstTimePoint.getPointorder());
 			break;
 		case INIT:
 		case ARRIVAL:
@@ -269,6 +270,7 @@ public class BisonToGtfsRealtimeService {
 			for (JourneyPatternPoint point : journey.getJourneypattern().points){
 				if (point.getOperatorpointref().equals(posinfo.getUserstopcode())){
 					vehiclePosition.setStopId(point.getPointref().toString());
+					vehiclePosition.setCurrentStopSequence(point.getPointorder());
 					vehiclePosition.setCurrentStatus(VehicleStopStatus.STOPPED_AT);
 					StopPoint sp = _ridService.getStopPoint(point.getPointref());
 					if ((posinfo.getRd_x() == null || posinfo.getRd_x() == -1) && sp != null){
@@ -288,6 +290,7 @@ public class BisonToGtfsRealtimeService {
 				if (point.getOperatorpointref().equals(posinfo.getUserstopcode())){
 					passed = true;
 					StopPoint sp = _ridService.getStopPoint(point.getPointref());
+					vehiclePosition.setCurrentStopSequence(point.getPointorder());
 					if (posinfo.getMessagetype() == Type.DEPARTURE && sp != null){
 						Builder position = Position.newBuilder();
 						position.setLatitude(sp.getLatitude());
@@ -296,6 +299,7 @@ public class BisonToGtfsRealtimeService {
 					}
 				}else if (passed && point.isScheduled()){
 					vehiclePosition.setStopId(point.getPointref().toString());
+					vehiclePosition.setCurrentStopSequence(point.getPointorder());
 					vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
 				}
 			}
