@@ -33,7 +33,10 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelations
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeEvent;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
+import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate;
+import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiVehiclePosition;
 import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
+import com.google.transit.realtime.GtfsRealtimeOVapi;
 @ToString()
 public class Journey {
 	@Getter
@@ -198,9 +201,25 @@ public class Journey {
 		StopTimeUpdate.Builder stopTimeUpdate = StopTimeUpdate.newBuilder();
 		boolean stopcanceled = isCanceled;
 		if (mutations.containsKey(pt.getPointorder())){ // Check if mutation exists with cancel
+			boolean destChanged = false;
 			for (Mutation m : mutations.get(pt.getPointorder())){
 				if (m.getMutationtype() == MutationType.SHORTEN){
 					stopcanceled = true;
+				}
+				if (m.getMutationtype() == MutationType.CHANGEDESTINATION && !destChanged){
+					destChanged = true;
+					String destination = m.getDestinationname50();
+					if (destination == null){
+						destination = m.getDestinationname16();
+					}
+					if (destination == null){
+						destination = m.getDestinationdisplay16();
+					}
+					if (destination != null){
+						OVapiStopTimeUpdate.Builder ovapiStopTimeUpdate = OVapiStopTimeUpdate.newBuilder();
+						ovapiStopTimeUpdate.setStopHeadsign(destination);
+						stopTimeUpdate.setExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate, ovapiStopTimeUpdate.build());
+					}
 				}
 			}
 		}
@@ -389,9 +408,25 @@ public class Journey {
 				stopTimeUpdate.setArrival(stopTimeEventArrival(tpt,pt,punctuality));
 				boolean stopcanceled = isCanceled;
 				if (mutations.containsKey(tpt.getPointorder())){ // Check if mutation exists with cancel
+					boolean destChanged = false;
 					for (Mutation m : mutations.get(tpt.getPointorder())){
 						if (m.getMutationtype() == MutationType.SHORTEN){
 							stopcanceled = true;
+						}
+						if (m.getMutationtype() == MutationType.CHANGEDESTINATION && !destChanged){
+							destChanged = true;
+							String destination = m.getDestinationname50();
+							if (destination == null){
+								destination = m.getDestinationname16();
+							}
+							if (destination == null){
+								destination = m.getDestinationdisplay16();
+							}
+							if (destination != null){
+								OVapiStopTimeUpdate.Builder ovapiStopTimeUpdate = OVapiStopTimeUpdate.newBuilder();
+								ovapiStopTimeUpdate.setStopHeadsign(destination);
+								stopTimeUpdate.setExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate, ovapiStopTimeUpdate.build());
+							}
 						}
 					}
 				}
@@ -506,7 +541,6 @@ public class Journey {
 			mutations.put(pst.getPointorder(), new ArrayList<Mutation>());
 		switch (m.getMutationtype()) {
 		case CHANGEDESTINATION:
-			break; //Currently unsupported
 		case CHANGEPASSTIMES:
 		case LAG:
 		case RECOVER:
