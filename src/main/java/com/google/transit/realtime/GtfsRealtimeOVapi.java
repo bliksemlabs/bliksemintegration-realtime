@@ -8,6 +8,8 @@ public final class GtfsRealtimeOVapi {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
     registry.add(com.google.transit.realtime.GtfsRealtimeOVapi.ovapiVehiclePosition);
+    registry.add(com.google.transit.realtime.GtfsRealtimeOVapi.ovapiTripUpdate);
+    registry.add(com.google.transit.realtime.GtfsRealtimeOVapi.ovapiStopTimeUpdate);
   }
   public interface OVapiVehiclePositionOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
@@ -347,6 +349,756 @@ public final class GtfsRealtimeOVapi {
     // @@protoc_insertion_point(class_scope:transit_realtime.OVapiVehiclePosition)
   }
   
+  public interface OVapiTripUpdateOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+    
+    // optional string trip_headsign = 1;
+    boolean hasTripHeadsign();
+    String getTripHeadsign();
+  }
+  public static final class OVapiTripUpdate extends
+      com.google.protobuf.GeneratedMessage
+      implements OVapiTripUpdateOrBuilder {
+    // Use OVapiTripUpdate.newBuilder() to construct.
+    private OVapiTripUpdate(Builder builder) {
+      super(builder);
+    }
+    private OVapiTripUpdate(boolean noInit) {}
+    
+    private static final OVapiTripUpdate defaultInstance;
+    public static OVapiTripUpdate getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public OVapiTripUpdate getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.google.transit.realtime.GtfsRealtimeOVapi.internal_static_transit_realtime_OVapiTripUpdate_descriptor;
+    }
+    
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.google.transit.realtime.GtfsRealtimeOVapi.internal_static_transit_realtime_OVapiTripUpdate_fieldAccessorTable;
+    }
+    
+    private int bitField0_;
+    // optional string trip_headsign = 1;
+    public static final int TRIP_HEADSIGN_FIELD_NUMBER = 1;
+    private java.lang.Object tripHeadsign_;
+    public boolean hasTripHeadsign() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public String getTripHeadsign() {
+      java.lang.Object ref = tripHeadsign_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          tripHeadsign_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getTripHeadsignBytes() {
+      java.lang.Object ref = tripHeadsign_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        tripHeadsign_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
+    private void initFields() {
+      tripHeadsign_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+      
+      memoizedIsInitialized = 1;
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getTripHeadsignBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getTripHeadsignBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+    
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdateOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.google.transit.realtime.GtfsRealtimeOVapi.internal_static_transit_realtime_OVapiTripUpdate_descriptor;
+      }
+      
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.google.transit.realtime.GtfsRealtimeOVapi.internal_static_transit_realtime_OVapiTripUpdate_fieldAccessorTable;
+      }
+      
+      // Construct using com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+      
+      private Builder(BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+      
+      public Builder clear() {
+        super.clear();
+        tripHeadsign_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+      
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate.getDescriptor();
+      }
+      
+      public com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate getDefaultInstanceForType() {
+        return com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate.getDefaultInstance();
+      }
+      
+      public com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate build() {
+        com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+      
+      private com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return result;
+      }
+      
+      public com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate buildPartial() {
+        com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate result = new com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.tripHeadsign_ = tripHeadsign_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+      
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate) {
+          return mergeFrom((com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+      
+      public Builder mergeFrom(com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate other) {
+        if (other == com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate.getDefaultInstance()) return this;
+        if (other.hasTripHeadsign()) {
+          setTripHeadsign(other.getTripHeadsign());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+      
+      public final boolean isInitialized() {
+        return true;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder(
+            this.getUnknownFields());
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              this.setUnknownFields(unknownFields.build());
+              onChanged();
+              return this;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                this.setUnknownFields(unknownFields.build());
+                onChanged();
+                return this;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              tripHeadsign_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      }
+      
+      private int bitField0_;
+      
+      // optional string trip_headsign = 1;
+      private java.lang.Object tripHeadsign_ = "";
+      public boolean hasTripHeadsign() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      public String getTripHeadsign() {
+        java.lang.Object ref = tripHeadsign_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          tripHeadsign_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setTripHeadsign(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        tripHeadsign_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearTripHeadsign() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        tripHeadsign_ = getDefaultInstance().getTripHeadsign();
+        onChanged();
+        return this;
+      }
+      void setTripHeadsign(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000001;
+        tripHeadsign_ = value;
+        onChanged();
+      }
+      
+      // @@protoc_insertion_point(builder_scope:transit_realtime.OVapiTripUpdate)
+    }
+    
+    static {
+      defaultInstance = new OVapiTripUpdate(true);
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:transit_realtime.OVapiTripUpdate)
+  }
+  
+  public interface OVapiStopTimeUpdateOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+    
+    // optional string stop_headsign = 1;
+    boolean hasStopHeadsign();
+    String getStopHeadsign();
+  }
+  public static final class OVapiStopTimeUpdate extends
+      com.google.protobuf.GeneratedMessage
+      implements OVapiStopTimeUpdateOrBuilder {
+    // Use OVapiStopTimeUpdate.newBuilder() to construct.
+    private OVapiStopTimeUpdate(Builder builder) {
+      super(builder);
+    }
+    private OVapiStopTimeUpdate(boolean noInit) {}
+    
+    private static final OVapiStopTimeUpdate defaultInstance;
+    public static OVapiStopTimeUpdate getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public OVapiStopTimeUpdate getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.google.transit.realtime.GtfsRealtimeOVapi.internal_static_transit_realtime_OVapiStopTimeUpdate_descriptor;
+    }
+    
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.google.transit.realtime.GtfsRealtimeOVapi.internal_static_transit_realtime_OVapiStopTimeUpdate_fieldAccessorTable;
+    }
+    
+    private int bitField0_;
+    // optional string stop_headsign = 1;
+    public static final int STOP_HEADSIGN_FIELD_NUMBER = 1;
+    private java.lang.Object stopHeadsign_;
+    public boolean hasStopHeadsign() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public String getStopHeadsign() {
+      java.lang.Object ref = stopHeadsign_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          stopHeadsign_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getStopHeadsignBytes() {
+      java.lang.Object ref = stopHeadsign_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        stopHeadsign_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
+    private void initFields() {
+      stopHeadsign_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+      
+      memoizedIsInitialized = 1;
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getStopHeadsignBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getStopHeadsignBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+    
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdateOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.google.transit.realtime.GtfsRealtimeOVapi.internal_static_transit_realtime_OVapiStopTimeUpdate_descriptor;
+      }
+      
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.google.transit.realtime.GtfsRealtimeOVapi.internal_static_transit_realtime_OVapiStopTimeUpdate_fieldAccessorTable;
+      }
+      
+      // Construct using com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+      
+      private Builder(BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+      
+      public Builder clear() {
+        super.clear();
+        stopHeadsign_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+      
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate.getDescriptor();
+      }
+      
+      public com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate getDefaultInstanceForType() {
+        return com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate.getDefaultInstance();
+      }
+      
+      public com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate build() {
+        com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+      
+      private com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return result;
+      }
+      
+      public com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate buildPartial() {
+        com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate result = new com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.stopHeadsign_ = stopHeadsign_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+      
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate) {
+          return mergeFrom((com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+      
+      public Builder mergeFrom(com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate other) {
+        if (other == com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate.getDefaultInstance()) return this;
+        if (other.hasStopHeadsign()) {
+          setStopHeadsign(other.getStopHeadsign());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+      
+      public final boolean isInitialized() {
+        return true;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder(
+            this.getUnknownFields());
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              this.setUnknownFields(unknownFields.build());
+              onChanged();
+              return this;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                this.setUnknownFields(unknownFields.build());
+                onChanged();
+                return this;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              stopHeadsign_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      }
+      
+      private int bitField0_;
+      
+      // optional string stop_headsign = 1;
+      private java.lang.Object stopHeadsign_ = "";
+      public boolean hasStopHeadsign() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      public String getStopHeadsign() {
+        java.lang.Object ref = stopHeadsign_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          stopHeadsign_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setStopHeadsign(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        stopHeadsign_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearStopHeadsign() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        stopHeadsign_ = getDefaultInstance().getStopHeadsign();
+        onChanged();
+        return this;
+      }
+      void setStopHeadsign(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000001;
+        stopHeadsign_ = value;
+        onChanged();
+      }
+      
+      // @@protoc_insertion_point(builder_scope:transit_realtime.OVapiStopTimeUpdate)
+    }
+    
+    static {
+      defaultInstance = new OVapiStopTimeUpdate(true);
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:transit_realtime.OVapiStopTimeUpdate)
+  }
+  
   public static final int OVAPI_VEHICLE_POSITION_FIELD_NUMBER = 1003;
   public static final
     com.google.protobuf.GeneratedMessage.GeneratedExtension<
@@ -355,11 +1107,37 @@ public final class GtfsRealtimeOVapi {
           .newFileScopedGeneratedExtension(
         com.google.transit.realtime.GtfsRealtimeOVapi.OVapiVehiclePosition.class,
         com.google.transit.realtime.GtfsRealtimeOVapi.OVapiVehiclePosition.getDefaultInstance());
+  public static final int OVAPI_TRIP_UPDATE_FIELD_NUMBER = 1003;
+  public static final
+    com.google.protobuf.GeneratedMessage.GeneratedExtension<
+      com.google.transit.realtime.GtfsRealtime.TripUpdate,
+      com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate> ovapiTripUpdate = com.google.protobuf.GeneratedMessage
+          .newFileScopedGeneratedExtension(
+        com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate.class,
+        com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate.getDefaultInstance());
+  public static final int OVAPI_STOP_TIME_UPDATE_FIELD_NUMBER = 1003;
+  public static final
+    com.google.protobuf.GeneratedMessage.GeneratedExtension<
+      com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate,
+      com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate> ovapiStopTimeUpdate = com.google.protobuf.GeneratedMessage
+          .newFileScopedGeneratedExtension(
+        com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate.class,
+        com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate.getDefaultInstance());
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_transit_realtime_OVapiVehiclePosition_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_transit_realtime_OVapiVehiclePosition_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_transit_realtime_OVapiTripUpdate_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_transit_realtime_OVapiTripUpdate_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_transit_realtime_OVapiStopTimeUpdate_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_transit_realtime_OVapiStopTimeUpdate_fieldAccessorTable;
   
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -373,10 +1151,17 @@ public final class GtfsRealtimeOVapi {
       "ime-OVapi.proto\022\020transit_realtime\032/com/g" +
       "oogle/transit/realtime/gtfs-realtime.pro" +
       "to\"%\n\024OVapiVehiclePosition\022\r\n\005delay\030\001 \001(" +
-      "\005:j\n\026ovapi_vehicle_position\022!.transit_re" +
-      "altime.VehiclePosition\030\353\007 \001(\0132&.transit_" +
-      "realtime.OVapiVehiclePositionB\035\n\033com.goo" +
-      "gle.transit.realtime"
+      "\005\"(\n\017OVapiTripUpdate\022\025\n\rtrip_headsign\030\001 " +
+      "\001(\t\",\n\023OVapiStopTimeUpdate\022\025\n\rstop_heads" +
+      "ign\030\001 \001(\t:j\n\026ovapi_vehicle_position\022!.tr" +
+      "ansit_realtime.VehiclePosition\030\353\007 \001(\0132&." +
+      "transit_realtime.OVapiVehiclePosition:[\n" +
+      "\021ovapi_trip_update\022\034.transit_realtime.Tr",
+      "ipUpdate\030\353\007 \001(\0132!.transit_realtime.OVapi" +
+      "TripUpdate:s\n\026ovapi_stop_time_update\022+.t" +
+      "ransit_realtime.TripUpdate.StopTimeUpdat" +
+      "e\030\353\007 \001(\0132%.transit_realtime.OVapiStopTim" +
+      "eUpdateB\035\n\033com.google.transit.realtime"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -391,7 +1176,25 @@ public final class GtfsRealtimeOVapi {
               new java.lang.String[] { "Delay", },
               com.google.transit.realtime.GtfsRealtimeOVapi.OVapiVehiclePosition.class,
               com.google.transit.realtime.GtfsRealtimeOVapi.OVapiVehiclePosition.Builder.class);
+          internal_static_transit_realtime_OVapiTripUpdate_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_transit_realtime_OVapiTripUpdate_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_transit_realtime_OVapiTripUpdate_descriptor,
+              new java.lang.String[] { "TripHeadsign", },
+              com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate.class,
+              com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripUpdate.Builder.class);
+          internal_static_transit_realtime_OVapiStopTimeUpdate_descriptor =
+            getDescriptor().getMessageTypes().get(2);
+          internal_static_transit_realtime_OVapiStopTimeUpdate_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_transit_realtime_OVapiStopTimeUpdate_descriptor,
+              new java.lang.String[] { "StopHeadsign", },
+              com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate.class,
+              com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate.Builder.class);
           ovapiVehiclePosition.internalInit(descriptor.getExtensions().get(0));
+          ovapiTripUpdate.internalInit(descriptor.getExtensions().get(1));
+          ovapiStopTimeUpdate.internalInit(descriptor.getExtensions().get(2));
           return null;
         }
       };

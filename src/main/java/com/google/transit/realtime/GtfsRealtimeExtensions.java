@@ -38,5 +38,7 @@ public class GtfsRealtimeExtensions {
     registry.add(GtfsRealtimeOneBusAway.obaFeedEntity);
     registry.add(GtfsRealtimeOneBusAway.obaTripUpdate);
     registry.add(GtfsRealtimeOVapi.ovapiVehiclePosition);
+    registry.add(GtfsRealtimeOVapi.ovapiTripUpdate);
+    registry.add(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
   }
 }

@@ -22,3 +22,23 @@ message OVapiVehiclePosition {
 extend VehiclePosition {
   optional OVapiVehiclePosition ovapi_vehicle_position = 1003;
 }
+
+message OVapiTripUpdate {
+  //The trip_headsign field contains the text that appears on a sign that identifies the trip's destination to passengers
+  // Overrides possible trip_headsign's in static GTFS feeds.
+  optional string trip_headsign = 1;
+}
+
+extend TripUpdate {
+  optional OVapiTripUpdate ovapi_trip_update = 1003;
+}
+
+message OVapiStopTimeUpdate {
+  //The trip_headsign field contains the text that appears on a sign that identifies the trip's destination to passengers
+  // Overrides possible trip_headsign's and stop_headsign's in static GTFS feeds.
+  optional string stop_headsign = 1;
+}
+
+extend transit_realtime.TripUpdate.StopTimeUpdate {
+  optional OVapiStopTimeUpdate ovapi_stop_time_update = 1003;
+}
