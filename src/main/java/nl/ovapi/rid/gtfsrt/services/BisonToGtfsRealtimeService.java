@@ -256,6 +256,7 @@ public class BisonToGtfsRealtimeService {
 		FeedEntity.Builder feedEntity = FeedEntity.newBuilder();
 		feedEntity.setId(id);
 		VehiclePosition.Builder vehiclePosition = VehiclePosition.newBuilder();
+		int delay = posinfo.getPunctuality();
 		switch (posinfo.getMessagetype()){
 		case END:
 			return null;
@@ -265,6 +266,7 @@ public class BisonToGtfsRealtimeService {
 			vehiclePosition.setStopId(firstPatternPoint.getPointref().toString());
 			vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
 			vehiclePosition.setCurrentStopSequence(firstTimePoint.getPointorder());
+			delay = Math.max(0, delay);
 			break;
 		case INIT:
 		case ARRIVAL:
@@ -280,6 +282,9 @@ public class BisonToGtfsRealtimeService {
 						position.setLatitude(sp.getLatitude());
 						position.setLongitude(sp.getLongitude());
 						vehiclePosition.setPosition(position);
+					}
+					if (point.isWaitpoint() && delay < 0){
+						delay = 0;
 					}
 				}
 			}
@@ -322,7 +327,10 @@ public class BisonToGtfsRealtimeService {
 		vehiclePosition.setTimestamp(posinfo.getTimestamp());
 		if (posinfo.getPunctuality() != null){
 			OVapiVehiclePosition.Builder ovapiVehiclePosition = OVapiVehiclePosition.newBuilder();
-			ovapiVehiclePosition.setDelay(posinfo.getPunctuality());
+			if (vehiclePosition.hasCurrentStopSequence() && vehiclePosition.getCurrentStopSequence() <= 1 && delay < 0){
+				delay = 0;
+			}
+			ovapiVehiclePosition.setDelay(delay);
 			vehiclePosition.setExtension(GtfsRealtimeOVapi.ovapiVehiclePosition, ovapiVehiclePosition.build());
 		}
 		feedEntity.setVehicle(vehiclePosition);
