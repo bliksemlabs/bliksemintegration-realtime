@@ -549,7 +549,7 @@ public class BisonToGtfsRealtimeService {
 								xr.parse(s);
 								process(handler.getPosinfos());
 							} catch (Exception e) {
-								_log.error("KV6 parsing {}",m[1]);
+								_log.error("KV6 parsing {}",m[1],e);
 							}
 						} else if (m[0].toLowerCase().endsWith("kv17cvlinfo")) {
 							InputSource s = new InputSource(new StringReader(m[1]));
@@ -560,7 +560,7 @@ public class BisonToGtfsRealtimeService {
 								_executor.submit(new ProcessKV17Task(handler.getCvlinfos()));
 								System.out.println(m[1]);
 							} catch (Exception e) {
-								_log.error("KV17 parsing {}",m[1]);
+								_log.error("KV17 parsing {}",m[1],e);
 							}
 						} else if (m[0].toLowerCase().endsWith("kv15messages")) {
 							InputSource s = new InputSource(new StringReader(m[1]));
