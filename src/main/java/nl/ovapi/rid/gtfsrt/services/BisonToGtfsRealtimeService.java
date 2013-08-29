@@ -70,6 +70,8 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelations
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition.VehicleStopStatus;
+import com.google.transit.realtime.GtfsRealtimeOVapi;
+import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiVehiclePosition;
 
 @Singleton
 public class BisonToGtfsRealtimeService {
@@ -318,6 +320,11 @@ public class BisonToGtfsRealtimeService {
 		if (posinfo.getVehicleDescription() != null)
 			vehiclePosition.setVehicle(posinfo.getVehicleDescription());
 		vehiclePosition.setTimestamp(posinfo.getTimestamp());
+		if (posinfo.getPunctuality() != null){
+			OVapiVehiclePosition.Builder ovapiVehiclePosition = OVapiVehiclePosition.newBuilder();
+			ovapiVehiclePosition.setDelay(posinfo.getPunctuality());
+			vehiclePosition.setExtension(GtfsRealtimeOVapi.ovapiVehiclePosition, ovapiVehiclePosition.build());
+		}
 		feedEntity.setVehicle(vehiclePosition);
 		return feedEntity.build();
 	}	
