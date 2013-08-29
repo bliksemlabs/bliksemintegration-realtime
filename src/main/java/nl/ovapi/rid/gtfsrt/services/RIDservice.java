@@ -177,12 +177,11 @@ public class RIDservice {
 	@PostConstruct
 	public void start() throws SQLException {
 		update();
-		_log.info("Done loading\n"+simpleStats());
 		_scheduler = Executors.newScheduledThreadPool(5);
 
 		Calendar c = Calendar.getInstance();
-		long now = c.getTimeInMillis();
 		c.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));		
+		long now = c.getTimeInMillis();
 		c.add(Calendar.DAY_OF_MONTH,1);
 		c.set(Calendar.HOUR_OF_DAY, HOUR_TO_RUN_UPDATE);
 		c.set(Calendar.MINUTE, 0);
@@ -208,6 +207,7 @@ public class RIDservice {
 			}finally {
 				conn.close();
 			}
+			_log.info("Done loading\n"+simpleStats());
 		} catch (SQLException e) {
 			_log.error("Loading SQL crash", e);
 		}
@@ -273,14 +273,18 @@ public class RIDservice {
 			}
 			journeypatterns.put(journeypatternRef, jp);
 			st = conn.prepareStatement(Database.journeyQuery);
-			_log.info("Start query for journeys");
 			rs = st.executeQuery();
+			int newCount = 0;
 			while (rs.next()) {
 				String key = hf.hashString(rs.getString(1)).toString();
 				if (journeys.containsKey(key)){
 					newJourneys.put(key, journeys.get(key));
+					if (trains.containsKey(key)){
+						newTrains.put(key, trains.get(key));
+					}
 					continue;
 				}
+				newCount++;
 				Journey journey = new Journey();
 				journey.setId(rs.getLong(2));
 				journey.setJourneypattern(newJourneypatterns.get(rs.getString(3).intern()));
@@ -306,6 +310,7 @@ public class RIDservice {
 					newJourneys.put(key, journey);
 				}
 			}
+			_log.info("{} New journeys",newCount);
 			st = conn.prepareStatement(Database.stoppointQuery);
 			rs = st.executeQuery();
 			while (rs.next()) {
@@ -352,8 +357,6 @@ public class RIDservice {
 			gvbJourneys = newgvbJourneys;
 			trains = newTrains;
 		}catch (Exception e) {
-			System.out.println(e.getMessage());
-			System.out.println(e.getStackTrace());
 			_log.error("Loading SQL crash", e);
 			e.printStackTrace();
 		}
