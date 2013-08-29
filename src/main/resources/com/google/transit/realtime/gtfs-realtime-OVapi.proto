@@ -3,7 +3,7 @@
 // The content of this file is licensed under the Creative Commons Attribution
 // 3.0 License.
 //
-// Protocol definition OneBusAway-specific extensions to GTFS-realtime.
+// Protocol definition OVapi.nl-specific extensions to GTFS-realtime.
 
 syntax = "proto2";
 
