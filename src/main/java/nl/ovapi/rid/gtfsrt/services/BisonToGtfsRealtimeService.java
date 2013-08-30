@@ -256,7 +256,7 @@ public class BisonToGtfsRealtimeService {
 		FeedEntity.Builder feedEntity = FeedEntity.newBuilder();
 		feedEntity.setId(id);
 		VehiclePosition.Builder vehiclePosition = VehiclePosition.newBuilder();
-		int delay = posinfo.getPunctuality();
+		int delay = posinfo.getPunctuality() == null ? 0 : posinfo.getPunctuality();
 		switch (posinfo.getMessagetype()){
 		case END:
 			return null;
@@ -303,6 +303,9 @@ public class BisonToGtfsRealtimeService {
 						position.setLatitude(sp.getLatitude());
 						position.setLongitude(sp.getLongitude());
 						vehiclePosition.setPosition(position);
+						if (delay < 0 &&  point.isWaitpoint()){
+							delay = 0;
+						}
 					}
 				}else if (passed && point.isScheduled()){
 					vehiclePosition.setStopId(point.getPointref().toString());
