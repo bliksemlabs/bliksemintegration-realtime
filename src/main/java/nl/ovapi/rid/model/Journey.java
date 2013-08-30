@@ -379,7 +379,9 @@ public class Journey {
 							punctuality = 0;
 						break;
 					case DEPARTURE:
-						if (RECORD_TIMES)
+						long targetDepartureTime = getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
+						newPunctuality = (int)(posinfo.getTimestamp()-targetDepartureTime);
+						if (RECORD_TIMES && (!pt.isWaitpoint() || newPunctuality > 0))
 							realizedDepartures.put(pt.getPointorder(), posinfo.getTimestamp());
 						if ((pt.isWaitpoint() || i == 0)	&& punctuality < 0)
 							punctuality = 0;
@@ -387,7 +389,7 @@ public class Journey {
 					case ONSTOP:
 						if ((pt.isWaitpoint() || i == 0)	&& punctuality < 0)
 							punctuality = 0;
-						long targetDepartureTime = getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
+						targetDepartureTime = getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
 						newPunctuality = (int)(posinfo.getTimestamp()-targetDepartureTime);
 						if (newPunctuality > -30 && newPunctuality - punctuality < 600){
 							punctuality = newPunctuality;
