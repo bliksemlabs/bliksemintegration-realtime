@@ -1,7 +1,7 @@
 package nl.ovapi.rid.gtfsrt.services;
 
 import static org.junit.Assert.assertTrue;
-
+import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -38,6 +38,8 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
+import com.google.transit.realtime.GtfsRealtimeOVapi;
+import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate;
 
 public class KV17Test {
 
@@ -198,6 +200,9 @@ public class KV17Test {
 			TripUpdate.Builder tripUpdate = j.update(cvlinfos);
 			assertTrue(j.hasMutations());
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SCHEDULED);
+			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate));
+			OVapiStopTimeUpdate extension = tripUpdate.getStopTimeUpdateBuilder(0).getExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
+			assertEquals(extension.getStopHeadsign(),"Arnhem Centraalspoor");
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(1).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(2).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(3).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
@@ -246,11 +251,14 @@ public class KV17Test {
 			cvlinfos = map.get(id);
 			TripUpdate.Builder tripUpdate = j.update(cvlinfos);
 			assertTrue(j.hasMutations());
-			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
+			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SCHEDULED);			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate));
+			OVapiStopTimeUpdate extension = tripUpdate.getStopTimeUpdateBuilder(0).getExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
+			assertEquals(extension.getStopHeadsign(),"Arnhem Centraalspoor");
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(1).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(2).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
-			assertTrue(tripUpdate.getStopTimeUpdateBuilder(3).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SCHEDULED);
-			assertTrue(tripUpdate.getStopTimeUpdateCount() == 4);
+			assertTrue(tripUpdate.getStopTimeUpdateBuilder(3).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
+			assertTrue(tripUpdate.getStopTimeUpdateBuilder(4).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SCHEDULED);
+			assertTrue(tripUpdate.getStopTimeUpdateCount() == 5);
 		}
 	}
 

@@ -27,6 +27,25 @@
         </tmi8:KV17JOURNEY>
         <tmi8:KV17MUTATEJOURNEYSTOP>
             <tmi8:timestamp>2013-08-27T14:33:39.584+02:00</tmi8:timestamp>
+            <tmi8:CHANGEDESTINATION>
+                <tmi8:userstopcode>10006900</tmi8:userstopcode>
+                <tmi8:passagesequencenumber>0</tmi8:passagesequencenumber>
+                <tmi8:destinationname50>Arnhem Centraalspoor</tmi8:destinationname50>
+                <tmi8:destinationname16>Arnhem</tmi8:destinationname16>
+                <tmi8:destinationdetail16>Centraalspoor</tmi8:destinationdetail16>
+            </tmi8:CHANGEDESTINATION>
+        </tmi8:KV17MUTATEJOURNEYSTOP>
+    </tmi8:KV17cvlinfo>
+    <tmi8:KV17cvlinfo>
+        <tmi8:KV17JOURNEY>
+            <tmi8:dataownercode>QBUZZ</tmi8:dataownercode>
+            <tmi8:lineplanningnumber>g005</tmi8:lineplanningnumber>
+            <tmi8:operatingday>2013-08-27</tmi8:operatingday>
+            <tmi8:journeynumber>1034</tmi8:journeynumber>
+            <tmi8:reinforcementnumber>0</tmi8:reinforcementnumber>
+        </tmi8:KV17JOURNEY>
+        <tmi8:KV17MUTATEJOURNEYSTOP>
+            <tmi8:timestamp>2013-08-27T14:33:39.584+02:00</tmi8:timestamp>
             <tmi8:SHORTEN>
                 <tmi8:userstopcode>10006780</tmi8:userstopcode>
                 <tmi8:passagesequencenumber>0</tmi8:passagesequencenumber>
