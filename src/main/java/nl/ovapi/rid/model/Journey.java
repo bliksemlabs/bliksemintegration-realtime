@@ -200,8 +200,8 @@ public class Journey {
 			return null;
 		StopTimeUpdate.Builder stopTimeUpdate = StopTimeUpdate.newBuilder();
 		boolean stopcanceled = isCanceled;
+		boolean destChanged = false;
 		if (mutations.containsKey(pt.getPointorder())){ // Check if mutation exists with cancel
-			boolean destChanged = false;
 			for (Mutation m : mutations.get(pt.getPointorder())){
 				if (m.getMutationtype() == MutationType.SHORTEN){
 					stopcanceled = true;
@@ -235,7 +235,7 @@ public class Journey {
 			stopTimeUpdate.setArrival(stopTimeEventArrival(pt,realizedArrivals.get(pt.getPointorder())));
 		if (realizedDepartures.containsKey(pt.getPointorder()))
 			stopTimeUpdate.setDeparture(stopTimeEventDeparture(pt,realizedDepartures.get(pt.getPointorder())));
-		if (stopTimeUpdate.hasArrival() || stopTimeUpdate.hasDeparture()){
+		if (stopTimeUpdate.hasArrival() || stopTimeUpdate.hasDeparture() || stopcanceled || destChanged){
 			return stopTimeUpdate;
 		}
 		return null;
@@ -249,7 +249,8 @@ public class Journey {
 		ArrayList<StopTimeUpdate.Builder> cleanUpdates = new ArrayList<StopTimeUpdate.Builder>();
 		for (StopTimeUpdate.Builder update : tripUpdate.getStopTimeUpdateBuilderList()){
 			if (update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.NO_DATA || 
-					update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED){
+					update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED ||
+					update.hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate)){
 				if (update.hasArrival()){
 					update.clearArrival();
 				}
@@ -407,8 +408,8 @@ public class Journey {
 				stopTimeUpdate.setStopId(pt.getPointref().toString());
 				stopTimeUpdate.setArrival(stopTimeEventArrival(tpt,pt,punctuality));
 				boolean stopcanceled = isCanceled;
+				boolean destChanged = false;
 				if (mutations.containsKey(tpt.getPointorder())){ // Check if mutation exists with cancel
-					boolean destChanged = false;
 					for (Mutation m : mutations.get(tpt.getPointorder())){
 						if (m.getMutationtype() == MutationType.SHORTEN){
 							stopcanceled = true;
@@ -443,7 +444,7 @@ public class Journey {
 					}
 				}
 				stopTimeUpdate.setDeparture(stopTimeEventDeparture(tpt,pt,punctuality));
-				if (!nullterminated || Math.abs(punctuality) > 0 || stopcanceled){
+				if (!nullterminated || Math.abs(punctuality) > 0 || stopcanceled || destChanged){
 					if (punctuality == 0){
 						nullterminated = true;
 					}
