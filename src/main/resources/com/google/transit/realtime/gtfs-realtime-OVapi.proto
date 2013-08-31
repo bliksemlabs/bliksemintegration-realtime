@@ -25,7 +25,8 @@ extend VehiclePosition {
 
 message OVapiTripUpdate {
   //The trip_headsign field contains the text that appears on a sign that identifies the trip's destination to passengers
-  // Overrides possible trip_headsign's in static GTFS feeds.
+  // Overrides possible trip_headsign's in static GTFS feeds, overrides stop_headsigns in the static feed 
+  // unless there stop_headsign in a StopTimeUpdate
   optional string trip_headsign = 1;
 }
 
