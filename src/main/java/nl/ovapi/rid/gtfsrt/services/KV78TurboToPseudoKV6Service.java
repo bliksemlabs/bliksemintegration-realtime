@@ -162,7 +162,11 @@ public class KV78TurboToPseudoKV6Service {
 		posinfo.setDataownercode(pt.getDataOwnerCode());
 		posinfo.setLineplanningnumber(pt.getLinePlanningNumber());
 		posinfo.setJourneynumber(pt.getJourneyNumber());
-		posinfo.setPunctuality(pt.getTargetDepartureTime()-pt.getExpectedArrivalTime());
+		if (pt.getJourneyStopType() == JourneyStopType.FIRST){
+			posinfo.setPunctuality(pt.getExpectedDepartureTime()-pt.getTargetDepartureTime());
+		}else{
+			posinfo.setPunctuality(pt.getExpectedArrivalTime()-pt.getTargetArrivalTime());
+		}
 		posinfo.setWheelchairaccessible(pt.getWheelChairAccessible());
 		posinfo.setNumberofcoaches(posinfo.getNumberofcoaches());
 		posinfo.setPassagesequencenumber(0);
