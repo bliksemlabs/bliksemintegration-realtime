@@ -104,32 +104,32 @@ public class KV17Test {
 		tp.setTotaldrivetime(0);
 		tp.setStopwaittime(0);
 		tp.setPointorder(1);
-		td.points.add(tp);
+		td.add(tp);
 		tp = new TimeDemandGroupPoint();
 		tp.setTotaldrivetime(60);
 		tp.setStopwaittime(60);
 		tp.setPointorder(2);
-		td.points.add(tp);
+		td.add(tp);
 		tp = new TimeDemandGroupPoint();
 		tp.setTotaldrivetime(120);
 		tp.setStopwaittime(120);
 		tp.setPointorder(3);
-		td.points.add(tp);
+		td.add(tp);
 		tp = new TimeDemandGroupPoint();
 		tp.setTotaldrivetime(180);
 		tp.setStopwaittime(180);
 		tp.setPointorder(4);
-		td.points.add(tp);
+		td.add(tp);
 		tp = new TimeDemandGroupPoint();
 		tp.setTotaldrivetime(240);
 		tp.setStopwaittime(240);
 		tp.setPointorder(5);
-		td.points.add(tp);
+		td.add(tp);
 		tp = new TimeDemandGroupPoint();
 		tp.setTotaldrivetime(300);
 		tp.setStopwaittime(300);
 		tp.setPointorder(6);
-		td.points.add(tp);
+		td.add(tp);
 		return td;
 
 	}

@@ -21,8 +21,12 @@ public class TimeDemandGroup {
 		public Integer stopwaittime;
 	}
 
-	public ArrayList<TimeDemandGroupPoint> points;
+	@Getter private ArrayList<TimeDemandGroupPoint> points;
 
+	public void add(TimeDemandGroupPoint point){
+		points.add(point);
+	}
+	
 	public TimeDemandGroup() {
 		points = new ArrayList<TimeDemandGroupPoint>();
 	}

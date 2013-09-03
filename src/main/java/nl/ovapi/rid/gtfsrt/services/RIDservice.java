@@ -242,7 +242,7 @@ public class RIDservice {
 				point.setTotaldrivetime(rs.getInt(3));
 				point.setStopwaittime(rs.getInt(4));
 				if (group != null)
-					group.points.add(point);
+					group.add(point);
 			}
 			timedemandgroups.put(timedemandgroupref, group);
 			st = conn.prepareStatement(Database.journeyPatternQuery);

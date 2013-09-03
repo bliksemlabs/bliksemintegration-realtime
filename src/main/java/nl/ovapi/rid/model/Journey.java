@@ -166,7 +166,7 @@ public class Journey {
 			c.set(Calendar.SECOND, 0);
 			c.set(Calendar.MILLISECOND, 0);
 			c.add(Calendar.SECOND, getDeparturetime());
-			c.add(Calendar.SECOND, timedemandgroup.points.get(timedemandgroup.points.size()-1).getTotaldrivetime());
+			c.add(Calendar.SECOND, timedemandgroup.getPoints().get(timedemandgroup.getPoints().size()-1).getTotaldrivetime());
 			if (posinfo != null && posinfo.getPunctuality() != null){
 				c.add(Calendar.SECOND, Math.abs(posinfo.getPunctuality()));
 			}
@@ -328,8 +328,8 @@ public class Journey {
 		case OFFROUTE:
 			if (getPosinfo() != null && !hasMutations() && getPosinfo().getMessagetype() != Type.OFFROUTE)
 				return null; //We've already sent out NO_DATE
-			for (int i = 0; i < timedemandgroup.points.size(); i++) {
-				TimeDemandGroupPoint tpt = timedemandgroup.points.get(i);
+			for (int i = 0; i < timedemandgroup.getPoints().size(); i++) {
+				TimeDemandGroupPoint tpt = timedemandgroup.getPoints().get(i);
 				JourneyPatternPoint pt = journeypattern.getPoint(tpt.pointorder);
 				if (!pt.isScheduled())
 					continue;
@@ -356,8 +356,8 @@ public class Journey {
 		int passageseq = 0;
 		int elapsedtime = 0;
 		boolean nullterminated = false;
-		for (int i = 0; i < timedemandgroup.points.size(); i++) {
-			TimeDemandGroupPoint tpt = timedemandgroup.points.get(i);
+		for (int i = 0; i < timedemandgroup.getPoints().size(); i++) {
+			TimeDemandGroupPoint tpt = timedemandgroup.getPoints().get(i);
 			JourneyPatternPoint pt = journeypattern.getPoint(tpt.pointorder);
 			if (pt.getOperatorpointref().equals(posinfo.getUserstopcode())) {
 				if (posinfo.getPassagesequencenumber() - passageseq > 0) {
@@ -455,8 +455,8 @@ public class Journey {
 					}
 				}
 				punctuality = stopTimeUpdate.getDeparture().getDelay();
-				if (i+1 < timedemandgroup.points.size()){
-					TimeDemandGroupPoint ntpt = timedemandgroup.points.get(i+1);
+				if (i+1 < timedemandgroup.getPoints().size()){
+					TimeDemandGroupPoint ntpt = timedemandgroup.getPoints().get(i+1);
 					JourneyPatternPoint npt = journeypattern.getPoint(ntpt.pointorder);
 					int distanceToNext = npt.getDistancefromstartroute() - pt.getDistancefromstartroute();
 					int secondsToNext = ntpt.getTotaldrivetime() - (tpt.getTotaldrivetime()+tpt.getStopwaittime());
@@ -467,12 +467,12 @@ public class Journey {
 						speed = SHORTHAUL_SPEED;
 					}
 					int fastest = distanceToNext / speed;
-					if ((punctuality > 0 || secondsToNext < fastest) && i != timedemandgroup.points.size() - 1) {
+					if ((punctuality > 0 || secondsToNext < fastest) && i != timedemandgroup.getPoints().size() - 1) {
 						punctuality -= (secondsToNext - fastest);
 						if (punctuality < 0) {
 							punctuality = 0;
 						}
-					} else if (punctuality < 0 && i != timedemandgroup.points.size() - 1) {
+					} else if (punctuality < 0 && i != timedemandgroup.getPoints().size() - 1) {
 						punctuality = decayeddelay(punctuality,
 								tpt.getTotaldrivetime() - elapsedtime);
 					}
@@ -520,8 +520,8 @@ public class Journey {
 	}
 
 	private JourneyPatternPoint getJourneyStop (String userstopcode,int passageSequencenumber){
-		for (int i = 0; i < timedemandgroup.points.size(); i++) {
-			TimeDemandGroupPoint tpt = timedemandgroup.points.get(i);
+		for (int i = 0; i < timedemandgroup.getPoints().size(); i++) {
+			TimeDemandGroupPoint tpt = timedemandgroup.getPoints().get(i);
 			JourneyPatternPoint pt = journeypattern.getPoint(tpt.pointorder);
 			if (pt.getOperatorpointref().equals(userstopcode)){
 				if (passageSequencenumber > 0){

@@ -261,7 +261,7 @@ public class BisonToGtfsRealtimeService {
 		case END:
 			return null;
 		case DELAY:
-			TimeDemandGroupPoint firstTimePoint = journey.getTimedemandgroup().points.get(0);
+			TimeDemandGroupPoint firstTimePoint = journey.getTimedemandgroup().getPoints().get(0);
 			JourneyPatternPoint firstPatternPoint = journey.getJourneypattern().getPoint(firstTimePoint.getPointorder());
 			vehiclePosition.setStopId(firstPatternPoint.getPointref().toString());
 			vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
