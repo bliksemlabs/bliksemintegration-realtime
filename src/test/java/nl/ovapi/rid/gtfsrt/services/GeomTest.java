@@ -11,10 +11,6 @@ import com.google.transit.realtime.GtfsRealtime.Position;
 public class GeomTest {
 
 	@Test
-	public void test() {
-		rijksdriehoek_convert();
-	}
-	@Test
 	public void rijksdriehoek_convert(){
 		GeometryService gs = new GeometryService();
 		Position point = gs.toWGS84(0,0);

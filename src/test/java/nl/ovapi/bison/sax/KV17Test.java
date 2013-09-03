@@ -26,14 +26,6 @@ import org.xml.sax.XMLReader;
 public class KV17Test {
 
 	@Test
-	public void test() throws ParserConfigurationException, SAXException,
-	FileNotFoundException, IOException {
-		test1();
-		test2();
-		test3();
-		test4();
-	}
-	
 	public void test4() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException{
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 		spf.setNamespaceAware(true);
@@ -45,7 +37,8 @@ public class KV17Test {
 		File f = new File(url.getFile());
 		xr.parse(new InputSource(new FileInputStream(f)));
 	}
-
+	
+	@Test
 	public void test1() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException{
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 		spf.setNamespaceAware(true);
@@ -62,7 +55,8 @@ public class KV17Test {
 			fail(handler.getCvlinfos().get(0).getMutations().size()
 					+ " messages parsed instead of 18");
 	}
-
+	
+	@Test
 	public void test2() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException{
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 		spf.setNamespaceAware(true);
@@ -80,6 +74,7 @@ public class KV17Test {
 					+ " messages parsed instead of 19");
 	}
 
+	@Test
 	public void test3() throws IOException, SAXException{
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 		spf.setNamespaceAware(true);

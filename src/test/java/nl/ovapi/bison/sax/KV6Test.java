@@ -26,10 +26,6 @@ import org.xml.sax.XMLReader;
 public class KV6Test {
 
 	@Test
-	public void test() throws FileNotFoundException, ParserConfigurationException, SAXException, IOException {
-		test1();
-	}
-
 	public void test1()  throws ParserConfigurationException, SAXException, FileNotFoundException, IOException{
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 		spf.setNamespaceAware(true);

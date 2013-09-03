@@ -23,11 +23,6 @@ import org.xml.sax.XMLReader;
 public class KV15Test {
 
 	@Test
-	public void test() throws FileNotFoundException, ParserConfigurationException, SAXException, IOException {
-		test1();
-		test2();
-	}
-
 	public void test2()  throws ParserConfigurationException, SAXException, FileNotFoundException, IOException{
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 		spf.setNamespaceAware(true);
@@ -44,6 +39,7 @@ public class KV15Test {
 		assertNotNull(messages.get(0).getMessageContent());
 	}
 	
+	@Test
 	public void test1()  throws ParserConfigurationException, SAXException, FileNotFoundException, IOException{
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 		spf.setNamespaceAware(true);

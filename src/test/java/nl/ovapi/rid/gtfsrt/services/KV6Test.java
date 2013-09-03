@@ -122,8 +122,8 @@ public class KV6Test {
 		j.setTimedemandgroup(testGroup());
 		return j;
 	}
-	
-	private void testNegativeOnFirstStopAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException{
+	@Test
+	public void testNegativeOnFirstStopAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException{
 		Journey j = getJourney();
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
@@ -143,7 +143,8 @@ public class KV6Test {
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),1377604560);
 	}
 	
-	private void testNegativeOnFirstStopNotAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException{
+	@Test
+	public void testNegativeOnFirstStopNotAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException{
 		Journey j = getJourney();
 		j.getJourneypattern().getPoint(1).setWaitpoint(false);
 		KV6posinfo posinfo = new KV6posinfo();
@@ -163,8 +164,8 @@ public class KV6Test {
 		assertFalse(tripUpdate.getStopTimeUpdate(0).hasDeparture());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),1377604560);
 	}
-	
-	private void testNegativeOnTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException{
+	@Test
+	public void testNegativeOnTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException{
 		Journey j = getJourney();
 		j.getJourneypattern().getPoint(3).setWaitpoint(true);
 		KV6posinfo posinfo = new KV6posinfo();
@@ -187,8 +188,8 @@ public class KV6Test {
 		assertFalse(tripUpdate.getStopTimeUpdate(1).hasDeparture());
 	}
 	
-
-	private void testNegativeOnDepartureFirstStop() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException{
+	@Test
+	public void testNegativeOnDepartureFirstStop() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException{
 		Journey j = getJourney();
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
@@ -205,13 +206,4 @@ public class KV6Test {
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch()+60);
 	}
-	
-	@Test
-	public void test() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException {
-		testNegativeOnFirstStopAsTimingPoint();
-		testNegativeOnFirstStopNotAsTimingPoint();
-		testNegativeOnTimingPoint();
-		testNegativeOnDepartureFirstStop();
-	}
-
 }

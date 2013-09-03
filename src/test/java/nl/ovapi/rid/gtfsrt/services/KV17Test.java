@@ -145,6 +145,7 @@ public class KV17Test {
 		return j;
 	}
 	
+	@Test
 	public void cancel() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException {
 		Journey j = getJourney();
 		SAXParserFactory spf = SAXParserFactory.newInstance();
@@ -174,6 +175,7 @@ public class KV17Test {
 		}
 	}
 	
+	@Test
 	public void shorten() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException {
 		Journey j = getJourney();
 		SAXParserFactory spf = SAXParserFactory.newInstance();
@@ -224,7 +226,7 @@ public class KV17Test {
 		posinfo.setPassagesequencenumber(0);
 		return posinfo;
 	}
-	
+	@Test
 	public void shortenMidTrip() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException {
 		Journey j = getJourney();
 		j.update(testPosinfoArrival());
@@ -261,12 +263,4 @@ public class KV17Test {
 			assertTrue(tripUpdate.getStopTimeUpdateCount() == 5);
 		}
 	}
-
-	@Test
-	public void test() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException {
-		cancel();
-		shorten();
-		shortenMidTrip();
-	}
-
 }
