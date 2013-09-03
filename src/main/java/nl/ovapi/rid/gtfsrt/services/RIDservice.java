@@ -269,7 +269,7 @@ public class RIDservice {
 				point.setWaitpoint(rs.getBoolean(5));
 				point.setDistancefromstartroute(rs.getInt(6));
 				point.setScheduled(rs.getBoolean(7));
-				jp.points.add(point);
+				jp.add(point);
 			}
 			journeypatterns.put(journeypatternRef, jp);
 			st = conn.prepareStatement(Database.journeyQuery);

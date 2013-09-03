@@ -97,12 +97,12 @@ public class NSapiToGtfsRealTimeServices {
 		if (j == null){
 			return null;//Journey does not exist
 		}
-		for (int i = 0; i < j.getJourneypattern().points.size();i++){
-			JourneyPatternPoint pt = j.getJourneypattern().points.get(i);
+		for (int i = 0; i < j.getJourneypattern().getPoints().size();i++){
+			JourneyPatternPoint pt = j.getJourneypattern().getPoints().get(i);
 			if (pt.getOperatorpointref().split(":")[0].equals(station)){
 				stationId = pt.getPointref().toString();
-				if (i < j.getJourneypattern().points.size()-1){
-					pt = j.getJourneypattern().points.get(i);
+				if (i < j.getJourneypattern().getPoints().size()-1){
+					pt = j.getJourneypattern().getPoints().get(i);
 					if (pt.getOperatorpointref().split(":")[0].equals(station)){
 						stationId = pt.getPointref().toString();
 					}

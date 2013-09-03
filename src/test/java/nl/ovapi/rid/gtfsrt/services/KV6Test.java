@@ -32,7 +32,7 @@ public class KV6Test {
 		pt.setDistancefromstartroute(0);
 		pt.setScheduled(true);
 		pt.setWaitpoint(true);
-		jp.points.add(pt);
+		jp.add(pt);
 		pt = new JourneyPatternPoint();
 		pt.setPointorder(2);
 		pt.setOperatorpointref("10007110");
@@ -40,7 +40,7 @@ public class KV6Test {
 		pt.setDistancefromstartroute(153);
 		pt.setScheduled(true);
 		pt.setWaitpoint(false);
-		jp.points.add(pt);
+		jp.add(pt);
 		pt = new JourneyPatternPoint();
 		pt.setPointorder(3);
 		pt.setOperatorpointref("10006780");
@@ -48,7 +48,7 @@ public class KV6Test {
 		pt.setDistancefromstartroute(446);
 		pt.setScheduled(true);
 		pt.setWaitpoint(false);
-		jp.points.add(pt);
+		jp.add(pt);
 		pt = new JourneyPatternPoint();
 		pt.setPointorder(4);
 		pt.setOperatorpointref("10006450");
@@ -56,7 +56,7 @@ public class KV6Test {
 		pt.setDistancefromstartroute(861);
 		pt.setScheduled(true);
 		pt.setWaitpoint(false);
-		jp.points.add(pt);
+		jp.add(pt);
 		pt = new JourneyPatternPoint();
 		pt.setPointorder(5);
 		pt.setOperatorpointref("10006820");
@@ -64,7 +64,7 @@ public class KV6Test {
 		pt.setDistancefromstartroute(1087);
 		pt.setScheduled(true);
 		pt.setWaitpoint(false);
-		jp.points.add(pt);
+		jp.add(pt);
 		pt = new JourneyPatternPoint();
 		pt.setPointorder(6);
 		pt.setOperatorpointref("10006450");
@@ -72,7 +72,7 @@ public class KV6Test {
 		pt.setDistancefromstartroute(1518);
 		pt.setScheduled(true);
 		pt.setWaitpoint(false);
-		jp.points.add(pt);
+		jp.add(pt);
 		return jp;
 	}
 	

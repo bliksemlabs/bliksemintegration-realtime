@@ -184,8 +184,8 @@ public class KV78TurboToPseudoKV6Service {
 			if (pt.getJourneyStopType() == JourneyStopType.LAST){
 				posinfo.setUserstopcode(pt.getUserStopCode());
 			}else{
-				for (int i = 0; i < j.getJourneypattern().points.size(); i++){
-					JourneyPatternPoint jp = j.getJourneypattern().points.get(i);
+				for (int i = 0; i < j.getJourneypattern().getPoints().size(); i++){
+					JourneyPatternPoint jp = j.getJourneypattern().getPoints().get(i);
 					if (jp.getOperatorpointref().equals(pt.getUserStopCode())){
 						if (jpLast == null){
 							posinfo.setUserstopcode(jp.getOperatorpointref());

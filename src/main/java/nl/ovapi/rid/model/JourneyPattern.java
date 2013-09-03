@@ -54,7 +54,11 @@ public class JourneyPattern {
 		return null;
 	}
 
-	public ArrayList<JourneyPatternPoint> points;
+	@Getter private ArrayList<JourneyPatternPoint> points;
+	
+	public void add(JourneyPatternPoint point){
+		points.add(point);
+	}
 
 	public JourneyPattern() {
 		points = new ArrayList<JourneyPatternPoint>();
