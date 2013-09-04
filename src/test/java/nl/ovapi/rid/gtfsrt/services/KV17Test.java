@@ -8,7 +8,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -22,6 +25,7 @@ import nl.ovapi.bison.model.KV6posinfo.Type;
 import nl.ovapi.bison.sax.KV17SAXHandler;
 import nl.ovapi.exceptions.StopNotFoundException;
 import nl.ovapi.exceptions.TooEarlyException;
+import nl.ovapi.exceptions.TooOldException;
 import nl.ovapi.exceptions.UnknownKV6PosinfoType;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.Journey;
@@ -137,9 +141,11 @@ public class KV17Test {
 	public Journey getJourney(){
 		Journey j = new Journey();
 		j.setAgencyId("QBUZZ");
-		j.setDeparturetime(50280);
+		Calendar c = Calendar.getInstance();
+		j.setDeparturetime(c.get(Calendar.HOUR_OF_DAY)*60*60+c.get(Calendar.MINUTE)*60+c.get(Calendar.SECOND));
 		j.setId(2552611L);
-		j.setOperatingDay("2013-08-27");
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		j.setOperatingDay(df.format(c.getTime()));
 		j.setJourneypattern(testPattern());
 		j.setTimedemandgroup(testGroup());
 		return j;
@@ -205,10 +211,10 @@ public class KV17Test {
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate));
 			OVapiStopTimeUpdate extension = tripUpdate.getStopTimeUpdateBuilder(0).getExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
 			assertEquals(extension.getStopHeadsign(),"Arnhem Centraalspoor");
-			assertTrue(tripUpdate.getStopTimeUpdateBuilder(1).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(2).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(3).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
-			assertTrue(tripUpdate.getStopTimeUpdateCount() == 4);
+			assertTrue(tripUpdate.getStopTimeUpdateBuilder(4).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
+			assertEquals(tripUpdate.getStopTimeUpdateCount(),6);
 		}
 	}
 	
@@ -227,7 +233,7 @@ public class KV17Test {
 		return posinfo;
 	}
 	@Test
-	public void shortenMidTrip() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException {
+	public void shortenMidTrip() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException {
 		Journey j = getJourney();
 		j.update(testPosinfoArrival());
 		SAXParserFactory spf = SAXParserFactory.newInstance();
