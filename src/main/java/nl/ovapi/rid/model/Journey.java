@@ -4,8 +4,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -19,6 +17,7 @@ import nl.ovapi.bison.model.KV6posinfo;
 import nl.ovapi.bison.model.KV6posinfo.Type;
 import nl.ovapi.exceptions.StopNotFoundException;
 import nl.ovapi.exceptions.TooEarlyException;
+import nl.ovapi.exceptions.TooOldException;
 import nl.ovapi.exceptions.UnknownKV6PosinfoType;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
@@ -33,10 +32,9 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelations
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeEvent;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
-import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate;
-import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiVehiclePosition;
 import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
 import com.google.transit.realtime.GtfsRealtimeOVapi;
+import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate;
 @ToString()
 public class Journey {
 	@Getter
@@ -117,14 +115,16 @@ public class Journey {
 
 	public StopTimeEvent.Builder stopTimeEventArrival(TimeDemandGroupPoint tpt,JourneyPatternPoint pt, int punctuality){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
-		//stopTimeEvent.setDelay(punctuality);
+		stopTimeEvent.setDelay(punctuality);
 		stopTimeEvent.setTime(getDepartureEpoch()+tpt.getTotaldrivetime()+punctuality);
 		return stopTimeEvent;
 	}
 
-	public StopTimeEvent.Builder stopTimeEventArrival(JourneyPatternPoint pt, long time){
+	public StopTimeEvent.Builder stopTimeEventArrivalRecorded(TimeDemandGroupPoint tpt, long time){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 		stopTimeEvent.setTime(time);
+		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
+		stopTimeEvent.setDelay((int)(time-targettime));
 		return stopTimeEvent;
 	}
 
@@ -147,9 +147,11 @@ public class Journey {
 		return stopTimeEvent;
 	}
 
-	public StopTimeEvent.Builder stopTimeEventDeparture(JourneyPatternPoint pt, long time){
+	public StopTimeEvent.Builder stopTimeEventDepartureRecorded(TimeDemandGroupPoint tpt, long time){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 		stopTimeEvent.setTime(time);
+		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
+		stopTimeEvent.setDelay((int)(time-targettime));
 		return stopTimeEvent;
 	}
 
@@ -195,7 +197,7 @@ public class Journey {
 		}
 	}
 
-	private StopTimeUpdate.Builder recordedTimes(JourneyPatternPoint pt){
+	private StopTimeUpdate.Builder recordedTimes(TimeDemandGroupPoint tpt, JourneyPatternPoint pt,int lastDelay){
 		if (!RECORD_TIMES)
 			return null;
 		StopTimeUpdate.Builder stopTimeUpdate = StopTimeUpdate.newBuilder();
@@ -232,21 +234,79 @@ public class Journey {
 			return stopTimeUpdate;
 		}
 		if (realizedArrivals.containsKey(pt.getPointorder()))
-			stopTimeUpdate.setArrival(stopTimeEventArrival(pt,realizedArrivals.get(pt.getPointorder())));
+			stopTimeUpdate.setArrival(stopTimeEventArrivalRecorded(tpt,realizedArrivals.get(pt.getPointorder())));
 		if (realizedDepartures.containsKey(pt.getPointorder()))
-			stopTimeUpdate.setDeparture(stopTimeEventDeparture(pt,realizedDepartures.get(pt.getPointorder())));
-		if (stopTimeUpdate.hasArrival() || stopTimeUpdate.hasDeparture() || stopcanceled || destChanged){
-			return stopTimeUpdate;
+			stopTimeUpdate.setDeparture(stopTimeEventDepartureRecorded(tpt,realizedDepartures.get(pt.getPointorder())));
+		else if (Integer.MIN_VALUE != lastDelay){
+			stopTimeUpdate.setDeparture(stopTimeEventDepartureRecorded(tpt,getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime()+lastDelay));
+		}else{
+			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
+			long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
+			stopTimeEvent.setTime(targettime);
+			stopTimeUpdate.setDeparture(stopTimeEvent);
 		}
-		return null;
+		return stopTimeUpdate;
 	}
 
 	public TripUpdate.Builder filter(TripUpdate.Builder tripUpdate){
 		if (tripUpdate.getStopTimeUpdateCount() == 0)
 			return tripUpdate;
 		tripUpdate.getStopTimeUpdateOrBuilderList();
-		long lastTime = -1;
-		ArrayList<StopTimeUpdate.Builder> cleanUpdates = new ArrayList<StopTimeUpdate.Builder>();
+		long lastTime = Integer.MAX_VALUE;
+		for (int i = tripUpdate.getStopTimeUpdateCount()-1; i >= 0; i--){ //Filter negative dwells and stoptimes
+			StopTimeUpdate.Builder update = tripUpdate.getStopTimeUpdateBuilder(i);
+			if (update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.NO_DATA || 
+					update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED ||
+					update.hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate)){
+				continue;
+			}
+			if (update.hasArrival() && update.hasDeparture()){
+				if (update.getArrival().getTime() > update.getDeparture().getTime()){
+					update.clearArrival();
+				}
+			}
+			if (update.hasDeparture()){
+				if (update.getDeparture().getTime() > lastTime){
+					if (!update.getDeparture().hasDelay() && update.getDeparture().hasTime() && lastTime != Integer.MAX_VALUE){
+						int delay = (int) (update.getDeparture().getTime() - lastTime)-1;
+						update.getDepartureBuilder().setDelay(-delay);
+						update.getDepartureBuilder().setTime(update.getDeparture().getTime()-delay);
+						_log.info("Early compenstated1 {}",delay);
+					}else{
+						update.clearDeparture();
+					}
+				}else if (update.getDeparture().hasTime()){
+					lastTime = update.getDeparture().getTime();
+				}else{
+					update.clearDeparture();
+				}
+				if (!update.getDeparture().hasDelay() && update.getDeparture().hasTime()){
+					update.getDepartureBuilder().setDelay(0);
+					
+				}
+			}
+			if (update.hasArrival()){
+				if (update.getArrival().getTime() > lastTime){
+					if (!update.getArrival().hasDelay() && update.getArrival().hasTime() && lastTime != Integer.MAX_VALUE){
+						int delay = (int) (update.getArrival().getTime() - lastTime)-1;
+						update.getArrivalBuilder().setDelay(-delay);
+						update.getArrivalBuilder().setTime(update.getArrival().getTime()-delay);
+						_log.info("Delay compenstated {}",delay);
+					}else{
+						update.clearArrival();
+					}
+				}else if (update.getArrival().hasTime()){
+					lastTime = update.getArrival().getTime();
+				}else{
+					update.clearArrival();
+				}
+				if (!update.getArrival().hasDelay() && update.getArrival().hasTime()){
+					update.getArrivalBuilder().setDelay(0);
+				}
+			}
+		}
+		ArrayList<StopTimeUpdate.Builder> updates = new ArrayList<StopTimeUpdate.Builder>();
+		int lastDelay = Integer.MIN_VALUE;
 		for (StopTimeUpdate.Builder update : tripUpdate.getStopTimeUpdateBuilderList()){
 			if (update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.NO_DATA || 
 					update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED ||
@@ -257,53 +317,43 @@ public class Journey {
 				if (update.hasDeparture()){
 					update.clearDeparture();
 				}
-				cleanUpdates.add(update); //No data
-			}
-			if (update.hasArrival() && update.hasDeparture()){
-				if (update.getArrival().hasDelay() && update.getDeparture().hasDelay()){
-					if (update.getArrival().getDelay() == update.getDeparture().getDelay()){
-						update.clearDeparture();
-					}
-				}else if (update.getArrival().hasTime() && update.getDeparture().hasTime()){
-					if (update.getArrival().getTime() == update.getDeparture().getTime()){
-						update.clearDeparture();
-					}
-				}
+				updates.add(update); //No data
+				lastDelay = Integer.MIN_VALUE;
+				continue;
 			}
 			if (update.hasArrival()){
-				if (update.getArrivalOrBuilder().hasTime()){
-					long eta = 	update.getArrivalOrBuilder().getTime();
-					if (eta >= lastTime){
-						lastTime = eta;
-					}else{
-						_log.trace("Non-sequential trip-update filterd {}",tripUpdate.build());
-						update.clearArrival();
-					}
+				if (update.getArrival().getDelay() == lastDelay){
+					update.clearArrival();
+				}else{
+					lastDelay = update.getArrival().getDelay();
 				}
 			}
 			if (update.hasDeparture()){
-				if (update.getDepartureOrBuilder().hasDelay()){
-					update.getDepartureBuilder().clearDelay();
+				if (update.getDeparture().getDelay() == lastDelay){
+					update.clearDeparture();
+				}else{
+					lastDelay = update.getDeparture().getDelay();
 				}
-				if (update.getDepartureOrBuilder().hasTime()){
-					long etd = 	update.getDepartureOrBuilder().getTime();
-					if (etd >= lastTime){
-						lastTime = etd;
-					}else{
-						update.clearDeparture();
-					}
-				}
-
 			}
 			if (update.hasArrival() || update.hasDeparture()){
-				cleanUpdates.add(update);
+				updates.add(update);
 			}
 		}
 		tripUpdate.clearStopTimeUpdate();
-		for (StopTimeUpdate.Builder update: cleanUpdates){
+		for (StopTimeUpdate.Builder update: updates){
 			tripUpdate.addStopTimeUpdate(update);
 		}
 		return tripUpdate;
+	}
+
+	private int lastDelay(StopTimeUpdate.Builder stoptimeUpdate,int lastDelay){
+		if (stoptimeUpdate.hasDeparture()){
+			return stoptimeUpdate.getDeparture().getDelay();
+		}
+		if (stoptimeUpdate.hasArrival()){
+			return stoptimeUpdate.getArrival().getDelay();
+		}
+		return lastDelay;
 	}
 
 	public TripUpdate.Builder updateTimes(KV6posinfo posinfo) {
@@ -328,13 +378,15 @@ public class Journey {
 		case OFFROUTE:
 			if (getPosinfo() != null && !hasMutations() && getPosinfo().getMessagetype() != Type.OFFROUTE)
 				return null; //We've already sent out NO_DATE
+			int lastDelay = Integer.MIN_VALUE;
 			for (int i = 0; i < timedemandgroup.getPoints().size(); i++) {
 				TimeDemandGroupPoint tpt = timedemandgroup.getPoints().get(i);
 				JourneyPatternPoint pt = journeypattern.getPoint(tpt.pointorder);
 				if (!pt.isScheduled())
 					continue;
-				StopTimeUpdate.Builder recordedTimes = recordedTimes(pt);
+				StopTimeUpdate.Builder recordedTimes = recordedTimes(tpt,pt,lastDelay);
 				if (recordedTimes != null){
+					lastDelay = lastDelay(recordedTimes,lastDelay);
 					tripUpdate.addStopTimeUpdate(recordedTimes);
 				}else if (posinfo.getMessagetype() == Type.OFFROUTE){
 					StopTimeUpdate.Builder noData = StopTimeUpdate.newBuilder();
@@ -355,7 +407,7 @@ public class Journey {
 		}
 		int passageseq = 0;
 		int elapsedtime = 0;
-		boolean nullterminated = false;
+		int lastDelay = Integer.MIN_VALUE;
 		for (int i = 0; i < timedemandgroup.getPoints().size(); i++) {
 			TimeDemandGroupPoint tpt = timedemandgroup.getPoints().get(i);
 			JourneyPatternPoint pt = journeypattern.getPoint(tpt.pointorder);
@@ -400,8 +452,9 @@ public class Journey {
 						break;
 					}
 				}
-				StopTimeUpdate.Builder recorded = recordedTimes(pt);
+				StopTimeUpdate.Builder recorded = recordedTimes(tpt,pt,lastDelay);
 				if (recorded != null){
+					lastDelay = lastDelay(recorded,lastDelay);
 					tripUpdate.addStopTimeUpdate(recorded);
 				}
 			} else if (!passed) { //Stops not visted by the vehicle
@@ -446,13 +499,8 @@ public class Journey {
 					}
 				}
 				stopTimeUpdate.setDeparture(stopTimeEventDeparture(tpt,pt,punctuality));
-				if (!nullterminated || Math.abs(punctuality) > 0 || stopcanceled || destChanged){
-					if (punctuality == 0){
-						nullterminated = true;
-					}
-					if (pt.isScheduled()){
-						tripUpdate.addStopTimeUpdate(stopTimeUpdate);
-					}
+				if (pt.isScheduled()){
+					tripUpdate.addStopTimeUpdate(stopTimeUpdate);
 				}
 				punctuality = stopTimeUpdate.getDeparture().getDelay();
 				if (i+1 < timedemandgroup.getPoints().size()){
@@ -481,8 +529,9 @@ public class Journey {
 					}
 				}
 			}else{ //JourneyPatternPoint has been passed.
-				StopTimeUpdate.Builder recorded = recordedTimes(pt);
+				StopTimeUpdate.Builder recorded = recordedTimes(tpt,pt,lastDelay);
 				if (recorded != null){
+					lastDelay = lastDelay(recorded,lastDelay);
 					tripUpdate.addStopTimeUpdate(recorded);
 				}
 			}
@@ -597,9 +646,13 @@ public class Journey {
 		}
 	}
 
-	public TripUpdate.Builder update(KV6posinfo posinfo) throws StopNotFoundException,UnknownKV6PosinfoType, TooEarlyException {
+	public TripUpdate.Builder update(KV6posinfo posinfo) throws StopNotFoundException,UnknownKV6PosinfoType, TooEarlyException, TooOldException {
+		long currentTime = Utils.currentTimeSecs();
+		if (posinfo.getTimestamp()<currentTime-120){
+			throw new TooOldException(posinfo.toString());
+		}
 		long departureTime = getDepartureEpoch();
-		if (Utils.currentTimeSecs() < departureTime){
+		if (currentTime < departureTime){
 			int timeDeltaSeconds = (int)(departureTime-Utils.currentTimeSecs());
 			if (timeDeltaSeconds>=3600){
 				switch(posinfo.getMessagetype()){

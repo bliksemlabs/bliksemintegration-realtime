@@ -35,6 +35,7 @@ import nl.ovapi.bison.sax.KV17SAXHandler;
 import nl.ovapi.bison.sax.KV6SAXHandler;
 import nl.ovapi.exceptions.StopNotFoundException;
 import nl.ovapi.exceptions.TooEarlyException;
+import nl.ovapi.exceptions.TooOldException;
 import nl.ovapi.exceptions.UnknownKV6PosinfoType;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.Journey;
@@ -341,6 +342,9 @@ public class BisonToGtfsRealtimeService {
 	}	
 
 	public void remove(ArrayList<String> removeIds){
+		if (removeIds.size() == 0){
+			return;
+		}
 		GtfsRealtimeIncrementalUpdate vehicleUpdates = new GtfsRealtimeIncrementalUpdate();
 		GtfsRealtimeIncrementalUpdate tripUpdates = new GtfsRealtimeIncrementalUpdate();
 		for (String id :removeIds){
@@ -480,6 +484,8 @@ public class BisonToGtfsRealtimeService {
 								tripEntity.setTripUpdate(tripUpdate); //Get update created from KV6
 								tripUpdates.addUpdatedEntity(tripEntity.build());
 							}
+						}catch (TooOldException e){
+							_log.error("Trip {} Too old: {}", id,posinfo);
 						}catch (StopNotFoundException e){
 							_log.error("Trip {} userstop {} not found", id,posinfo.getUserstopcode());
 						}catch (TooEarlyException e){
