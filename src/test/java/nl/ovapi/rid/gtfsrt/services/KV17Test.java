@@ -262,11 +262,11 @@ public class KV17Test {
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SCHEDULED);			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate));
 			OVapiStopTimeUpdate extension = tripUpdate.getStopTimeUpdateBuilder(0).getExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
 			assertEquals(extension.getStopHeadsign(),"Arnhem Centraalspoor");
-			assertTrue(tripUpdate.getStopTimeUpdateBuilder(1).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(2).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(3).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
-			assertTrue(tripUpdate.getStopTimeUpdateBuilder(4).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SCHEDULED);
-			assertTrue(tripUpdate.getStopTimeUpdateCount() == 5);
+			assertTrue(tripUpdate.getStopTimeUpdateBuilder(4).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
+			assertTrue(tripUpdate.getStopTimeUpdateBuilder(5).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SCHEDULED);
+			assertTrue(tripUpdate.getStopTimeUpdateCount() == 6);
 		}
 	}
 }

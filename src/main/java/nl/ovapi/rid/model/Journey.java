@@ -243,7 +243,20 @@ public class Journey {
 			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 			long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
 			stopTimeEvent.setTime(targettime);
+			stopTimeEvent.setDelay(0);
+			stopTimeUpdate.setArrival(stopTimeEvent);
+			targettime += tpt.getStopwaittime();
+			stopTimeEvent.setTime(targettime);
+			stopTimeEvent.setDelay(0);
 			stopTimeUpdate.setDeparture(stopTimeEvent);
+		}
+		if (stopTimeUpdate.hasDeparture() && !stopTimeUpdate.hasArrival()){
+			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
+			long time = stopTimeUpdate.getDeparture().getTime();
+			int delay = stopTimeUpdate.getDeparture().getDelay();
+			stopTimeEvent.setTime(time);
+			stopTimeEvent.setDelay(delay);
+			stopTimeUpdate.setArrival(stopTimeEvent);
 		}
 		return stopTimeUpdate;
 	}
@@ -252,7 +265,7 @@ public class Journey {
 		if (tripUpdate.getStopTimeUpdateCount() == 0)
 			return tripUpdate;
 		tripUpdate.getStopTimeUpdateOrBuilderList();
-		long lastTime = Integer.MAX_VALUE;
+		long lastTime = Long.MAX_VALUE;
 		for (int i = tripUpdate.getStopTimeUpdateCount()-1; i >= 0; i--){ //Filter negative dwells and stoptimes
 			StopTimeUpdate.Builder update = tripUpdate.getStopTimeUpdateBuilder(i);
 			if (update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.NO_DATA || 
@@ -260,50 +273,28 @@ public class Journey {
 					update.hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate)){
 				continue;
 			}
-			if (update.hasArrival() && update.hasDeparture()){
-				if (update.getArrival().getTime() > update.getDeparture().getTime()){
-					update.clearArrival();
-				}
+			if (!update.hasDeparture() || !update.hasArrival()){
+				_log.error("Departure or arrival is missing");
 			}
-			if (update.hasDeparture()){
-				if (update.getDeparture().getTime() > lastTime){
-					if (!update.getDeparture().hasDelay() && update.getDeparture().hasTime() && lastTime != Integer.MAX_VALUE){
-						int delay = (int) (update.getDeparture().getTime() - lastTime)-1;
-						update.getDepartureBuilder().setDelay(-delay);
-						update.getDepartureBuilder().setTime(update.getDeparture().getTime()-delay);
-						_log.info("Early compenstated1 {}",delay);
-					}else{
-						update.clearDeparture();
-					}
-				}else if (update.getDeparture().hasTime()){
-					lastTime = update.getDeparture().getTime();
-				}else{
-					update.clearDeparture();
+			if (update.getDeparture().getTime() > lastTime){
+				int delay = (int) (lastTime - update.getDeparture().getTime());
+				if (delay < 0){
+					delay -= 1;
 				}
-				if (!update.getDeparture().hasDelay() && update.getDeparture().hasTime()){
-					update.getDepartureBuilder().setDelay(0);
-					
-				}
+				update.getDepartureBuilder().setDelay(delay);
+				update.getDepartureBuilder().setTime(update.getDeparture().getTime()+delay);
+				lastTime = update.getDeparture().getTime();
 			}
-			if (update.hasArrival()){
-				if (update.getArrival().getTime() > lastTime){
-					if (!update.getArrival().hasDelay() && update.getArrival().hasTime() && lastTime != Integer.MAX_VALUE){
-						int delay = (int) (update.getArrival().getTime() - lastTime)-1;
-						update.getArrivalBuilder().setDelay(-delay);
-						update.getArrivalBuilder().setTime(update.getArrival().getTime()-delay);
-						_log.info("Delay compenstated {}",delay);
-					}else{
-						update.clearArrival();
-					}
-				}else if (update.getArrival().hasTime()){
-					lastTime = update.getArrival().getTime();
-				}else{
-					update.clearArrival();
+			lastTime = update.getDeparture().getTime();
+			if (update.getArrival().getTime() > lastTime){
+				int delay = (int) (lastTime - update.getArrival().getTime());
+				if (delay < 0){
+					delay -= 1;
 				}
-				if (!update.getArrival().hasDelay() && update.getArrival().hasTime()){
-					update.getArrivalBuilder().setDelay(0);
-				}
+				update.getArrivalBuilder().setDelay(delay);
+				update.getArrivalBuilder().setTime(update.getArrival().getTime()+delay);
 			}
+			lastTime = update.getArrival().getTime();
 		}
 		ArrayList<StopTimeUpdate.Builder> updates = new ArrayList<StopTimeUpdate.Builder>();
 		int lastDelay = Integer.MIN_VALUE;

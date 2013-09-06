@@ -146,13 +146,11 @@ public class KV6Test {
 		posinfo.setTimestamp(j.getDepartureEpoch()-60);
 		posinfo.setPassagesequencenumber(-120);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
+		System.out.println(tripUpdate.build());
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
-		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch()-60);
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),-60);
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),j.getDepartureEpoch());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getDelay(),0);
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch());
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),0);
 
 	}
 	
@@ -174,11 +172,8 @@ public class KV6Test {
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
-		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch()-120);
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),-120);
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),j.getDepartureEpoch());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getDelay(),0);
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch());
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),0);
 	}
 	@Test
 	public void testNegativeOnTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException{
@@ -192,17 +187,16 @@ public class KV6Test {
 		posinfo.setVehiclenumber(911);
 		posinfo.setMessagetype(Type.ARRIVAL);
 		posinfo.setUserstopcode(j.getJourneypattern().getPoint(3).getOperatorpointref());
-		posinfo.setPunctuality(-120);
-		posinfo.setTimestamp(j.getDepartureEpoch());
+		posinfo.setPunctuality(-30);
+		posinfo.setTimestamp(j.getDepartureEpoch()+100);
 		posinfo.setPassagesequencenumber(0);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 2);
-		System.out.println(tripUpdate.build());
-		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getDelay(),0);
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),j.getDepartureEpoch());
-		assertEquals(tripUpdate.getStopTimeUpdate(1).getArrival().getDelay(),-120);
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getDelay(),0);
+		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),0);
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch());
+		assertEquals(tripUpdate.getStopTimeUpdate(1).getArrival().getDelay(),-20);
+		assertEquals(tripUpdate.getStopTimeUpdate(1).getDeparture().getDelay(),0);
 	}
 	
 	@Test
