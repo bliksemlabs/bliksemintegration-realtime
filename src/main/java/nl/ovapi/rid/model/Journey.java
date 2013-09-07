@@ -124,7 +124,7 @@ public class Journey {
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 		stopTimeEvent.setTime(time);
 		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
-		stopTimeEvent.setDelay((int)(time-targettime));
+		stopTimeEvent.setDelay((int)(targettime-time));
 		return stopTimeEvent;
 	}
 
@@ -151,7 +151,7 @@ public class Journey {
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 		stopTimeEvent.setTime(time);
 		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
-		stopTimeEvent.setDelay((int)(time-targettime));
+		stopTimeEvent.setDelay((int)(targettime-time));
 		return stopTimeEvent;
 	}
 
