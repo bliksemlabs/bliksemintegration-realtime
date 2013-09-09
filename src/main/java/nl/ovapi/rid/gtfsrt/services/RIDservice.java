@@ -288,7 +288,11 @@ public class RIDservice {
 				Journey journey = new Journey();
 				journey.setId(rs.getLong(2));
 				journey.setJourneypattern(newJourneypatterns.get(rs.getString(3).intern()));
+				if (journey.getJourneypattern() == null)
+					_log.error("JourneyPattern == null {} {}",rs.getString(1),rs.getString(3));
 				journey.setTimedemandgroup(newTimedemandgroups.get(rs.getString(4).intern()));
+				if (journey.getTimedemandgroup() == null)
+					_log.error("TimeDemandGroup == null {} {}",rs.getString(1),rs.getString(4));
 				journey.setDeparturetime(rs.getInt(5));
 				if (rs.getString(6) != null){
 					journey.setWheelchairaccessible("true".equals(rs.getString(6)));
