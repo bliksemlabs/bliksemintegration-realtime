@@ -40,5 +40,6 @@ public class GtfsRealtimeExtensions {
     registry.add(GtfsRealtimeOVapi.ovapiVehiclePosition);
     registry.add(GtfsRealtimeOVapi.ovapiTripUpdate);
     registry.add(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
+    registry.add(GtfsRealtimeOVapi.ovapiVehicleDescriptor);
   }
 }

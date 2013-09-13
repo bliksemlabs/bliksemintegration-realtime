@@ -43,3 +43,13 @@ message OVapiStopTimeUpdate {
 extend transit_realtime.TripUpdate.StopTimeUpdate {
   optional OVapiStopTimeUpdate ovapi_stop_time_update = 1003;
 }
+
+message OVapiVehicleDescriptor {
+  optional bool wheelchair_accessible = 1;
+  optional string vehicle_type = 2;
+  optional string vehicle_headsign = 3;
+}
+
+extend VehicleDescriptor {
+  optional OVapiVehicleDescriptor ovapi_vehicle_descriptor = 1003;
+}
