@@ -239,6 +239,11 @@ public class KV78TurboToPseudoKV6Service {
 							case EBS:
 							case SYNTUS:
 								break;
+							case CXX:
+								if ("H060".equals(pt.getLinePlanningNumber()))
+									break;
+								if ("H061".equals(pt.getLinePlanningNumber()))
+									break;
 							default:
 								continue;
 							}
