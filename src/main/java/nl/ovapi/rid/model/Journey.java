@@ -278,9 +278,6 @@ public class Journey {
 			}
 			if (update.getDeparture().getTime() > lastTime){
 				int delay = (int) (lastTime - update.getDeparture().getTime());
-				if (delay < 0){
-					delay -= 1;
-				}
 				update.getDepartureBuilder().setDelay(delay);
 				update.getDepartureBuilder().setTime(update.getDeparture().getTime()+delay);
 				lastTime = update.getDeparture().getTime();
@@ -288,9 +285,6 @@ public class Journey {
 			lastTime = update.getDeparture().getTime();
 			if (update.getArrival().getTime() > lastTime){
 				int delay = (int) (lastTime - update.getArrival().getTime());
-				if (delay < 0){
-					delay -= 1;
-				}
 				update.getArrivalBuilder().setDelay(delay);
 				update.getArrivalBuilder().setTime(update.getArrival().getTime()+delay);
 			}
