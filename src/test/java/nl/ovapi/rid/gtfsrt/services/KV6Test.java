@@ -149,8 +149,11 @@ public class KV6Test {
 		System.out.println(tripUpdate.build());
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),0);
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch()-60);
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),-60);
+		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),j.getDepartureEpoch());
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getDelay(),0);
 
 	}
 	

@@ -237,6 +237,12 @@ public class Journey {
 			stopTimeUpdate.setArrival(stopTimeEventArrivalRecorded(tpt,realizedArrivals.get(pt.getPointorder())));
 		if (realizedDepartures.containsKey(pt.getPointorder()))
 			stopTimeUpdate.setDeparture(stopTimeEventDepartureRecorded(tpt,realizedDepartures.get(pt.getPointorder())));
+		if (pt.isWaitpoint() && stopTimeUpdate.hasArrival() && stopTimeUpdate.getArrival().getDelay() < 0 && !stopTimeUpdate.hasDeparture()){
+			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
+			stopTimeEvent.setTime(getDepartureTime(tpt.getPointorder()));
+			stopTimeEvent.setDelay(0);
+			stopTimeUpdate.setDeparture(stopTimeEvent);
+		}
 		else if (Integer.MIN_VALUE != lastDelay){
 			stopTimeUpdate.setDeparture(stopTimeEventDepartureRecorded(tpt,getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime()+lastDelay));
 		}else{
@@ -449,7 +455,6 @@ public class Journey {
 						if (newPunctuality > -30 && newPunctuality - punctuality < 600){
 							punctuality = newPunctuality;
 						}
-
 						break;
 					default:
 						break;
