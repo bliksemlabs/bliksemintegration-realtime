@@ -335,6 +335,8 @@ public class Journey {
 		}
 		ArrayList<StopTimeUpdate.Builder> updates = new ArrayList<StopTimeUpdate.Builder>();
 		int lastDelay = Integer.MIN_VALUE;
+		StopTimeUpdate.ScheduleRelationship lastSchedule = StopTimeUpdate.ScheduleRelationship.SCHEDULED;
+		boolean hadStopTimeExtension = false;
 		for (StopTimeUpdate.Builder update : tripUpdate.getStopTimeUpdateBuilderList()){
 			if (update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.NO_DATA || 
 					update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED ||
@@ -347,17 +349,22 @@ public class Journey {
 				}
 				updates.add(update); //No data
 				lastDelay = Integer.MIN_VALUE;
+				lastSchedule = update.hasScheduleRelationship() ? StopTimeUpdate.ScheduleRelationship.SCHEDULED :
+					update.getScheduleRelationship();
+				hadStopTimeExtension = update.hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
 				continue;
 			}
+			boolean override = lastSchedule != update.getScheduleRelationship() ||
+					hadStopTimeExtension != update.hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
 			if (update.hasArrival()){
-				if (update.getArrival().getDelay() == lastDelay){
+				if (update.getArrival().getDelay() == lastDelay && !override){
 					update.clearArrival();
 				}else{
 					lastDelay = update.getArrival().getDelay();
 				}
 			}
 			if (update.hasDeparture()){
-				if (update.getDeparture().getDelay() == lastDelay){
+				if (update.getDeparture().getDelay() == lastDelay && !override){
 					update.clearDeparture();
 				}else{
 					lastDelay = update.getDeparture().getDelay();
@@ -366,6 +373,9 @@ public class Journey {
 			if (update.hasArrival() || update.hasDeparture()){
 				updates.add(update);
 			}
+			lastSchedule = update.hasScheduleRelationship() ? StopTimeUpdate.ScheduleRelationship.SCHEDULED :
+				update.getScheduleRelationship();
+			hadStopTimeExtension = update.hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
 		}
 		tripUpdate.clearStopTimeUpdate();
 		for (StopTimeUpdate.Builder update: updates){
