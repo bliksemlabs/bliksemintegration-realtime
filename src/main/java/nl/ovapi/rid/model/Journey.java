@@ -124,7 +124,7 @@ public class Journey {
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 		stopTimeEvent.setTime(time);
 		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
-		stopTimeEvent.setDelay((int)(targettime-time));
+		stopTimeEvent.setDelay((int)(time-targettime));
 		return stopTimeEvent;
 	}
 
@@ -151,7 +151,7 @@ public class Journey {
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 		stopTimeEvent.setTime(time);
 		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
-		stopTimeEvent.setDelay((int)(targettime-time));
+		stopTimeEvent.setDelay((int)(time-targettime));
 		return stopTimeEvent;
 	}
 
@@ -260,6 +260,24 @@ public class Journey {
 		}
 		return stopTimeUpdate;
 	}
+	
+	public long getDepartureTime(int pointorder){
+		for (TimeDemandGroupPoint tpt : getTimedemandgroup().getPoints()){
+			if (tpt.getPointorder().equals(pointorder)){
+				return getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
+			}
+		}
+		throw new IllegalArgumentException("Pointorder "+pointorder+"does not exist");
+	}
+	
+	public long getArrivalTime(int pointorder){
+		for (TimeDemandGroupPoint tpt : getTimedemandgroup().getPoints()){
+			if (tpt.getPointorder().equals(pointorder)){
+				return getDepartureEpoch()+tpt.getTotaldrivetime();
+			}
+		}
+		throw new IllegalArgumentException("Pointorder "+pointorder+"does not exist");
+	}
 
 	public TripUpdate.Builder filter(TripUpdate.Builder tripUpdate){
 		if (tripUpdate.getStopTimeUpdateCount() == 0)
@@ -277,16 +295,16 @@ public class Journey {
 				_log.error("Departure or arrival is missing");
 			}
 			if (update.getDeparture().getTime() > lastTime){
-				int delay = (int) (lastTime - update.getDeparture().getTime());
-				update.getDepartureBuilder().setDelay(delay);
-				update.getDepartureBuilder().setTime(update.getDeparture().getTime()+delay);
+				int offset = (int) (lastTime - update.getDeparture().getTime());
+				update.getDepartureBuilder().setTime(update.getDeparture().getTime()+offset);
+				update.getDepartureBuilder().setDelay((int)(update.getDepartureBuilder().getTime()-getDepartureTime(update.getStopSequence())));
 				lastTime = update.getDeparture().getTime();
 			}
 			lastTime = update.getDeparture().getTime();
 			if (update.getArrival().getTime() > lastTime){
-				int delay = (int) (lastTime - update.getArrival().getTime());
-				update.getArrivalBuilder().setDelay(delay);
-				update.getArrivalBuilder().setTime(update.getArrival().getTime()+delay);
+				int offset = (int) (lastTime - update.getArrival().getTime());
+				update.getDepartureBuilder().setDelay((int)(update.getArrivalBuilder().getTime()-getArrivalTime(update.getStopSequence())));
+				update.getArrivalBuilder().setTime(update.getArrival().getTime()+offset);
 			}
 			lastTime = update.getArrival().getTime();
 		}
