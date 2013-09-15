@@ -175,8 +175,12 @@ public class KV6Test {
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),0);
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch()-120);
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),-120);
+		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),j.getDepartureEpoch());
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getDelay(),0);
+
 	}
 	@Test
 	public void testNegativeOnTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException{

@@ -122,9 +122,15 @@ public class Journey {
 
 	public StopTimeEvent.Builder stopTimeEventArrivalRecorded(TimeDemandGroupPoint tpt, long time){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
-		stopTimeEvent.setTime(time);
 		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
-		stopTimeEvent.setDelay((int)(time-targettime));
+		int delay = (int)(time-targettime);
+		if (Math.abs(delay) < PUNCTUALITY_FLOOR){
+			stopTimeEvent.setDelay(0);
+			stopTimeEvent.setTime(targettime);
+		}else{
+			stopTimeEvent.setDelay(delay);
+			stopTimeEvent.setTime(time);
+		}
 		return stopTimeEvent;
 	}
 
@@ -149,9 +155,16 @@ public class Journey {
 
 	public StopTimeEvent.Builder stopTimeEventDepartureRecorded(TimeDemandGroupPoint tpt, long time){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
-		stopTimeEvent.setTime(time);
 		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
 		stopTimeEvent.setDelay((int)(time-targettime));
+		int delay = (int)(time-targettime);
+		if (Math.abs(delay) < PUNCTUALITY_FLOOR){
+			stopTimeEvent.setDelay(0);
+			stopTimeEvent.setTime(targettime);
+		}else{
+			stopTimeEvent.setDelay(delay);
+			stopTimeEvent.setTime(time);
+		}
 		return stopTimeEvent;
 	}
 
@@ -237,20 +250,9 @@ public class Journey {
 			stopTimeUpdate.setArrival(stopTimeEventArrivalRecorded(tpt,realizedArrivals.get(pt.getPointorder())));
 		if (realizedDepartures.containsKey(pt.getPointorder()))
 			stopTimeUpdate.setDeparture(stopTimeEventDepartureRecorded(tpt,realizedDepartures.get(pt.getPointorder())));
-		if (pt.isWaitpoint() && stopTimeUpdate.hasArrival() && stopTimeUpdate.getArrival().getDelay() < 0 && !stopTimeUpdate.hasDeparture()){
+		if ((pt.isWaitpoint() ||pt.getPointorder() <= 1) && stopTimeUpdate.hasArrival() && stopTimeUpdate.getArrival().getDelay() < 0 && !stopTimeUpdate.hasDeparture()){
 			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 			stopTimeEvent.setTime(getDepartureTime(tpt.getPointorder()));
-			stopTimeEvent.setDelay(0);
-			stopTimeUpdate.setDeparture(stopTimeEvent);
-		}
-		if (!stopTimeUpdate.hasDeparture() && !stopTimeUpdate.hasDeparture()){
-			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
-			long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
-			stopTimeEvent.setTime(targettime);
-			stopTimeEvent.setDelay(0);
-			stopTimeUpdate.setArrival(stopTimeEvent);
-			targettime += tpt.getStopwaittime();
-			stopTimeEvent.setTime(targettime);
 			stopTimeEvent.setDelay(0);
 			stopTimeUpdate.setDeparture(stopTimeEvent);
 		}
@@ -262,9 +264,28 @@ public class Journey {
 			stopTimeEvent.setDelay(delay);
 			stopTimeUpdate.setArrival(stopTimeEvent);
 		}
+		if (!stopTimeUpdate.hasDeparture() && stopTimeUpdate.hasArrival()){
+			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
+			long time = stopTimeUpdate.getArrival().getTime();
+			int delay = stopTimeUpdate.getArrival().getDelay();
+			stopTimeEvent.setTime(time);
+			stopTimeEvent.setDelay(delay);
+			stopTimeUpdate.setDeparture(stopTimeEvent);
+		}
+		if (!stopTimeUpdate.hasArrival() && !stopTimeUpdate.hasDeparture()){
+			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
+			long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
+			stopTimeEvent.setTime(targettime);
+			stopTimeEvent.setDelay(0);
+			stopTimeUpdate.setArrival(stopTimeEvent);
+			targettime += tpt.getStopwaittime();
+			stopTimeEvent.setTime(targettime);
+			stopTimeEvent.setDelay(0);
+			stopTimeUpdate.setDeparture(stopTimeEvent);
+		}
 		return stopTimeUpdate;
 	}
-	
+
 	public long getDepartureTime(int pointorder){
 		for (TimeDemandGroupPoint tpt : getTimedemandgroup().getPoints()){
 			if (tpt.getPointorder().equals(pointorder)){
@@ -273,7 +294,7 @@ public class Journey {
 		}
 		throw new IllegalArgumentException("Pointorder "+pointorder+"does not exist");
 	}
-	
+
 	public long getArrivalTime(int pointorder){
 		for (TimeDemandGroupPoint tpt : getTimedemandgroup().getPoints()){
 			if (tpt.getPointorder().equals(pointorder)){
@@ -296,19 +317,19 @@ public class Journey {
 				continue;
 			}
 			if (!update.hasDeparture() || !update.hasArrival()){
+				System.out.println(tripUpdate.build());
 				_log.error("Departure or arrival is missing");
 			}
 			if (update.getDeparture().getTime() > lastTime){
 				int offset = (int) (lastTime - update.getDeparture().getTime());
 				update.getDepartureBuilder().setTime(update.getDeparture().getTime()+offset);
 				update.getDepartureBuilder().setDelay((int)(update.getDepartureBuilder().getTime()-getDepartureTime(update.getStopSequence())));
-				lastTime = update.getDeparture().getTime();
 			}
 			lastTime = update.getDeparture().getTime();
 			if (update.getArrival().getTime() > lastTime){
 				int offset = (int) (lastTime - update.getArrival().getTime());
 				update.getArrivalBuilder().setTime(update.getArrival().getTime()+offset);
-				update.getDepartureBuilder().setDelay((int)(update.getArrivalBuilder().getTime()-getArrivalTime(update.getStopSequence())));
+				update.getArrivalBuilder().setDelay((int)(update.getArrivalBuilder().getTime()-getArrivalTime(update.getStopSequence())));
 			}
 			lastTime = update.getArrival().getTime();
 		}
@@ -402,7 +423,6 @@ public class Journey {
 		}
 		int passageseq = 0;
 		int elapsedtime = 0;
-		int lastDelay = Integer.MIN_VALUE;
 		for (int i = 0; i < timedemandgroup.getPoints().size(); i++) {
 			TimeDemandGroupPoint tpt = timedemandgroup.getPoints().get(i);
 			JourneyPatternPoint pt = journeypattern.getPoint(tpt.pointorder);
