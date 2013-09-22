@@ -43,7 +43,6 @@ public class NSapiToGtfsRealTimeServices {
 	private ExecutorService _executor;
 	private Future<?> _task;
 	private static final Logger _log = LoggerFactory.getLogger(NSapiToGtfsRealTimeServices.class);
-	private ScheduledExecutorService _scheduler;
 	private final static String[] nsApiPublishers = new String[] {"tcp://node01.post.openov.nl:6611"};
 	private GtfsRealtimeSink _alertsSink;
 	private RIDservice _ridService;
@@ -63,8 +62,6 @@ public class NSapiToGtfsRealTimeServices {
 	@PostConstruct
 	public void start() {
 		_executor = Executors.newCachedThreadPool();
-		_scheduler = Executors.newScheduledThreadPool(5);
-		_scheduler.scheduleAtFixedRate(new CleanTask(), 60, 10, TimeUnit.SECONDS);
 		_task = _executor.submit(new ReceiveTask());
 		stations = Maps.newHashMapWithExpectedSize(255);
 	}
@@ -84,10 +81,6 @@ public class NSapiToGtfsRealTimeServices {
 		if (_executor != null) {
 			_executor.shutdownNow();
 			_executor = null;
-		}
-		if (_scheduler != null) {
-			_scheduler.shutdownNow();
-			_scheduler = null;
 		}
 	}
 
