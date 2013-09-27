@@ -220,7 +220,7 @@ public class KV78TurboToPseudoKV6Service {
 			_log.info("Connected to {}",kv8turboPublishers[addressPointer]);
 			org.zeromq.ZMQ.Poller poller = context.poller();
 			poller.register(subscriber);
-			while (true) {
+			while (!Thread.interrupted()) {
 				if (poller.poll(60*1000*5) > 0){
 					messagecounter++;
 					if (messagecounter % 1000 == 0){
@@ -286,6 +286,7 @@ public class KV78TurboToPseudoKV6Service {
 					subscriber.subscribe("".getBytes());
 				}
 			}
+			subscriber.disconnect(kv8turboPublishers[addressPointer]);
 		}
 	}
 }

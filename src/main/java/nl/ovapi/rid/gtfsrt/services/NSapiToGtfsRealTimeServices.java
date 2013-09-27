@@ -197,7 +197,7 @@ public class NSapiToGtfsRealTimeServices {
 			_log.info("Connected to {}",nsApiPublishers[addressPointer]);
 			org.zeromq.ZMQ.Poller poller = context.poller();
 			poller.register(subscriber);
-			while (true) {
+			while (!Thread.interrupted()) {
 				if (poller.poll(60*1000*5) > 0){
 					messagecounter++;
 					if (messagecounter % 1000 == 0){
@@ -222,6 +222,7 @@ public class NSapiToGtfsRealTimeServices {
 					subscriber.subscribe("".getBytes());
 				}
 			}
+			subscriber.disconnect(nsApiPublishers[addressPointer]);
 		}
 	}
 }

@@ -566,7 +566,7 @@ public class BisonToGtfsRealtimeService {
 			subscriber.subscribe("".getBytes());
 			org.zeromq.ZMQ.Poller poller = context.poller();
 			poller.register(subscriber);
-			while (true) {
+			while (!Thread.interrupted()) {
 				if (poller.poll(60*1000*5) > 0){
 					messagecounter++;
 					if (messagecounter % 1000 == 0){
@@ -618,6 +618,7 @@ public class BisonToGtfsRealtimeService {
 					subscriber.connect(pubAdress);
 					subscriber.subscribe("".getBytes());
 				}
+				subscriber.disconnect(pubAdress);
 			}
 		}
 	}
