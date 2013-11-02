@@ -69,6 +69,7 @@ import com.google.transit.realtime.GtfsRealtime.TranslatedString.Translation;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
+import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition.VehicleStopStatus;
 import com.google.transit.realtime.GtfsRealtimeOVapi;
@@ -478,6 +479,17 @@ public class BisonToGtfsRealtimeService {
 					if (posinfo.getReinforcementnumber() == 0){ //Primary vehicle, BISON can currently not yet support schedules for reinforcments
 						try{
 							TripUpdate.Builder tripUpdate = journey.update(posinfo);
+							int pointorder = -1;
+							boolean valid = true;
+							for (StopTimeUpdate stoptimeUpdate : tripUpdate.getStopTimeUpdateList()){
+								if (stoptimeUpdate.getStopSequence() < pointorder){
+									valid = false;
+								}
+								pointorder = stoptimeUpdate.getStopSequence();
+							}
+							if (!valid){
+								_log.error("Invalid sequence of pointorders {}",tripUpdate.build());
+							}
 							if (tripUpdate != null){
 								FeedEntity.Builder tripEntity = FeedEntity.newBuilder();
 								tripEntity.setId(id);
@@ -485,13 +497,13 @@ public class BisonToGtfsRealtimeService {
 								tripUpdates.addUpdatedEntity(tripEntity.build());
 							}
 						}catch (TooOldException e){
-							_log.error("Trip {} Too old: {}", id,posinfo);
+							_log.info("Trip {} Too old: {}", id,posinfo);
 						}catch (StopNotFoundException e){
-							_log.error("Trip {} userstop {} not found", id,posinfo.getUserstopcode());
+							_log.info("Trip {} userstop {} not found", id,posinfo.getUserstopcode());
 						}catch (TooEarlyException e){
-							_log.error("Trip {} punctuality too early {}", id,posinfo);
+							_log.trace("Trip {} punctuality too early {}", id,posinfo);
 						} catch (UnknownKV6PosinfoType e) {
-							_log.error("Trip {} unknown Posinfotype {}", id,posinfo);
+							_log.info("Trip {} unknown Posinfotype {}", id,posinfo);
 						}
 					}
 				}catch (Exception e){
@@ -618,8 +630,9 @@ public class BisonToGtfsRealtimeService {
 					subscriber.connect(pubAdress);
 					subscriber.subscribe("".getBytes());
 				}
-				subscriber.disconnect(pubAdress);
 			}
+			_log.error("BisonToGtfsRealtime service interrupted");
+			subscriber.disconnect(pubAdress);
 		}
 	}
 }
