@@ -125,7 +125,7 @@ public class Journey {
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
 		int delay = (int)(time-targettime);
-		if (Math.abs(delay) < PUNCTUALITY_FLOOR){
+		if (Math.abs(delay) < PUNCTUALITY_FLOOR || delay <  MIN_PUNCTUALITY){
 			stopTimeEvent.setDelay(0);
 			stopTimeEvent.setTime(targettime);
 		}else{
@@ -159,7 +159,7 @@ public class Journey {
 		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
 		stopTimeEvent.setDelay((int)(time-targettime));
 		int delay = (int)(time-targettime);
-		if (Math.abs(delay) < PUNCTUALITY_FLOOR){
+		if (Math.abs(delay) < PUNCTUALITY_FLOOR || delay <  MIN_PUNCTUALITY){
 			stopTimeEvent.setDelay(0);
 			stopTimeEvent.setTime(targettime);
 		}else{
@@ -322,7 +322,8 @@ public class Journey {
 				continue;
 			}
 			if (!update.hasDeparture() || !update.hasArrival()){
-				System.out.println(tripUpdate.build());
+				//System.out.println(tripUpdate.build());
+				//System.out.println(update.build());
 				_log.error("Departure or arrival is missing");
 			}
 			if (update.getDeparture().getTime() > lastTime){
@@ -533,6 +534,7 @@ public class Journey {
 				if (pt.isScheduled()){
 					tripUpdate.addStopTimeUpdate(stopTimeUpdate);
 				}
+				
 				punctuality = stopTimeUpdate.getDeparture().getDelay();
 				if (i+1 < timedemandgroup.getPoints().size()){
 					TimeDemandGroupPoint ntpt = timedemandgroup.getPoints().get(i+1);
