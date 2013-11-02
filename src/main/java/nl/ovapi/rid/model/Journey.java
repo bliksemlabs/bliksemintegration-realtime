@@ -364,7 +364,7 @@ public class Journey {
 			boolean override = lastSchedule != update.getScheduleRelationship() ||
 					hadStopTimeExtension != update.hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
 			if (update.hasArrival()){
-				if (update.getArrival().getDelay() == lastDelay && (lastDelay == 0 || i != unfilteredUpdates.size()-1) && !override){
+				if (update.getArrival().getDelay() == lastDelay && !override){
 					update.clearArrival();
 				}else{
 					lastDelay = update.getArrival().getDelay();
