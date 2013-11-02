@@ -199,9 +199,10 @@ public class KV6Test {
 		posinfo.setPassagesequencenumber(0);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 2);
-		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
+		System.out.println(tripUpdate.build());
+		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),0);
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch());
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),j.getDepartureEpoch());
 		assertEquals(tripUpdate.getStopTimeUpdate(1).getArrival().getDelay(),-20);
 		assertEquals(tripUpdate.getStopTimeUpdate(1).getDeparture().getDelay(),0);
 	}
