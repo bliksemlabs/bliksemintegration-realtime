@@ -479,22 +479,22 @@ public class BisonToGtfsRealtimeService {
 					if (posinfo.getReinforcementnumber() == 0){ //Primary vehicle, BISON can currently not yet support schedules for reinforcments
 						try{
 							TripUpdate.Builder tripUpdate = journey.update(posinfo);
-							int pointorder = -1;
-							boolean valid = true;
-							for (StopTimeUpdate stoptimeUpdate : tripUpdate.getStopTimeUpdateList()){
-								if (stoptimeUpdate.getStopSequence() < pointorder){
-									valid = false;
-								}
-								pointorder = stoptimeUpdate.getStopSequence();
-							}
-							if (!valid){
-								_log.error("Invalid sequence of pointorders {}",tripUpdate.build());
-							}
 							if (tripUpdate != null){
 								FeedEntity.Builder tripEntity = FeedEntity.newBuilder();
 								tripEntity.setId(id);
 								tripEntity.setTripUpdate(tripUpdate); //Get update created from KV6
 								tripUpdates.addUpdatedEntity(tripEntity.build());
+								boolean valid = true;
+								int pointorder = -1;
+								for (StopTimeUpdate stoptimeUpdate : tripUpdate.getStopTimeUpdateList()){
+									if (stoptimeUpdate.getStopSequence() < pointorder){
+										valid = false;
+									}
+									pointorder = stoptimeUpdate.getStopSequence();
+								}
+								if (!valid){
+									_log.error("Invalid sequence of pointorders {}",tripUpdate.build());
+								}
 							}
 						}catch (TooOldException e){
 							_log.info("Trip {} Too old: {}", id,posinfo);
