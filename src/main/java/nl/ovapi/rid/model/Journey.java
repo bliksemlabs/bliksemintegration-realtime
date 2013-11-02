@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -260,17 +261,21 @@ public class Journey {
 			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 			long time = stopTimeUpdate.getDeparture().getTime();
 			int delay = stopTimeUpdate.getDeparture().getDelay();
-			stopTimeEvent.setTime(time);
-			stopTimeEvent.setDelay(delay);
-			stopTimeUpdate.setArrival(stopTimeEvent);
+			if (delay > MIN_PUNCTUALITY){
+				stopTimeEvent.setTime(time);
+				stopTimeEvent.setDelay(delay);
+				stopTimeUpdate.setArrival(stopTimeEvent);
+			}
 		}
 		if (!stopTimeUpdate.hasDeparture() && stopTimeUpdate.hasArrival()){
 			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 			long time = stopTimeUpdate.getArrival().getTime();
 			int delay = stopTimeUpdate.getArrival().getDelay();
-			stopTimeEvent.setTime(time);
-			stopTimeEvent.setDelay(delay);
-			stopTimeUpdate.setDeparture(stopTimeEvent);
+			if (delay > MIN_PUNCTUALITY){
+				stopTimeEvent.setTime(time);
+				stopTimeEvent.setDelay(delay);
+				stopTimeUpdate.setDeparture(stopTimeEvent);
+			}
 		}
 		if (!stopTimeUpdate.hasArrival() && !stopTimeUpdate.hasDeparture()){
 			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
@@ -337,7 +342,9 @@ public class Journey {
 		int lastDelay = Integer.MIN_VALUE;
 		StopTimeUpdate.ScheduleRelationship lastSchedule = StopTimeUpdate.ScheduleRelationship.SCHEDULED;
 		boolean hadStopTimeExtension = false;
-		for (StopTimeUpdate.Builder update : tripUpdate.getStopTimeUpdateBuilderList()){
+		List<StopTimeUpdate.Builder> unfilteredUpdates = tripUpdate.getStopTimeUpdateBuilderList();
+		for (int i = 0; i < unfilteredUpdates.size(); i++){
+			StopTimeUpdate.Builder update = unfilteredUpdates.get(i);
 			if (update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.NO_DATA || 
 					update.getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED ||
 					update.hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate)){
@@ -357,14 +364,14 @@ public class Journey {
 			boolean override = lastSchedule != update.getScheduleRelationship() ||
 					hadStopTimeExtension != update.hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
 			if (update.hasArrival()){
-				if (update.getArrival().getDelay() == lastDelay && !override){
+				if (update.getArrival().getDelay() == lastDelay && (lastDelay == 0 || i != unfilteredUpdates.size()-1) && !override){
 					update.clearArrival();
 				}else{
 					lastDelay = update.getArrival().getDelay();
 				}
 			}
 			if (update.hasDeparture()){
-				if (update.getDeparture().getDelay() == lastDelay && !override){
+				if (update.getDeparture().getDelay() == lastDelay && (i != 0) && !override){
 					update.clearDeparture();
 				}else{
 					lastDelay = update.getDeparture().getDelay();
@@ -679,9 +686,6 @@ public class Journey {
 			if (timeDeltaSeconds>=3600){
 				switch(posinfo.getMessagetype()){
 				case INIT:
-				case ARRIVAL:
-				case ONSTOP:
-				case DELAY:
 					break;
 				default:
 					throw new TooEarlyException(posinfo.toString());
