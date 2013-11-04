@@ -125,7 +125,7 @@ public class Journey {
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
 		int delay = (int)(time-targettime);
-		if (Math.abs(delay) < PUNCTUALITY_FLOOR || delay <  MIN_PUNCTUALITY){
+		if (Math.abs(delay) < PUNCTUALITY_FLOOR || delay <  MIN_PUNCTUALITY*2){
 			stopTimeEvent.setDelay(0);
 			stopTimeEvent.setTime(targettime);
 		}else{
@@ -159,7 +159,7 @@ public class Journey {
 		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
 		stopTimeEvent.setDelay((int)(time-targettime));
 		int delay = (int)(time-targettime);
-		if (Math.abs(delay) < PUNCTUALITY_FLOOR || delay <  MIN_PUNCTUALITY){
+		if (Math.abs(delay) < PUNCTUALITY_FLOOR || delay <  MIN_PUNCTUALITY*2){
 			stopTimeEvent.setDelay(0);
 			stopTimeEvent.setTime(targettime);
 		}else{
@@ -261,7 +261,7 @@ public class Journey {
 			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 			long time = stopTimeUpdate.getDeparture().getTime();
 			int delay = stopTimeUpdate.getDeparture().getDelay();
-			if (delay > MIN_PUNCTUALITY){
+			if (delay > MIN_PUNCTUALITY*2){
 				stopTimeEvent.setTime(time);
 				stopTimeEvent.setDelay(delay);
 				stopTimeUpdate.setArrival(stopTimeEvent);
@@ -271,7 +271,7 @@ public class Journey {
 			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 			long time = stopTimeUpdate.getArrival().getTime();
 			int delay = stopTimeUpdate.getArrival().getDelay();
-			if (delay > MIN_PUNCTUALITY){
+			if (delay > MIN_PUNCTUALITY*2){
 				stopTimeEvent.setTime(time);
 				stopTimeEvent.setDelay(delay);
 				stopTimeUpdate.setDeparture(stopTimeEvent);
@@ -287,6 +287,9 @@ public class Journey {
 			stopTimeEvent.setTime(targettime);
 			stopTimeEvent.setDelay(0);
 			stopTimeUpdate.setDeparture(stopTimeEvent);
+		}
+		if (!stopTimeUpdate.hasArrival() || !stopTimeUpdate.hasDeparture()){
+			_log.error("Missing \n{}",stopTimeUpdate.build());
 		}
 		return stopTimeUpdate;
 	}

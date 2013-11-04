@@ -188,7 +188,7 @@ public class RIDservice {
 		c.set(Calendar.SECOND, 0);
 		c.set(Calendar.MILLISECOND, 0);
 		int toNextRun = (int)((c.getTimeInMillis() - now)/1000/60); // time to 2am
-		int betweenRuns = 60*24; //24h in minutes
+		int betweenRuns = 24*60; //24h in minutes
 		_scheduler.scheduleWithFixedDelay(new UpdateTask(), toNextRun, betweenRuns, TimeUnit.MINUTES);
 	}
 
@@ -227,6 +227,7 @@ public class RIDservice {
 				//timedemandgroupref,pointorder,totaldrivetime,stopwaittime
 				String curRef = rs.getString(1).intern();
 				if (!curRef.equals(timedemandgroupref)){
+					group = null;
 					timedemandgroupref = curRef;
 					if (timedemandgroups.containsKey(timedemandgroupref)){ //Interning
 						newTimedemandgroups.put(timedemandgroupref, timedemandgroups.get(timedemandgroupref));
@@ -252,6 +253,7 @@ public class RIDservice {
 			while (rs.next()) {
 				String curRef = rs.getString(1).intern();
 				if (!curRef.equals(journeypatternRef)){
+					jp = null;
 					journeypatternRef = curRef;
 					if (journeypatterns.containsKey(journeypatternRef)){ //Recycle
 						newJourneypatterns.put(journeypatternRef, journeypatterns.get(journeypatternRef));
