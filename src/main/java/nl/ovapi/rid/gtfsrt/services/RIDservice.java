@@ -279,7 +279,8 @@ public class RIDservice {
 			int newCount = 0;
 			while (rs.next()) {
 				String key = hf.hashString(rs.getString(1)).toString();
-				if (journeys.containsKey(key)){
+				long id = rs.getLong(2);
+				if (journeys.containsKey(key) && journeys.get(key).getId().equals(id)){
 					newJourneys.put(key, journeys.get(key));
 					if (trains.containsKey(key)){
 						newTrains.put(key, trains.get(key));

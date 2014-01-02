@@ -104,6 +104,10 @@ public class Journey {
 	private static final int MIN_PUNCTUALITY = -300; // Minimum allowed
 	// punctuality.
 
+	private static final int MIN_STOPWAITTIME = -300; // Time it takes to unload a bus at a major stop eg a trainstation.
+	// punctuality.
+
+
 	private static final Logger _log = LoggerFactory.getLogger(Journey.class);
 
 	public TripDescriptor.Builder tripDescriptor(){
@@ -157,7 +161,6 @@ public class Journey {
 	public StopTimeEvent.Builder stopTimeEventDepartureRecorded(TimeDemandGroupPoint tpt, long time){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
-		stopTimeEvent.setDelay((int)(time-targettime));
 		int delay = (int)(time-targettime);
 		if (Math.abs(delay) < PUNCTUALITY_FLOOR || delay <  MIN_PUNCTUALITY*2){
 			stopTimeEvent.setDelay(0);
@@ -261,19 +264,43 @@ public class Journey {
 			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 			long time = stopTimeUpdate.getDeparture().getTime();
 			int delay = stopTimeUpdate.getDeparture().getDelay();
+			long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
 			if (delay > MIN_PUNCTUALITY*2){
-				stopTimeEvent.setTime(time);
-				stopTimeEvent.setDelay(delay);
-				stopTimeUpdate.setArrival(stopTimeEvent);
+				if (tpt.getStopwaittime() == 0){
+					stopTimeEvent.setTime(time);
+					stopTimeEvent.setDelay(delay);
+					
+				}else if (delay <= 0){
+					stopTimeEvent.setTime(targettime);
+					stopTimeEvent.setDelay(0);
+				}else{
+					int waittime = 	Math.min(tpt.getStopwaittime(),MIN_STOPWAITTIME);
+					stopTimeEvent.setTime(time-waittime);
+					stopTimeEvent.setDelay((int)(targettime-(time-waittime)));
+				}
+			}else{
+				stopTimeEvent.setTime(targettime);
+				stopTimeEvent.setDelay(0);
 			}
+			stopTimeUpdate.setArrival(stopTimeEvent);
 		}
 		if (!stopTimeUpdate.hasDeparture() && stopTimeUpdate.hasArrival()){
 			StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 			long time = stopTimeUpdate.getArrival().getTime();
 			int delay = stopTimeUpdate.getArrival().getDelay();
+			time += tpt.getStopwaittime();
+			if (delay < 0 && pt.isWaitpoint()){
+				delay = 0;
+				time = getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
+			}
 			if (delay > MIN_PUNCTUALITY*2){
-				stopTimeEvent.setTime(time);
+				stopTimeEvent.setTime(time+tpt.getStopwaittime());
 				stopTimeEvent.setDelay(delay);
+				stopTimeUpdate.setDeparture(stopTimeEvent);
+			}else{
+				long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
+				stopTimeEvent.setTime(targettime);
+				stopTimeEvent.setDelay(0);
 				stopTimeUpdate.setDeparture(stopTimeEvent);
 			}
 		}
@@ -528,8 +555,8 @@ public class Journey {
 					punctuality = 0;
 				if (tpt.getStopwaittime() != 0 && punctuality > 0) { //Minimize delay by cutting into dwells
 					int stopwaittime = tpt.getStopwaittime();
-					if (stopwaittime > 20 ) {
-						punctuality -= Math.max(0, stopwaittime - 20);
+					if (stopwaittime > 100 ) {
+						punctuality -= stopwaittime-MIN_STOPWAITTIME;
 						punctuality = Math.max(0, punctuality);
 					}
 				}
@@ -537,7 +564,7 @@ public class Journey {
 				if (pt.isScheduled()){
 					tripUpdate.addStopTimeUpdate(stopTimeUpdate);
 				}
-				
+
 				punctuality = stopTimeUpdate.getDeparture().getDelay();
 				if (i+1 < timedemandgroup.getPoints().size()){
 					TimeDemandGroupPoint ntpt = timedemandgroup.getPoints().get(i+1);
