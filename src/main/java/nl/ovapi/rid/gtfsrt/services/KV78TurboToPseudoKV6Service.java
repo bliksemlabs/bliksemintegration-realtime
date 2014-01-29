@@ -237,12 +237,13 @@ public class KV78TurboToPseudoKV6Service {
 							switch (pt.getDataOwnerCode()){
 							case GVB:
 							case EBS:
-							case SYNTUS:
 								break;
-							case CXX:
-								if ("H060".equals(pt.getLinePlanningNumber()))
+							case QBUZZ:
+								if ("u060".equals(pt.getLinePlanningNumber()))
 									break;
-								if ("H061".equals(pt.getLinePlanningNumber()))
+								if ("u061".equals(pt.getLinePlanningNumber()))
+									break;
+								if ("u260".equals(pt.getLinePlanningNumber()))
 									break;
 							default:
 								continue;
