@@ -12,6 +12,15 @@ import "com/google/transit/realtime/gtfs-realtime.proto";
 option java_package = "com.google.transit.realtime";
 package transit_realtime;
 
+message OVapiTripDescriptor {
+  // Matches with realtime_trip_id field in trips.txt
+  optional string realtime_trip_id = 1;
+}
+
+extend TripDescriptor {
+  optional OVapiTripDescriptor ovapi_tripdescriptor = 1003;
+}
+
 message OVapiVehiclePosition {
   // Estimated arrival-delay at the next stop (in seconds) can be positive (meaning that the vehicle is late) or
   // negative (meaning that the vehicle is ahead of schedule). Delay of 0
