@@ -21,6 +21,7 @@ import com.google.protobuf.ExtensionRegistry;
  * Support for GTFS-realtime extensions.
  * 
  * @author bdferris
+ * 
  */
 public class GtfsRealtimeExtensions {
 
@@ -41,5 +42,7 @@ public class GtfsRealtimeExtensions {
     registry.add(GtfsRealtimeOVapi.ovapiTripUpdate);
     registry.add(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
     registry.add(GtfsRealtimeOVapi.ovapiVehicleDescriptor);
+    registry.add(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
+    registry.add(GtfsRealtimeOVapi.ovapiTripdescriptor);
   }
 }
