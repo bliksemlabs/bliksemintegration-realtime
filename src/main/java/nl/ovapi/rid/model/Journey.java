@@ -41,47 +41,78 @@ import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripDescriptor;
 public class Journey {
 	@Getter
 	@Setter
+	/**
+	 * Trip_id of this journey
+	 */
 	private Long id;
 	@Getter
 	@Setter
+	/**
+	 * DataOwnerCode:LinePlanningNumber:Journeynumber of trip, matches with KV6/17
+	 */
 	private String privateCode;
 	@Getter
 	@Setter
+	/**
+	 * JourneyPattern of the Journey
+	 */
 	private JourneyPattern journeypattern;
 	@Getter
 	@Setter
+	/**
+	 * TimeDemandGroup of the Journey
+	 */
 	private TimeDemandGroup timedemandgroup;
-	@Getter
-	@Setter
+	
 	private Map<Integer, Long> realizedArrivals;
-	@Getter
-	@Setter
 	private Map<Integer, Long> realizedDepartures;
 
 	@Getter
 	@Setter
+	/**
+	 * Departuretime of the Journey, in seconds since midnight of operatingday (00:00:00).
+	 */
 	private Integer departuretime;
 	@Getter
 	@Setter
+	/**
+	 * Indicates whether Journey is accessible to Journey
+	 */
 	private Boolean wheelchairaccessible;
 	@Getter
 	@Setter
+	/**
+	 * agency_id of journey eg. (HTMBUZZ, BRENG, CXX).
+	 * Is not equal to DataOwnerCode!.
+	 */
 	private String agencyId;
 	@Getter
 	@Setter
+	/**
+	 * ISO-8601 formatted (YYYY-MM-DD) OperatingDay.
+	 */
 	private String operatingDay;
 
 	@Getter
+	/**
+	 * Last received KV6posinfo for this Journey
+	 */
 	private KV6posinfo posinfo;
 
 	@Getter
 	@Setter
+	/**
+	 * Indicates whether the trip is canceled
+	 */
 	private boolean isCanceled;
 
 	private Map<Integer, ArrayList<Mutation>> mutations;
 
 	@Getter
 	@Setter
+	/**
+	 * Map with last received posinfo for reinforcementnumber.
+	 */
 	private Map<Integer, KV6posinfo> reinforcements;
 
 	public Journey() {
