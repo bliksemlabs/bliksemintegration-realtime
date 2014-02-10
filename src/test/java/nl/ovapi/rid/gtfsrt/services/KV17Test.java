@@ -147,6 +147,7 @@ public class KV17Test {
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		j.setOperatingDay(df.format(c.getTime()));
 		j.setJourneypattern(testPattern());
+		j.setPrivateCode("QBUZZ:g005:1045");
 		j.setTimedemandgroup(testGroup());
 		return j;
 	}

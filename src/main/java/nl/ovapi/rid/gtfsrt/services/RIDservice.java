@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
@@ -17,6 +18,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Singleton;
 
+import lombok.Getter;
 import nl.ovapi.bison.model.AdviceType;
 import nl.ovapi.bison.model.DataOwnerCode;
 import nl.ovapi.bison.model.EffectType;
@@ -65,20 +67,33 @@ public class RIDservice {
 	private Map<String, ArrayList<String>> lines = Maps.newHashMapWithExpectedSize(500);
 	private Map<String, String> gvbJourneys = Maps.newHashMapWithExpectedSize(0);
 	private final static int HOUR_TO_RUN_UPDATE = 2;
+	@Getter private long fromDate = 0;
 
 	public RIDservice(){}
 
+	/**
+	 * @param id OperatingDay+':'+DataOwnerCode+':'+LinePlanningNumber+':'+JourneyNumber
+	 * @return If id does not exist NULL, else a Journey object with said identifier. 
+	 */
 	public Journey getJourney(String id){
 		String key = hf.hashString(id).toString();
 		return journeys.get(key);
 	}
 
+	/**
+	 * @param oldId OperatingDay+':'+DataOwnerCode+':'+LinePlanningNumber+':'+JourneyNumber in legacy KV1 deliveries.
+	 * @return OperatingDay+':'+DataOwnerCode+':'+LinePlanningNumber+':'+JourneyNumber of new KV1 system, if known otherwise NULL.
+	 */
 	public String getGVBdeltaId(String oldId){
 		String key = hf.hashString(oldId).toString();
 		return gvbJourneys.get(key);
 	}
 
-
+	/**
+	 * This is a special method for returning multple objects for the same trainnumber
+	 * @param id OperatingDay+':'+DataOwnerCode+':'+LinePlanningNumber+':'+JourneyNumber
+	 * @return (empty) List with Journey objects with id in parameter.
+	 */
 	public ArrayList<Journey> getTrains(String id){
 		String key = hf.hashString(id).toString();
 		if (trains.containsKey(key)){
@@ -90,14 +105,12 @@ public class RIDservice {
 		return journey;
 	}
 
-	public Map<String, Journey> getJourneys(){
-		return journeys;
-	}
-
-	public void deleteJourney(String id){
-		journeys.remove(id);
-	}
-
+	/**
+	 * @param daow DataOwnerCode (eg. GVB , RET, HTM,etc)
+	 * @param linePlanningNumber (eg. M300, 4045,etc.)
+	 * @return NULL when DataOwnerCode and LinePlanningNumber does not exist within database.
+	 *         List of id's of Lines with DataOwnerCode daow and UserStopCode userstopcode
+	 */
 	public ArrayList<String> getLineIds(DataOwnerCode daow, String linePlanningNumber){
 		String id = String.format("%s:%s", daow.name(),linePlanningNumber);
 		if (lines.containsKey(id)){
@@ -108,6 +121,12 @@ public class RIDservice {
 		}
 	}
 
+	/**
+	 * @param daow DataOwnerCode (eg. GVB , RET, HTM,etc).
+	 * @param userstopcode UserStopCode (eg. 49005010)
+	 * @return NULL when DataOwnerCode daow and UserStopCode userstopcode does not exist in database.
+	 *         List of id's of StopPoints with DataOwnerCode daow and UserStopCode userstopcode
+	 */
 
 	public ArrayList<Long> getStopIds(DataOwnerCode daow, String userstopcode){
 		String id = String.format("%s:%s", daow.name(),userstopcode);
@@ -119,9 +138,20 @@ public class RIDservice {
 		}
 	}
 
+	/**
+	 * @param id of stoppoint in database.
+	 * @return NULL when StopPoint with id is not present in database
+	 *         StopPoint class with data present in database.
+	 */
+
 	public StopPoint getStopPoint(Long id){
 		return stoppoints.get(id.toString().intern());
 	}
+
+	/**
+	 * @return Active KV15messages stored in RID database
+	 * @throws SQLException
+	 */
 
 	public ArrayList<KV15message> getActiveKV15messages() throws SQLException{
 		ArrayList<KV15message> messages = new ArrayList<KV15message>();
@@ -199,7 +229,7 @@ public class RIDservice {
 		}
 	}
 
-	public void update(){
+	private void update(){
 		try {
 			Connection conn = getConn();
 			try{
@@ -213,8 +243,9 @@ public class RIDservice {
 		}
 	}
 
-	public void update(Connection  conn){
+	private void update(Connection  conn){
 		try {
+			fromDate = 0;
 			PreparedStatement st = conn.prepareStatement(Database.timepatternQuery);
 			ResultSet rs = st.executeQuery();
 			String timedemandgroupref = null;
@@ -302,6 +333,11 @@ public class RIDservice {
 				}
 				journey.setAgencyId(rs.getString(7));
 				journey.setOperatingDay(rs.getString(8));
+				long date = new SimpleDateFormat("yyyy-MM-dd").parse(rs.getString(8)).getTime();
+				if (fromDate == 0 || date < fromDate){
+					fromDate = date;
+				}
+				journey.setPrivateCode(rs.getString(9));
 				if (newJourneys.containsKey(key)){ //Trains can have multiple journeys under same trainnumer
 					if (rs.getString(1).contains("ARR")){ 
 						continue;//But Arriva is just mucking around ;)

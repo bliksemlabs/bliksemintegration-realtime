@@ -448,12 +448,24 @@ public class BisonToGtfsRealtimeService {
 					Journey journey = _ridService.getJourney(id);
 					if (journey == null){
 						Calendar c = Calendar.getInstance();
+						SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+						c.setTime(df.parse(posinfo.getOperatingday()));
+						if (_ridService.getFromDate() > c.getTimeInMillis()){
+							continue;
+						}
 						if (posinfo.getDataownercode() == DataOwnerCode.CXX && c.get(Calendar.HOUR_OF_DAY) < 4){//Connexxion operday fuckup workaround
-							SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-							c.setTime(df.parse(posinfo.getOperatingday()));
 							c.add(Calendar.DAY_OF_YEAR, -1);
 							posinfo.setOperatingday(df.format(c.getTime()));
 							id = getId(posinfo);
+							journey = _ridService.getJourney(id);
+						}
+						if (posinfo.getDataownercode() == DataOwnerCode.GVB){
+							String newId = _ridService.getGVBdeltaId(id);
+							if (newId != null){
+								id = newId;
+							}else{
+								_log.info("GVB delta ID not found {}",id);
+							}
 							journey = _ridService.getJourney(id);
 						}
 						if (journey == null){ //Double check for the CXX workaround

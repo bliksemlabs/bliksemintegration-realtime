@@ -3,13 +3,13 @@ package nl.ovapi.rid;
 public class Database {
 
 	public final static String journeyQuery = 
-			"SELECT validdate||':'||journey.privatecode as key,journey.id,journeypatternref,timedemandgroupref,departuretime,(lowfloor or hasliftorramp) as wheelchairaccessible,o.privatecode,validdate::text \n" +
-					"FROM journey LEFT JOIN availabilityconditionday USING (availabilityconditionref) LEFT JOIN journeypattern as j ON (j.id = journeypatternref) LEFT JOIN route as r ON (r.id = routeref) LEFT JOIN line as l ON (l.id = lineref) LEFT JOIN operator as o ON (operatorref = o.id) "+
+			"SELECT validdate||':'||journey.privatecode as key,journey.id,journeypatternref,timedemandgroupref,departuretime,(lowfloor or hasliftorramp) as wheelchairaccessible,o.privatecode as operatorcode,validdate::text,journey.privatecode \n" +
+					"FROM journey JOIN availabilityconditionday USING (availabilityconditionref) LEFT JOIN journeypattern as j ON (j.id = journeypatternref) JOIN route as r ON (r.id = routeref) JOIN line as l ON (l.id = lineref) JOIN operator as o ON (operatorref = o.id) "+
 					"WHERE isavailable = true AND validdate in (date 'yesterday',date 'today',date 'tomorrow') AND coalesce(monitored,true) = true;";
 
 	public final static String journeyPatternQuery = 
 			"SELECT journeypatternref,pointorder,pointref,s.privatecode,iswaitpoint,distancefromstartroute,isscheduled FROM pointinjourneypattern LEFT JOIN stoppoint as s ON (s.id = pointref) "+
-					"WHERE journeypatternref in (SELECT DISTINCT journeypatternref FROM journey LEFT JOIN availabilityconditionday USING (availabilityconditionref) LEFT JOIN journeypattern as j ON (j.id = journeypatternref) LEFT JOIN route as r ON (r.id = routeref) LEFT JOIN line as l ON (l.id = lineref) WHERE isavailable = true AND validdate in (date 'yesterday',date 'today',date 'tomorrow') AND coalesce(monitored,true) = true) "+
+					"WHERE journeypatternref in (SELECT DISTINCT journeypatternref FROM journey LEFT JOIN availabilityconditionday USING (availabilityconditionref) JOIN journeypattern as j ON (j.id = journeypatternref) LEFT JOIN route as r ON (r.id = routeref) LEFT JOIN line as l ON (l.id = lineref) WHERE isavailable = true AND validdate in (date 'yesterday',date 'today',date 'tomorrow') AND coalesce(monitored,true) = true) "+
 					"ORDER BY journeypatternref,pointorder;";
 
 	public final static String timepatternQuery =

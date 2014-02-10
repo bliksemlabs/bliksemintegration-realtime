@@ -36,11 +36,15 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
 import com.google.transit.realtime.GtfsRealtimeOVapi;
 import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate;
+import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripDescriptor;
 @ToString()
 public class Journey {
 	@Getter
 	@Setter
 	private Long id;
+	@Getter
+	@Setter
+	private String privateCode;
 	@Getter
 	@Setter
 	private JourneyPattern journeypattern;
@@ -115,6 +119,9 @@ public class Journey {
 		tripDescriptor.setStartDate(operatingDay.replace("-", ""));
 		tripDescriptor.setTripId(id.toString());
 		tripDescriptor.setScheduleRelationship(isCanceled ? ScheduleRelationship.CANCELED : ScheduleRelationship.SCHEDULED);
+		OVapiTripDescriptor.Builder extension = OVapiTripDescriptor.newBuilder();
+		extension.setRealtimeTripId(privateCode);
+		tripDescriptor.setExtension(GtfsRealtimeOVapi.ovapiTripdescriptor, extension.build());
 		return tripDescriptor;
 	}
 

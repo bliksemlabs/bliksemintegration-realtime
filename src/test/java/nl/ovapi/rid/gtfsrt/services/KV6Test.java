@@ -129,6 +129,7 @@ public class KV6Test {
 		j.setOperatingDay(df.format(c.getTime()));
 		j.setJourneypattern(testPattern());
 		j.setTimedemandgroup(testGroup());
+		j.setPrivateCode("QBUZZ:g005:1045");
 		return j;
 	}
 	@Test
