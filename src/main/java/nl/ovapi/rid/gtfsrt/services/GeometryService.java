@@ -48,7 +48,7 @@ public class GeometryService {
 			builder.setLongitude((float)tgt.x);
 			return builder.build();
 		}catch(Exception e){
-			_log.error("RD->WGS84 x={},y={}",rd_x,rd_y,e);
+			_log.error("RD->WGS84 x={},y={}",rd_x,rd_y);
 			return null;
 		}
 	}
