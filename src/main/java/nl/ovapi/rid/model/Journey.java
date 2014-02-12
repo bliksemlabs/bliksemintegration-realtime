@@ -145,6 +145,9 @@ public class Journey {
 
 	private static final Logger _log = LoggerFactory.getLogger(Journey.class);
 
+	/**
+	 * @return GTFS-Realtime TripDescriptor for this Journey
+	 */
 	public TripDescriptor.Builder tripDescriptor(){
 		TripDescriptor.Builder tripDescriptor = TripDescriptor.newBuilder();
 		tripDescriptor.setStartDate(operatingDay.replace("-", ""));
@@ -156,14 +159,14 @@ public class Journey {
 		return tripDescriptor;
 	}
 
-	public StopTimeEvent.Builder stopTimeEventArrival(TimeDemandGroupPoint tpt,JourneyPatternPoint pt, int punctuality){
+	private StopTimeEvent.Builder stopTimeEventArrival(TimeDemandGroupPoint tpt,JourneyPatternPoint pt, int punctuality){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 		stopTimeEvent.setDelay(punctuality);
 		stopTimeEvent.setTime(getDepartureEpoch()+tpt.getTotaldrivetime()+punctuality);
 		return stopTimeEvent;
 	}
 
-	public StopTimeEvent.Builder stopTimeEventArrivalRecorded(TimeDemandGroupPoint tpt, long time){
+	private StopTimeEvent.Builder stopTimeEventArrivalRecorded(TimeDemandGroupPoint tpt, long time){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
 		long targettime = getDepartureEpoch()+tpt.getTotaldrivetime();
 		int delay = (int)(time-targettime);
@@ -359,7 +362,7 @@ public class Journey {
 		return stopTimeUpdate;
 	}
 
-	public long getDepartureTime(int pointorder){
+	private long getDepartureTime(int pointorder){
 		for (TimeDemandGroupPoint tpt : getTimedemandgroup().getPoints()){
 			if (tpt.getPointorder().equals(pointorder)){
 				return getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
@@ -368,7 +371,7 @@ public class Journey {
 		throw new IllegalArgumentException("Pointorder "+pointorder+"does not exist");
 	}
 
-	public long getArrivalTime(int pointorder){
+	private long getArrivalTime(int pointorder){
 		for (TimeDemandGroupPoint tpt : getTimedemandgroup().getPoints()){
 			if (tpt.getPointorder().equals(pointorder)){
 				return getDepartureEpoch()+tpt.getTotaldrivetime();
@@ -377,7 +380,7 @@ public class Journey {
 		throw new IllegalArgumentException("Pointorder "+pointorder+"does not exist");
 	}
 
-	public TripUpdate.Builder filter(TripUpdate.Builder tripUpdate){
+	private TripUpdate.Builder filter(TripUpdate.Builder tripUpdate){
 		if (tripUpdate.getStopTimeUpdateCount() == 0)
 			return tripUpdate;
 		tripUpdate.getStopTimeUpdateOrBuilderList();
@@ -644,7 +647,7 @@ public class Journey {
 			return null;
 	}
 
-	public int decayeddelay(int delay, int elapsedtime) {
+	private int decayeddelay(int delay, int elapsedtime) {
 		if (delay == 0)
 			return 0;
 		double vlamba = 1.0 / 500.0;
