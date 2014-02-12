@@ -574,6 +574,17 @@ public class BisonToGtfsRealtimeService {
 	void process(ArrayList<KV6posinfo> posinfos){
 		_executor.submit(new ProcessKV6Task(posinfos));
 	}
+	
+    public boolean startsWithBom(String line) {  
+        char myChar = line.charAt(0);  
+        int intValue = (int) myChar;  
+        // Hexa value of BOM = EF BB BF  => int 65279  
+        if (intValue == 65279) {  
+                return true;  
+        } else {  
+                return false;  
+        }  
+    }  
 
 	private class ProcessTask implements Runnable {
 		int messagecounter = 0;
@@ -597,8 +608,15 @@ public class BisonToGtfsRealtimeService {
 				}
 				try {
 					String[] m = ZeroMQUtils.gunzipMultifameZMsg(ZMsg.recvMsg(pull));
+					if (startsWithBom(m[1])){
+						System.out.println(m[1]);
+						m[1] = m[1].substring(1);
+					}else{
+						continue;
+					}
 					if (m[0].toLowerCase().endsWith("kv6posinfo")) {
 						InputSource s = new InputSource(new StringReader(m[1]));
+						s.setEncoding("UTF-8");
 						KV6SAXHandler handler = new KV6SAXHandler();
 						xr.setContentHandler(handler);
 						try {
@@ -609,6 +627,7 @@ public class BisonToGtfsRealtimeService {
 						}
 					} else if (m[0].toLowerCase().endsWith("kv17cvlinfo")) {
 						InputSource s = new InputSource(new StringReader(m[1]));
+						s.setEncoding("UTF-8");
 						KV17SAXHandler handler = new KV17SAXHandler();
 						xr.setContentHandler(handler);
 						try {
@@ -620,6 +639,7 @@ public class BisonToGtfsRealtimeService {
 						}
 					} else if (m[0].toLowerCase().endsWith("kv15messages")) {
 						InputSource s = new InputSource(new StringReader(m[1]));
+						s.setEncoding("UTF-8");
 						KV15SAXHandler handler = new KV15SAXHandler();
 						xr.setContentHandler(handler);
 						try {
