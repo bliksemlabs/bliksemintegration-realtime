@@ -19,6 +19,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import nl.ovapi.bison.model.DataOwnerCode;
+import nl.ovapi.bison.model.JourneyProcessor;
 import nl.ovapi.bison.model.KV17cvlinfo;
 import nl.ovapi.bison.model.KV6posinfo;
 import nl.ovapi.bison.model.KV6posinfo.Type;
@@ -154,7 +155,8 @@ public class KV17Test {
 	
 	@Test
 	public void cancel() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException {
-		Journey j = getJourney();
+		Journey journey = getJourney();
+		JourneyProcessor j = new JourneyProcessor(journey);
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 		spf.setNamespaceAware(true);
 		SAXParser sp = spf.newSAXParser();
@@ -177,14 +179,15 @@ public class KV17Test {
 		for (String id : map.keySet()){
 			cvlinfos = map.get(id);
 			TripUpdate.Builder tripUpdate = j.update(cvlinfos);
-			assertTrue(j.isCanceled());
+			assertTrue(journey.isCanceled());
 			assertTrue(tripUpdate.getTrip().getScheduleRelationship() == ScheduleRelationship.CANCELED);
 		}
 	}
 	
 	@Test
 	public void shorten() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException {
-		Journey j = getJourney();
+		Journey journey = getJourney();
+		JourneyProcessor j = new JourneyProcessor(journey);
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 		spf.setNamespaceAware(true);
 		SAXParser sp = spf.newSAXParser();
@@ -235,7 +238,8 @@ public class KV17Test {
 	}
 	@Test
 	public void shortenMidTrip() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException {
-		Journey j = getJourney();
+		Journey journey = getJourney();
+		JourneyProcessor j = new JourneyProcessor(journey);
 		j.update(testPosinfoArrival());
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 		spf.setNamespaceAware(true);

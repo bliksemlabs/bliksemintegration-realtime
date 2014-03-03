@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,9 +22,11 @@ import javax.inject.Singleton;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import lombok.NonNull;
 import lombok.Setter;
 import nl.ovapi.ZeroMQUtils;
 import nl.ovapi.bison.model.DataOwnerCode;
+import nl.ovapi.bison.model.JourneyProcessor;
 import nl.ovapi.bison.model.KV15message;
 import nl.ovapi.bison.model.KV17cvlinfo;
 import nl.ovapi.bison.model.KV6posinfo;
@@ -58,6 +61,7 @@ import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.ZMsg;
 
+import com.google.common.collect.Maps;
 import com.google.transit.realtime.GtfsRealtime.Alert;
 import com.google.transit.realtime.GtfsRealtime.EntitySelector;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
@@ -94,6 +98,7 @@ public class BisonToGtfsRealtimeService {
 
 	private GtfsRealtimeSource _tripUpdatesSource;
 	private GtfsRealtimeSource _vehiclePositionsSource;
+	private Map<String, JourneyProcessor> journeyProcessors;
 
 	@Inject
 	public void setTripUpdatesSource(@TripUpdates GtfsRealtimeSource tripUpdatesSource) {
@@ -223,10 +228,26 @@ public class BisonToGtfsRealtimeService {
 				_alertsSink.handleIncrementalUpdate(update);
 		}
 	}
+	
+	private JourneyProcessor getOrCreateProcessorForId(@NonNull String privateCode){
+		JourneyProcessor jp = journeyProcessors.get(privateCode);
+		if (jp != null){
+			return jp;
+		}
+		Journey journey = _ridService.getJourney(privateCode);
+		if (journey == null){
+			_log.info("Journey {} not found",privateCode);
+			return null; //Journey not found
+		}
+		jp = new JourneyProcessor(journey);
+		journeyProcessors.put(privateCode, jp);
+		return jp;
+	}
 
 	@PostConstruct
 	public void start() {
 		TimeZone.setDefault(TimeZone.getTimeZone("Europe/Amsterdam"));
+		journeyProcessors = Maps.newHashMap();
 		_executor = Executors.newCachedThreadPool();
 		_scheduler = Executors.newScheduledThreadPool(5);
 		_scheduler.scheduleAtFixedRate(new GarbageCollectorTask(), 60, GARBAGE_COLLECTOR_INTERVAL_SECONDS, TimeUnit.SECONDS);
@@ -255,93 +276,6 @@ public class BisonToGtfsRealtimeService {
 		}
 	}
 
-	private FeedEntity vehiclePosition(String id,Journey journey,KV6posinfo posinfo){
-		FeedEntity.Builder feedEntity = FeedEntity.newBuilder();
-		feedEntity.setId(id);
-		VehiclePosition.Builder vehiclePosition = VehiclePosition.newBuilder();
-		int delay = posinfo.getPunctuality() == null ? 0 : posinfo.getPunctuality();
-		switch (posinfo.getMessagetype()){
-		case END:
-			return null;
-		case DELAY:
-			TimeDemandGroupPoint firstTimePoint = journey.getTimedemandgroup().getPoints().get(0);
-			JourneyPatternPoint firstPatternPoint = journey.getJourneypattern().getPoint(firstTimePoint.getPointorder());
-			vehiclePosition.setStopId(firstPatternPoint.getPointref().toString());
-			vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
-			vehiclePosition.setCurrentStopSequence(firstTimePoint.getPointorder());
-			delay = Math.max(0, delay);
-			break;
-		case INIT:
-		case ARRIVAL:
-		case ONSTOP:
-			for (JourneyPatternPoint point : journey.getJourneypattern().getPoints()){
-				if (point.getOperatorpointref().equals(posinfo.getUserstopcode())){
-					vehiclePosition.setStopId(point.getPointref().toString());
-					vehiclePosition.setCurrentStopSequence(point.getPointorder());
-					vehiclePosition.setCurrentStatus(VehicleStopStatus.STOPPED_AT);
-					StopPoint sp = _ridService.getStopPoint(point.getPointref());
-					if ((posinfo.getRd_x() == null || posinfo.getRd_x() == -1) && sp != null){
-						Builder position = Position.newBuilder();
-						position.setLatitude(sp.getLatitude());
-						position.setLongitude(sp.getLongitude());
-						vehiclePosition.setPosition(position);
-					}
-					if (point.isWaitpoint() && delay < 0){
-						delay = 0;
-					}
-				}
-			}
-			break;
-		case DEPARTURE:
-		case OFFROUTE:
-		case ONROUTE:
-			boolean passed = false;
-			for (JourneyPatternPoint point : journey.getJourneypattern().getPoints()){
-				if (point.getOperatorpointref().equals(posinfo.getUserstopcode())){
-					passed = true;
-					StopPoint sp = _ridService.getStopPoint(point.getPointref());
-					vehiclePosition.setCurrentStopSequence(point.getPointorder());
-					if (posinfo.getMessagetype() == Type.DEPARTURE && sp != null){
-						Builder position = Position.newBuilder();
-						position.setLatitude(sp.getLatitude());
-						position.setLongitude(sp.getLongitude());
-						vehiclePosition.setPosition(position);
-						if (delay < 0 &&  point.isWaitpoint()){
-							delay = 0;
-						}
-					}
-				}else if (passed && point.isScheduled()){
-					vehiclePosition.setStopId(point.getPointref().toString());
-					vehiclePosition.setCurrentStopSequence(point.getPointorder());
-					vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
-				}
-			}
-			break;
-		}
-		if (posinfo.getRd_x() != null){
-			Position position = _geometryService.toWGS84(posinfo.getRd_x(), posinfo.getRd_y());
-			if (position != null)
-				vehiclePosition.setPosition(position);
-		}
-		TripDescriptor.Builder tripDescription = journey.tripDescriptor();
-		if (posinfo.getReinforcementnumber() > 0){
-			tripDescription.setScheduleRelationship(ScheduleRelationship.ADDED);
-		}
-		vehiclePosition.setTrip(tripDescription);
-		if (posinfo.getVehicleDescription() != null)
-			vehiclePosition.setVehicle(posinfo.getVehicleDescription());
-		vehiclePosition.setTimestamp(posinfo.getTimestamp());
-		if (posinfo.getPunctuality() != null){
-			OVapiVehiclePosition.Builder ovapiVehiclePosition = OVapiVehiclePosition.newBuilder();
-			if (vehiclePosition.hasCurrentStopSequence() && vehiclePosition.getCurrentStopSequence() <= 1 && delay < 0){
-				delay = 0;
-			}
-			ovapiVehiclePosition.setDelay(delay);
-			vehiclePosition.setExtension(GtfsRealtimeOVapi.ovapiVehiclePosition, ovapiVehiclePosition.build());
-		}
-		feedEntity.setVehicle(vehiclePosition);
-		return feedEntity.build();
-	}	
 
 	public void remove(ArrayList<String> removeIds){
 		if (removeIds.size() == 0){
@@ -373,7 +307,7 @@ public class BisonToGtfsRealtimeService {
 					if (idParts.length == 5){
 						id = String.format("%s:%s:%s:%s", idParts[0],idParts[1],idParts[2],idParts[3]);
 					}
-					Journey j = _ridService.getJourney(id);
+					JourneyProcessor j = getOrCreateProcessorForId(id);
 					if (!f.hasVehicle() || f.getVehicle().getTimestamp() < threshold){
 						if (j != null && idParts.length == 4){
 							j.clearKV6();
@@ -445,8 +379,8 @@ public class BisonToGtfsRealtimeService {
 						continue;
 					}
 					String id = getId(posinfo);
-					Journey journey = _ridService.getJourney(id);
-					if (journey == null){
+					JourneyProcessor jp = getOrCreateProcessorForId(id);
+					if (jp == null){
 						Calendar c = Calendar.getInstance();
 						SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 						c.setTime(df.parse(posinfo.getOperatingday()));
@@ -457,7 +391,7 @@ public class BisonToGtfsRealtimeService {
 							c.add(Calendar.DAY_OF_YEAR, -1);
 							posinfo.setOperatingday(df.format(c.getTime()));
 							id = getId(posinfo);
-							journey = _ridService.getJourney(id);
+							jp = getOrCreateProcessorForId(id);
 						}
 						if (posinfo.getDataownercode() == DataOwnerCode.GVB){
 							String newId = _ridService.getGVBdeltaId(id);
@@ -466,9 +400,9 @@ public class BisonToGtfsRealtimeService {
 							}else{
 								_log.info("GVB delta ID not found {}",id);
 							}
-							journey = _ridService.getJourney(id);
+							jp = getOrCreateProcessorForId(id);
 						}
-						if (journey == null){ //Double check for the CXX workaround
+						if (jp == null){ //Double check for the CXX workaround
 							_log.info("Journey {} not found",id);
 							continue; //Trip not in database
 						}
@@ -477,21 +411,21 @@ public class BisonToGtfsRealtimeService {
 						id += ":"+posinfo.getReinforcementnumber().toString(); // Key for reinforcement
 					if (posinfo.getMessagetype() == Type.END){
 						if (posinfo.getReinforcementnumber() == 0)
-							journey.clearKV6(); //Primary vehicle finished
-						else if (journey.getReinforcements().containsKey(posinfo.getReinforcementnumber()))
-							journey.getReinforcements().remove(posinfo.getReinforcementnumber()); //Remove reinforcement
+							jp.clearKV6(); //Primary vehicle finished
+						else if (jp.getReinforcements().containsKey(posinfo.getReinforcementnumber()))
+							jp.getReinforcements().remove(posinfo.getReinforcementnumber()); //Remove reinforcement
 						vehicleUpdates.addDeletedEntity(id);
 					}
-					FeedEntity vehiclePosition = vehiclePosition(id,journey,posinfo);
+					FeedEntity vehiclePosition = jp.vehiclePosition(id,jp,posinfo,_ridService,_geometryService);
 					if (vehiclePosition != null){
 						vehicleUpdates.addUpdatedEntity(vehiclePosition);
 						if (posinfo.getReinforcementnumber() > 0){
-							journey.getReinforcements().put(posinfo.getReinforcementnumber(), posinfo);
+							jp.getReinforcements().put(posinfo.getReinforcementnumber(), posinfo);
 						}
 					}
 					if (posinfo.getReinforcementnumber() == 0){ //Primary vehicle, BISON can currently not yet support schedules for reinforcments
 						try{
-							TripUpdate.Builder tripUpdate = journey.update(posinfo);
+							TripUpdate.Builder tripUpdate = jp.update(posinfo);
 							if (tripUpdate != null){
 								FeedEntity.Builder tripEntity = FeedEntity.newBuilder();
 								tripEntity.setId(id);
@@ -550,15 +484,11 @@ public class BisonToGtfsRealtimeService {
 				}
 				for (String id : map.keySet()){
 					ArrayList<KV17cvlinfo> cvlinfos = map.get(id);
-					Journey journey = _ridService.getJourney(id);
-					if (journey == null){
-						_log.info("KV17: journey {} not found",id);
-						continue; //Journey not found
-					}
-					TripUpdate.Builder tripUpdate = journey.update(cvlinfos);
+					JourneyProcessor jp = getOrCreateProcessorForId(id);
+					TripUpdate.Builder tripUpdate = jp.update(cvlinfos);
 					if (tripUpdate != null){
 						FeedEntity.Builder entity = FeedEntity.newBuilder();
-						entity.setTripUpdate(journey.update(cvlinfos));
+						entity.setTripUpdate(tripUpdate);
 						entity.setId(id);
 						tripUpdates.addUpdatedEntity(entity.build());
 					}

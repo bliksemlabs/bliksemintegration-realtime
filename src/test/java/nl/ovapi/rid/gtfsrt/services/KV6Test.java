@@ -10,6 +10,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import nl.ovapi.bison.model.DataOwnerCode;
+import nl.ovapi.bison.model.JourneyProcessor;
 import nl.ovapi.bison.model.KV6posinfo;
 import nl.ovapi.bison.model.KV6posinfo.Type;
 import nl.ovapi.exceptions.StopNotFoundException;
@@ -134,93 +135,97 @@ public class KV6Test {
 	}
 	@Test
 	public void testNegativeOnFirstStopAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException{
-		Journey j = getJourney();
+		Journey journey = getJourney();
+		JourneyProcessor j = new JourneyProcessor(journey);
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
 		posinfo.setLineplanningnumber("g005");
-		posinfo.setOperatingday(j.getOperatingDay());
+		posinfo.setOperatingday(journey.getOperatingDay());
 		posinfo.setJourneynumber(1034);
 		posinfo.setVehiclenumber(911);
 		posinfo.setMessagetype(Type.ARRIVAL);
 		posinfo.setUserstopcode("10006900");
 		posinfo.setPunctuality(-120);
-		posinfo.setTimestamp(j.getDepartureEpoch()-60);
+		posinfo.setTimestamp(journey.getDepartureEpoch()-60);
 		posinfo.setPassagesequencenumber(-120);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
 		System.out.println(tripUpdate.build());
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch()-60);
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),journey.getDepartureEpoch()-60);
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),-60);
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),j.getDepartureEpoch());
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),journey.getDepartureEpoch());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getDelay(),0);
 
 	}
 	
 	@Test
 	public void testNegativeOnFirstStopNotAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException{
-		Journey j = getJourney();
-		j.getJourneypattern().getPoint(1).setWaitpoint(false);
+		Journey journey = getJourney();
+		JourneyProcessor j = new JourneyProcessor(journey);
+		journey.getJourneypattern().getPoint(1).setWaitpoint(false);
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
 		posinfo.setLineplanningnumber("g005");
-		posinfo.setOperatingday(j.getOperatingDay());
+		posinfo.setOperatingday(journey.getOperatingDay());
 		posinfo.setJourneynumber(1034);
 		posinfo.setVehiclenumber(911);
 		posinfo.setMessagetype(Type.ARRIVAL);
 		posinfo.setUserstopcode("10006900");
 		posinfo.setPunctuality(-120);
-		posinfo.setTimestamp(j.getDepartureEpoch()-120);
+		posinfo.setTimestamp(journey.getDepartureEpoch()-120);
 		posinfo.setPassagesequencenumber(0);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),j.getDepartureEpoch()-120);
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),journey.getDepartureEpoch()-120);
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),-120);
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),j.getDepartureEpoch());
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),journey.getDepartureEpoch());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getDelay(),0);
 
 	}
 	@Test
 	public void testNegativeOnTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException{
-		Journey j = getJourney();
-		j.getJourneypattern().getPoint(3).setWaitpoint(true);
+		Journey journey = getJourney();
+		JourneyProcessor j = new JourneyProcessor(journey);
+		journey.getJourneypattern().getPoint(3).setWaitpoint(true);
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
 		posinfo.setLineplanningnumber("g005");
-		posinfo.setOperatingday(j.getOperatingDay());
+		posinfo.setOperatingday(journey.getOperatingDay());
 		posinfo.setJourneynumber(1034);
 		posinfo.setVehiclenumber(911);
 		posinfo.setMessagetype(Type.ARRIVAL);
-		posinfo.setUserstopcode(j.getJourneypattern().getPoint(3).getOperatorpointref());
+		posinfo.setUserstopcode(journey.getJourneypattern().getPoint(3).getOperatorpointref());
 		posinfo.setPunctuality(-30);
-		posinfo.setTimestamp(j.getDepartureEpoch()+100);
+		posinfo.setTimestamp(journey.getDepartureEpoch()+100);
 		posinfo.setPassagesequencenumber(0);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 2);
 		System.out.println(tripUpdate.build());
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),0);
-		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),j.getDepartureEpoch());
+		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),journey.getDepartureEpoch());
 		assertEquals(tripUpdate.getStopTimeUpdate(1).getArrival().getDelay(),-20);
 		assertEquals(tripUpdate.getStopTimeUpdate(1).getDeparture().getDelay(),0);
 	}
 	
 	@Test
 	public void testNegativeOnDepartureFirstStop() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException{
-		Journey j = getJourney();
+		Journey journey = getJourney();
+		JourneyProcessor j = new JourneyProcessor(journey);
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
 		posinfo.setLineplanningnumber("g005");
-		posinfo.setOperatingday(j.getOperatingDay());
+		posinfo.setOperatingday(journey.getOperatingDay());
 		posinfo.setJourneynumber(1034);
 		posinfo.setVehiclenumber(911);
 		posinfo.setMessagetype(Type.DEPARTURE);
 		posinfo.setUserstopcode("10006900");
 		posinfo.setPunctuality(-120);
-		posinfo.setTimestamp(j.getDepartureEpoch()-120);
+		posinfo.setTimestamp(journey.getDepartureEpoch()-120);
 		posinfo.setPassagesequencenumber(0);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
