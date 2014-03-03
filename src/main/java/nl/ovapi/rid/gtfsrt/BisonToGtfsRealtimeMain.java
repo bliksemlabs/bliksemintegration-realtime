@@ -9,7 +9,7 @@ import javax.inject.Inject;
 
 import nl.ovapi.rid.gtfsrt.services.BisonToGtfsRealtimeService;
 import nl.ovapi.rid.gtfsrt.services.KV78TurboToPseudoKV6Service;
-import nl.ovapi.rid.gtfsrt.services.NSapiToGtfsRealTimeServices;
+import nl.ovapi.rid.gtfsrt.services.ARNUritInfoToGtfsRealTimeServices;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -43,7 +43,7 @@ public class BisonToGtfsRealtimeMain {
 	private GtfsRealtimeSource _vehiclePositionsSource;
 	private BisonToGtfsRealtimeService _bisonToGtfsRealtimeService;
 	private KV78TurboToPseudoKV6Service  _kv78TurboToPseudoKV6Service;
-	private NSapiToGtfsRealTimeServices  _nsApiToGtfsRealTimeServices;
+	private ARNUritInfoToGtfsRealTimeServices  _nsApiToGtfsRealTimeServices;
 
 	private LifecycleService _lifecycleService;
 
@@ -76,7 +76,7 @@ public class BisonToGtfsRealtimeMain {
 	}
 
 	@Inject
-	public void setNSApiToGtfsRealTimeServices(NSapiToGtfsRealTimeServices nsApiToGtfsRealTimeServices) {
+	public void setNSApiToGtfsRealTimeServices(ARNUritInfoToGtfsRealTimeServices nsApiToGtfsRealTimeServices) {
 		_nsApiToGtfsRealTimeServices = nsApiToGtfsRealTimeServices;
 	}
 

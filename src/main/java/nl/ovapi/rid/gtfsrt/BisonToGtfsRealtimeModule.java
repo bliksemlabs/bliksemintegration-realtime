@@ -7,7 +7,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import nl.ovapi.rid.gtfsrt.services.BisonToGtfsRealtimeService;
 import nl.ovapi.rid.gtfsrt.services.GeometryService;
 import nl.ovapi.rid.gtfsrt.services.KV78TurboToPseudoKV6Service;
-import nl.ovapi.rid.gtfsrt.services.NSapiToGtfsRealTimeServices;
+import nl.ovapi.rid.gtfsrt.services.ARNUritInfoToGtfsRealTimeServices;
 
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeExporterModule;
 import org.onebusaway.guice.jsr250.JSR250Module;
@@ -27,7 +27,7 @@ public class BisonToGtfsRealtimeModule extends AbstractModule {
 	protected void configure() {
 		bind(KV78TurboToPseudoKV6Service.class);
 		bind(BisonToGtfsRealtimeService.class);
-		bind(NSapiToGtfsRealTimeServices.class);
+		bind(ARNUritInfoToGtfsRealTimeServices.class);
 		bind(GeometryService.class);
 		bind(ScheduledExecutorService.class).toInstance(
 				Executors.newSingleThreadScheduledExecutor());
