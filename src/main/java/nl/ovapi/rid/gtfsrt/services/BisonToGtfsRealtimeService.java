@@ -609,10 +609,7 @@ public class BisonToGtfsRealtimeService {
 				try {
 					String[] m = ZeroMQUtils.gunzipMultifameZMsg(ZMsg.recvMsg(pull));
 					if (startsWithBom(m[1])){
-						System.out.println(m[1]);
 						m[1] = m[1].substring(1);
-					}else{
-						continue;
 					}
 					if (m[0].toLowerCase().endsWith("kv6posinfo")) {
 						InputSource s = new InputSource(new StringReader(m[1]));
