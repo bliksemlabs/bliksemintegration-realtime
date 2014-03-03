@@ -216,7 +216,8 @@ public class KV78TurboToPseudoKV6Service {
 			Socket subscriber = context.socket(ZMQ.XSUB);
 			subscriber.connect(kv8turboPublishers[addressPointer]);
 			char enable = 0x01;
-			subscriber.send(enable+"/GOVI/KV8");
+			subscriber.send(enable+"/GOVI/KV8passtimes/GVB");
+			subscriber.send(enable+"/GOVI/KV8passtimes/UT-STD");
 			_log.info("Connected to {}",kv8turboPublishers[addressPointer]);
 			org.zeromq.ZMQ.Poller poller = context.poller();
 			poller.register(subscriber);
