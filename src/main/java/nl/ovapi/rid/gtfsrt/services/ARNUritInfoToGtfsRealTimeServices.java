@@ -1,9 +1,11 @@
 package nl.ovapi.rid.gtfsrt.services;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,7 +24,10 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.stream.StreamSource;
 
+import lombok.NonNull;
 import nl.ovapi.ZeroMQUtils;
+import nl.ovapi.arnu.TrainProcessor;
+import nl.ovapi.rid.model.Journey;
 import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 
@@ -36,16 +41,18 @@ import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.ZMsg;
 
+import com.google.common.collect.Maps;
+
 @Singleton
 public class ARNUritInfoToGtfsRealTimeServices {
 
 	private ExecutorService _executor;
 	private Future<?> _task;
 	private static final Logger _log = LoggerFactory.getLogger(ARNUritInfoToGtfsRealTimeServices.class);
-	private final static String pubAddress = "tcp://post.ndovloket.nl:7662";
+	private final static String pubAddress = "tcp://127.0.0.1:7662";
 	private GtfsRealtimeSink _alertsSink;
 	private RIDservice _ridService;
-	private Map<String, ArrayList<String>> stations;
+	private Map<String, TrainProcessor> journeyProcessors;
 
 
 	@Inject
@@ -61,6 +68,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 	@PostConstruct
 	public void start() {
 		_executor = Executors.newCachedThreadPool();
+		journeyProcessors = Maps.newHashMap();
 		_task = _executor.submit(new ProcessTask());
 		_task = _executor.submit(new ReceiveTask());
 	}
@@ -75,6 +83,21 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			_executor.shutdownNow();
 			_executor = null;
 		}
+	}
+	
+	private TrainProcessor getOrCreateProcessorForId(@NonNull String id){
+		TrainProcessor jp = journeyProcessors.get(id);
+		if (jp != null){
+			return jp;
+		}
+		List<Journey> trains = _ridService.getTrains(id);
+		if (trains == null || trains.size() == 0){
+			_log.info("TrainId {} not found",id);
+			return null; //Journey not found
+		}
+		jp = new TrainProcessor(trains);
+		journeyProcessors.put(id, jp);
+		return jp;
 	}
 
 	private final static String INPROC_PORT = "51546";
@@ -110,15 +133,18 @@ public class ARNUritInfoToGtfsRealTimeServices {
 				}
 				try {
 					String[] m = ZeroMQUtils.gunzipMultifameZMsg(ZMsg.recvMsg(pull));
-					System.out.println(m[0]);
 					InputStream stream = new ByteArrayInputStream(m[1].getBytes("UTF-8"));
 					JAXBElement<PutServiceInfoIn> feed = unmarshaller.unmarshal(new StreamSource(stream), PutServiceInfoIn.class);
 					if (feed == null || feed.getValue() == null || feed.getValue().getServiceInfoList() == null){
 						continue;
 					}
+					System.out.println(m[0]);
 					for (ServiceInfoServiceType info : feed.getValue().getServiceInfoList().getServiceInfo()){
-						String id = String.format("IFF:%s:%s:%s", info.getCompanyCode().toUpperCase(),info.getTransportModeCode(),info.getServiceCode());
-						System.out.println(id);
+						SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+						String id = String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode());
+						TrainProcessor jp = getOrCreateProcessorForId(id);
+						if (jp != null)
+							jp.process(info);
 					}
 				} catch (Exception e) {
 					_log.error("Error ARNU",e);
