@@ -3,11 +3,14 @@ package nl.tt_solutions.schemas.ns.rti._1;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+
+import lombok.ToString;
 
 
 /**
@@ -52,6 +55,7 @@ import javax.xml.bind.annotation.XmlType;
     "transportModeCode",
     "stopList"
 })
+@ToString
 public class ServiceInfoServiceType {
 
     @XmlElement(name = "CompanyCode", required = true)
@@ -209,6 +213,7 @@ public class ServiceInfoServiceType {
     @XmlType(name = "", propOrder = {
         "stop"
     })
+    @ToString
     public static class StopList {
 
         @XmlElement(name = "Stop", required = true)

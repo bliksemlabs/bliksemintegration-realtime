@@ -10,6 +10,8 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.Duration;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import lombok.ToString;
+
 
 /**
  * Description of the stop information
@@ -55,6 +57,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "departurePlatform",
     "actualDeparturePlatform"
 })
+@ToString
 public class ServiceInfoStopType {
 
     @XmlElement(name = "StopCode", required = true)

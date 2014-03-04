@@ -9,6 +9,8 @@ import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import lombok.ToString;
+
 
 /**
  * Input for GetServiceInfo
@@ -42,6 +44,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "dateTime",
     "callerId"
 })
+@ToString
 public class ServiceInputType {
 
     @XmlElement(name = "CompanyCode", required = true)
