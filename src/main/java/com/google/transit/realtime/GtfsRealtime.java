@@ -2825,11 +2825,13 @@ public final class GtfsRealtime {
         SCHEDULED(0, 0),
         SKIPPED(1, 1),
         NO_DATA(2, 2),
+        ADDED(3, 3),
         ;
         
         public static final int SCHEDULED_VALUE = 0;
         public static final int SKIPPED_VALUE = 1;
         public static final int NO_DATA_VALUE = 2;
+        public static final int ADDED_VALUE = 3;
         
         
         public final int getNumber() { return value; }
@@ -2839,6 +2841,7 @@ public final class GtfsRealtime {
             case 0: return SCHEDULED;
             case 1: return SKIPPED;
             case 2: return NO_DATA;
+            case 3: return ADDED;
             default: return null;
           }
         }
@@ -2869,7 +2872,7 @@ public final class GtfsRealtime {
         }
         
         private static final ScheduleRelationship[] VALUES = {
-          SCHEDULED, SKIPPED, NO_DATA, 
+          SCHEDULED, SKIPPED, NO_DATA, ADDED, 
         };
         
         public static ScheduleRelationship valueOf(
@@ -11762,14 +11765,14 @@ public final class GtfsRealtime {
       "\n\013trip_update\030\003 \001(\0132\034.transit_realtime.T" +
       "ripUpdate\0222\n\007vehicle\030\004 \001(\0132!.transit_rea" +
       "ltime.VehiclePosition\022&\n\005alert\030\005 \001(\0132\027.t" +
-      "ransit_realtime.Alert*\006\010\350\007\020\320\017\"\213\005\n\nTripUp" +
+      "ransit_realtime.Alert*\006\010\350\007\020\320\017\"\226\005\n\nTripUp" +
       "date\022.\n\004trip\030\001 \002(\0132 .transit_realtime.Tr" +
       "ipDescriptor\0224\n\007vehicle\030\003 \001(\0132#.transit_" +
       "realtime.VehicleDescriptor\022E\n\020stop_time_" +
       "update\030\002 \003(\0132+.transit_realtime.TripUpda" +
       "te.StopTimeUpdate\022\021\n\ttimestamp\030\004 \001(\004\032I\n\r",
       "StopTimeEvent\022\r\n\005delay\030\001 \001(\005\022\014\n\004time\030\002 \001" +
-      "(\003\022\023\n\013uncertainty\030\003 \001(\005*\006\010\350\007\020\320\017\032\351\002\n\016Stop" +
+      "(\003\022\023\n\013uncertainty\030\003 \001(\005*\006\010\350\007\020\320\017\032\364\002\n\016Stop" +
       "TimeUpdate\022\025\n\rstop_sequence\030\001 \001(\r\022\017\n\007sto" +
       "p_id\030\004 \001(\t\022;\n\007arrival\030\002 \001(\0132*.transit_re" +
       "altime.TripUpdate.StopTimeEvent\022=\n\tdepar" +
@@ -11777,65 +11780,66 @@ public final class GtfsRealtime {
       ".StopTimeEvent\022j\n\025schedule_relationship\030" +
       "\005 \001(\0162@.transit_realtime.TripUpdate.Stop" +
       "TimeUpdate.ScheduleRelationship:\tSCHEDUL" +
-      "ED\"?\n\024ScheduleRelationship\022\r\n\tSCHEDULED\020",
-      "\000\022\013\n\007SKIPPED\020\001\022\013\n\007NO_DATA\020\002*\006\010\350\007\020\320\017*\006\010\350\007" +
-      "\020\320\017\"\341\004\n\017VehiclePosition\022.\n\004trip\030\001 \001(\0132 ." +
-      "transit_realtime.TripDescriptor\0224\n\007vehic" +
-      "le\030\010 \001(\0132#.transit_realtime.VehicleDescr" +
-      "iptor\022,\n\010position\030\002 \001(\0132\032.transit_realti" +
-      "me.Position\022\035\n\025current_stop_sequence\030\003 \001" +
-      "(\r\022\017\n\007stop_id\030\007 \001(\t\022Z\n\016current_status\030\004 " +
-      "\001(\01623.transit_realtime.VehiclePosition.V" +
-      "ehicleStopStatus:\rIN_TRANSIT_TO\022\021\n\ttimes" +
-      "tamp\030\005 \001(\004\022K\n\020congestion_level\030\006 \001(\01621.t",
-      "ransit_realtime.VehiclePosition.Congesti" +
-      "onLevel\"G\n\021VehicleStopStatus\022\017\n\013INCOMING" +
-      "_AT\020\000\022\016\n\nSTOPPED_AT\020\001\022\021\n\rIN_TRANSIT_TO\020\002" +
-      "\"}\n\017CongestionLevel\022\034\n\030UNKNOWN_CONGESTIO" +
-      "N_LEVEL\020\000\022\024\n\020RUNNING_SMOOTHLY\020\001\022\017\n\013STOP_" +
-      "AND_GO\020\002\022\016\n\nCONGESTION\020\003\022\025\n\021SEVERE_CONGE" +
-      "STION\020\004*\006\010\350\007\020\320\017\"\266\006\n\005Alert\0222\n\ractive_peri" +
-      "od\030\001 \003(\0132\033.transit_realtime.TimeRange\0229\n" +
-      "\017informed_entity\030\005 \003(\0132 .transit_realtim" +
-      "e.EntitySelector\022;\n\005cause\030\006 \001(\0162\035.transi",
-      "t_realtime.Alert.Cause:\rUNKNOWN_CAUSE\022>\n" +
-      "\006effect\030\007 \001(\0162\036.transit_realtime.Alert.E" +
-      "ffect:\016UNKNOWN_EFFECT\022/\n\003url\030\010 \001(\0132\".tra" +
-      "nsit_realtime.TranslatedString\0227\n\013header" +
-      "_text\030\n \001(\0132\".transit_realtime.Translate" +
-      "dString\022<\n\020description_text\030\013 \001(\0132\".tran" +
-      "sit_realtime.TranslatedString\"\330\001\n\005Cause\022" +
-      "\021\n\rUNKNOWN_CAUSE\020\001\022\017\n\013OTHER_CAUSE\020\002\022\025\n\021T" +
-      "ECHNICAL_PROBLEM\020\003\022\n\n\006STRIKE\020\004\022\021\n\rDEMONS" +
-      "TRATION\020\005\022\014\n\010ACCIDENT\020\006\022\013\n\007HOLIDAY\020\007\022\013\n\007",
-      "WEATHER\020\010\022\017\n\013MAINTENANCE\020\t\022\020\n\014CONSTRUCTI" +
-      "ON\020\n\022\023\n\017POLICE_ACTIVITY\020\013\022\025\n\021MEDICAL_EME" +
-      "RGENCY\020\014\"\265\001\n\006Effect\022\016\n\nNO_SERVICE\020\001\022\023\n\017R" +
-      "EDUCED_SERVICE\020\002\022\026\n\022SIGNIFICANT_DELAYS\020\003" +
-      "\022\n\n\006DETOUR\020\004\022\026\n\022ADDITIONAL_SERVICE\020\005\022\024\n\020" +
-      "MODIFIED_SERVICE\020\006\022\020\n\014OTHER_EFFECT\020\007\022\022\n\016" +
-      "UNKNOWN_EFFECT\020\010\022\016\n\nSTOP_MOVED\020\t*\006\010\350\007\020\320\017" +
-      "\"\'\n\tTimeRange\022\r\n\005start\030\001 \001(\004\022\013\n\003end\030\002 \001(" +
-      "\004\"i\n\010Position\022\020\n\010latitude\030\001 \002(\002\022\021\n\tlongi" +
-      "tude\030\002 \002(\002\022\017\n\007bearing\030\003 \001(\002\022\020\n\010odometer\030",
-      "\004 \001(\001\022\r\n\005speed\030\005 \001(\002*\006\010\350\007\020\320\017\"\233\002\n\016TripDes" +
-      "criptor\022\017\n\007trip_id\030\001 \001(\t\022\020\n\010route_id\030\005 \001" +
-      "(\t\022\022\n\nstart_time\030\002 \001(\t\022\022\n\nstart_date\030\003 \001" +
-      "(\t\022T\n\025schedule_relationship\030\004 \001(\01625.tran" +
-      "sit_realtime.TripDescriptor.ScheduleRela" +
-      "tionship\"`\n\024ScheduleRelationship\022\r\n\tSCHE" +
-      "DULED\020\000\022\t\n\005ADDED\020\001\022\017\n\013UNSCHEDULED\020\002\022\014\n\010C" +
-      "ANCELED\020\003\022\017\n\013REPLACEMENT\020\005*\006\010\350\007\020\320\017\"M\n\021Ve" +
-      "hicleDescriptor\022\n\n\002id\030\001 \001(\t\022\r\n\005label\030\002 \001" +
-      "(\t\022\025\n\rlicense_plate\030\003 \001(\t*\006\010\350\007\020\320\017\"\222\001\n\016En",
-      "titySelector\022\021\n\tagency_id\030\001 \001(\t\022\020\n\010route" +
-      "_id\030\002 \001(\t\022\022\n\nroute_type\030\003 \001(\005\022.\n\004trip\030\004 " +
-      "\001(\0132 .transit_realtime.TripDescriptor\022\017\n" +
-      "\007stop_id\030\005 \001(\t*\006\010\350\007\020\320\017\"\206\001\n\020TranslatedStr" +
-      "ing\022C\n\013translation\030\001 \003(\0132..transit_realt" +
-      "ime.TranslatedString.Translation\032-\n\013Tran" +
-      "slation\022\014\n\004text\030\001 \002(\t\022\020\n\010language\030\002 \001(\tB" +
-      "\035\n\033com.google.transit.realtime"
+      "ED\"J\n\024ScheduleRelationship\022\r\n\tSCHEDULED\020",
+      "\000\022\013\n\007SKIPPED\020\001\022\013\n\007NO_DATA\020\002\022\t\n\005ADDED\020\003*\006" +
+      "\010\350\007\020\320\017*\006\010\350\007\020\320\017\"\341\004\n\017VehiclePosition\022.\n\004tr" +
+      "ip\030\001 \001(\0132 .transit_realtime.TripDescript" +
+      "or\0224\n\007vehicle\030\010 \001(\0132#.transit_realtime.V" +
+      "ehicleDescriptor\022,\n\010position\030\002 \001(\0132\032.tra" +
+      "nsit_realtime.Position\022\035\n\025current_stop_s" +
+      "equence\030\003 \001(\r\022\017\n\007stop_id\030\007 \001(\t\022Z\n\016curren" +
+      "t_status\030\004 \001(\01623.transit_realtime.Vehicl" +
+      "ePosition.VehicleStopStatus:\rIN_TRANSIT_" +
+      "TO\022\021\n\ttimestamp\030\005 \001(\004\022K\n\020congestion_leve",
+      "l\030\006 \001(\01621.transit_realtime.VehiclePositi" +
+      "on.CongestionLevel\"G\n\021VehicleStopStatus\022" +
+      "\017\n\013INCOMING_AT\020\000\022\016\n\nSTOPPED_AT\020\001\022\021\n\rIN_T" +
+      "RANSIT_TO\020\002\"}\n\017CongestionLevel\022\034\n\030UNKNOW" +
+      "N_CONGESTION_LEVEL\020\000\022\024\n\020RUNNING_SMOOTHLY" +
+      "\020\001\022\017\n\013STOP_AND_GO\020\002\022\016\n\nCONGESTION\020\003\022\025\n\021S" +
+      "EVERE_CONGESTION\020\004*\006\010\350\007\020\320\017\"\266\006\n\005Alert\0222\n\r" +
+      "active_period\030\001 \003(\0132\033.transit_realtime.T" +
+      "imeRange\0229\n\017informed_entity\030\005 \003(\0132 .tran" +
+      "sit_realtime.EntitySelector\022;\n\005cause\030\006 \001",
+      "(\0162\035.transit_realtime.Alert.Cause:\rUNKNO" +
+      "WN_CAUSE\022>\n\006effect\030\007 \001(\0162\036.transit_realt" +
+      "ime.Alert.Effect:\016UNKNOWN_EFFECT\022/\n\003url\030" +
+      "\010 \001(\0132\".transit_realtime.TranslatedStrin" +
+      "g\0227\n\013header_text\030\n \001(\0132\".transit_realtim" +
+      "e.TranslatedString\022<\n\020description_text\030\013" +
+      " \001(\0132\".transit_realtime.TranslatedString" +
+      "\"\330\001\n\005Cause\022\021\n\rUNKNOWN_CAUSE\020\001\022\017\n\013OTHER_C" +
+      "AUSE\020\002\022\025\n\021TECHNICAL_PROBLEM\020\003\022\n\n\006STRIKE\020" +
+      "\004\022\021\n\rDEMONSTRATION\020\005\022\014\n\010ACCIDENT\020\006\022\013\n\007HO",
+      "LIDAY\020\007\022\013\n\007WEATHER\020\010\022\017\n\013MAINTENANCE\020\t\022\020\n" +
+      "\014CONSTRUCTION\020\n\022\023\n\017POLICE_ACTIVITY\020\013\022\025\n\021" +
+      "MEDICAL_EMERGENCY\020\014\"\265\001\n\006Effect\022\016\n\nNO_SER" +
+      "VICE\020\001\022\023\n\017REDUCED_SERVICE\020\002\022\026\n\022SIGNIFICA" +
+      "NT_DELAYS\020\003\022\n\n\006DETOUR\020\004\022\026\n\022ADDITIONAL_SE" +
+      "RVICE\020\005\022\024\n\020MODIFIED_SERVICE\020\006\022\020\n\014OTHER_E" +
+      "FFECT\020\007\022\022\n\016UNKNOWN_EFFECT\020\010\022\016\n\nSTOP_MOVE" +
+      "D\020\t*\006\010\350\007\020\320\017\"\'\n\tTimeRange\022\r\n\005start\030\001 \001(\004\022" +
+      "\013\n\003end\030\002 \001(\004\"i\n\010Position\022\020\n\010latitude\030\001 \002" +
+      "(\002\022\021\n\tlongitude\030\002 \002(\002\022\017\n\007bearing\030\003 \001(\002\022\020",
+      "\n\010odometer\030\004 \001(\001\022\r\n\005speed\030\005 \001(\002*\006\010\350\007\020\320\017\"" +
+      "\233\002\n\016TripDescriptor\022\017\n\007trip_id\030\001 \001(\t\022\020\n\010r" +
+      "oute_id\030\005 \001(\t\022\022\n\nstart_time\030\002 \001(\t\022\022\n\nsta" +
+      "rt_date\030\003 \001(\t\022T\n\025schedule_relationship\030\004" +
+      " \001(\01625.transit_realtime.TripDescriptor.S" +
+      "cheduleRelationship\"`\n\024ScheduleRelations" +
+      "hip\022\r\n\tSCHEDULED\020\000\022\t\n\005ADDED\020\001\022\017\n\013UNSCHED" +
+      "ULED\020\002\022\014\n\010CANCELED\020\003\022\017\n\013REPLACEMENT\020\005*\006\010" +
+      "\350\007\020\320\017\"M\n\021VehicleDescriptor\022\n\n\002id\030\001 \001(\t\022\r" +
+      "\n\005label\030\002 \001(\t\022\025\n\rlicense_plate\030\003 \001(\t*\006\010\350",
+      "\007\020\320\017\"\222\001\n\016EntitySelector\022\021\n\tagency_id\030\001 \001" +
+      "(\t\022\020\n\010route_id\030\002 \001(\t\022\022\n\nroute_type\030\003 \001(\005" +
+      "\022.\n\004trip\030\004 \001(\0132 .transit_realtime.TripDe" +
+      "scriptor\022\017\n\007stop_id\030\005 \001(\t*\006\010\350\007\020\320\017\"\206\001\n\020Tr" +
+      "anslatedString\022C\n\013translation\030\001 \003(\0132..tr" +
+      "ansit_realtime.TranslatedString.Translat" +
+      "ion\032-\n\013Translation\022\014\n\004text\030\001 \002(\t\022\020\n\010lang" +
+      "uage\030\002 \001(\tB\035\n\033com.google.transit.realtim" +
+      "e"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
