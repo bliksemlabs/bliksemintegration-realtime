@@ -112,8 +112,8 @@ public class JourneyProcessor {
 
 	private TripUpdate.Builder buildTripUpdate(){
 		TripUpdate.Builder trip = TripUpdate.newBuilder();
-		//Keep track whether all stations are canceled along the journey
-		Boolean completelyCanceled = null; 
+		//Keep track how many stations are canceled along the journey
+		int stopsCanceled = 0; 
 		for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
 			JourneyPatternPoint jp = journey.getJourneypattern().getPoints().get(i);
 			StopTimeUpdate.Builder stop = StopTimeUpdate.newBuilder();
@@ -125,13 +125,9 @@ public class JourneyProcessor {
 				stop.setScheduleRelationship(p.canceled ? ScheduleRelationship.SKIPPED :
 					ScheduleRelationship.SCHEDULED);
 				if (p.canceled){
-					completelyCanceled = true; //Signal that there was a cancellation along the journey
-				}else if (completelyCanceled != null){
-					completelyCanceled = false; //Signal that there was a station that was not cancelled
+					stopsCanceled++; //Signal that there was a cancellation along the journey
 				}
 			}else{
-				completelyCanceled = false; //Signal that there was a station that was not cancelled
-				//TODO set static times or skip updates?
 				continue;
 			}
 			if (i != 0 && p.eta != null){
@@ -148,7 +144,8 @@ public class JourneyProcessor {
 			}
 			trip.addStopTimeUpdate(stop);
 		}
-		if (completelyCanceled != null && completelyCanceled){
+		if (stopsCanceled >= journey.getJourneypattern().getPoints().size()-2){
+			//Journey now exists of a single stop or less
 			trip.clearStopTimeUpdate();
 			journey.setCanceled(true);
 		}else{
