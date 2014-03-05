@@ -10,6 +10,7 @@ import lombok.NonNull;
 import nl.ovapi.rid.gtfsrt.services.RIDservice;
 import nl.ovapi.rid.model.Journey;
 import nl.ovapi.rid.model.JourneyPattern;
+import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.TimeDemandGroup;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
@@ -47,7 +48,7 @@ public class TrainProcessor {
 				continue; //Train does not stop at this station;
 			}
 			JourneyPattern.JourneyPatternPoint pt = new JourneyPattern.JourneyPatternPoint();
-			pt.setPointorder(i);
+			pt.setPointorder((i+1)*10);
 			pt.setScheduled(true);
 			pt.setWaitpoint(true);
 			pt.setOperatorpointref(String.format("%s:0", s.getStopCode().toLowerCase()));
@@ -61,6 +62,45 @@ public class TrainProcessor {
 		}
 		return jp;
 	}
+	
+	/**
+	 * @return the journey which visits the most stations, assumed to be the journey that describes the entire trainpath
+	 */
+	private Journey longestJourney(){
+		int maxLength = -1;
+		Journey longestJourney = null;
+		for (JourneyProcessor j : this._processors){
+			if (j.getJourney().getJourneypattern().getPoints().size() > maxLength){
+				maxLength = j.getJourney().getJourneypattern().getPoints().size();
+				longestJourney = j.getJourney();
+			}
+		}
+		return longestJourney;
+	}
+	
+	public void changeService(ServiceInfoServiceType info){
+	    ArrayList<String> plannedPath = new ArrayList<String>();
+	    for (JourneyPatternPoint pt : longestJourney().getJourneypattern().getPoints()){
+			String stationCode = pt.getOperatorpointref().split(":")[0].toLowerCase();
+			plannedPath.add(stationCode);
+	    }
+	    if (_processors.size() > 1){
+	    	_log.error("Journey path change not supported for multiple blocks...");
+	    	return;
+	    }
+		for (int i = 0; i < info.getStopList().getStop().size(); i++){
+			ServiceInfoStopType s = info.getStopList().getStop().get(i);
+			if (s.getArrival() == null && s.getDeparture() == null){
+				continue;
+			}
+			if (!plannedPath.contains(s.getStopCode().toLowerCase())){
+				for (JourneyProcessor jp : _processors){
+			    	_log.error("Here i should have added station {} for train {}",s.getStopCode(),s.getStopServiceCode());
+				}
+			}
+		}
+	}
+
 	
 	private static TimeDemandGroup timePatternFromArnu(Journey j,ServiceInfoServiceType info){
 		TimeDemandGroup tp = new TimeDemandGroup();

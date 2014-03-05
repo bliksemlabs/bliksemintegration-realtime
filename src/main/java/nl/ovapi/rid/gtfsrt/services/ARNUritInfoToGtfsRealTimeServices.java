@@ -145,10 +145,10 @@ public class ARNUritInfoToGtfsRealTimeServices {
 						case CANCELLED_SERVICE:
 						case NORMAL_SERVICE:
 						case NEW_SERVICE:
+						case SCHEDULE_CHANGED_SERVICE:
 							break;
 						case DIVERTED_SERVICE:
 						case EXTENDED_SERVICE:
-						case SCHEDULE_CHANGED_SERVICE:
 						case SPLIT_SERVICE:
 							System.out.println(m[1]);
 						default:
@@ -162,6 +162,9 @@ public class ARNUritInfoToGtfsRealTimeServices {
 							journeyProcessors.put(id, jp);
 						}
 						if (jp != null){
+							if (info.getServiceType() == ServiceInfoKind.SCHEDULE_CHANGED_SERVICE){
+								jp.changeService(info);
+							}
 							_tripUpdatesSink.handleIncrementalUpdate(jp.process(info));
 						}else{
 							_log.error("Train {} not found",id);

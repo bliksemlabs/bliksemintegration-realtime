@@ -94,7 +94,7 @@ public class ServiceInfoStopType {
      *     
      */
     public String getStopCode() {
-        return stopCode;
+        return stopCode == null ? null : stopCode.toLowerCase();
     }
 
     /**

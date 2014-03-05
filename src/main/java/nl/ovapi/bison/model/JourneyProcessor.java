@@ -244,7 +244,8 @@ public class JourneyProcessor {
 			}
 			if (update.hasDeparture()){
 				if (update.getDeparture().getDelay() == lastDelay && (i != 0) && !override){
-					update.clearDeparture();
+					if (!update.hasArrival())
+						update.clearDeparture();
 				}else{
 					lastDelay = update.getDeparture().getDelay();
 				}

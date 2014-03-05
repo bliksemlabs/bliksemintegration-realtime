@@ -1,5 +1,6 @@
 package nl.ovapi.arnu;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
 
@@ -41,7 +42,22 @@ public class JourneyProcessor {
 		journey = j;
 		patches = Maps.newHashMap();
 	}
-
+	
+	/**
+	 * 
+	 * @param stationCode NS stationcode such as lls, asd,asdz etc.
+	 * @return whether this journey contains station of stationCode
+	 */
+	
+	public boolean containsStation(String stationCode){
+	    for (JourneyPatternPoint pt : journey.getJourneypattern().getPoints()){
+	    	if (stationCode.equals(stationCode)){
+	    		return true;
+	    	}
+	    }
+	    return false;
+	}
+	
 	private void updatePatches(ServiceInfoServiceType info){
 		if (info.getStopList() == null || info.getStopList().getStop() == null){
 			return;
@@ -64,10 +80,8 @@ public class JourneyProcessor {
 					break;
 				}
 			}else{
-				p.canceled = false;
-				if (station.getArrival() == null && station.getDeparture() == null){
-					continue;
-				}
+				//This also sets passage-stations as canceled, but that is assumed to be a non-issue
+				p.canceled = (station.getArrival() == null && station.getDeparture() == null);
 			}
 			if (station.getArrivalTimeDelay() != null){
 				p.arrivalDelay = Utils.toSeconds(station.getArrivalTimeDelay());
@@ -128,6 +142,18 @@ public class JourneyProcessor {
 					stopsCanceled++; //Signal that there was a cancellation along the journey
 				}
 			}else{
+				if (i != 0){
+					StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
+					arrival.setDelay(0);
+					arrival.setTime(journey.getArrivalTime(jp.getPointorder())); //In seconds since 1970 
+					stop.setArrival(arrival);
+				}
+				if (i != journey.getJourneypattern().getPoints().size()-1){
+					StopTimeEvent.Builder departure = StopTimeEvent.newBuilder();
+					departure.setDelay(0);
+					departure.setTime(journey.getDepartureTime(jp.getPointorder())); //In seconds since 1970 
+					stop.setArrival(departure);
+				}
 				continue;
 			}
 			if (i != 0 && p.eta != null){
@@ -144,7 +170,7 @@ public class JourneyProcessor {
 			}
 			trip.addStopTimeUpdate(stop);
 		}
-		if (stopsCanceled >= journey.getJourneypattern().getPoints().size()-2){
+		if (stopsCanceled > journey.getJourneypattern().getPoints().size()-2){
 			//Journey now exists of a single stop or less
 			trip.clearStopTimeUpdate();
 			journey.setCanceled(true);
