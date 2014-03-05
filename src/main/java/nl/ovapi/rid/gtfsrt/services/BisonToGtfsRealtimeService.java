@@ -145,8 +145,10 @@ public class BisonToGtfsRealtimeService {
 			GtfsRealtimeIncrementalUpdate update = new GtfsRealtimeIncrementalUpdate();
 			for (KV15message msg : messages){
 				try{
-					if (msg.getMessagePriority() == MessagePriority.COMMERCIAL)
-						continue;
+					if (msg.getMessagePriority() == MessagePriority.COMMERCIAL){
+						if (msg.getDataOwnerCode() != DataOwnerCode.QBUZZ)
+							continue;
+					}
 					String id = String.format("KV15:%s:%s:%s", msg.getDataOwnerCode().name(),msg.getMessageCodeDate(),msg.getMessageCodeNumber());
 					if (msg.getIsDelete()){
 						update.addDeletedEntity(id);
