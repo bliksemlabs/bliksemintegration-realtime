@@ -29,9 +29,11 @@ import nl.ovapi.ZeroMQUtils;
 import nl.ovapi.arnu.TrainProcessor;
 import nl.ovapi.rid.model.Journey;
 import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.Alerts;
+import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripUpdates;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +51,8 @@ public class ARNUritInfoToGtfsRealTimeServices {
 	private ExecutorService _executor;
 	private Future<?> _task;
 	private static final Logger _log = LoggerFactory.getLogger(ARNUritInfoToGtfsRealTimeServices.class);
-	private final static String pubAddress = "tcp://127.0.0.1:7662";
-	private GtfsRealtimeSink _alertsSink;
+	private final static String pubAddress = "tcp://post.ndovloket.nl:7662";
+	private GtfsRealtimeSink _tripUpdatesSink;
 	private RIDservice _ridService;
 	private Map<String, TrainProcessor> journeyProcessors;
 
@@ -61,8 +63,8 @@ public class ARNUritInfoToGtfsRealTimeServices {
 	}
 
 	@Inject
-	public void setTripUpdatesSink(@Alerts GtfsRealtimeSink alertsSink) {
-		_alertsSink = alertsSink;
+	public void setTripUpdatesSink(@TripUpdates GtfsRealtimeSink tripUpdates) {
+		_tripUpdatesSink = tripUpdates;
 	}
 
 	@PostConstruct
@@ -92,7 +94,6 @@ public class ARNUritInfoToGtfsRealTimeServices {
 		}
 		List<Journey> trains = _ridService.getTrains(id);
 		if (trains == null || trains.size() == 0){
-			_log.info("TrainId {} not found",id);
 			return null; //Journey not found
 		}
 		jp = new TrainProcessor(trains);
@@ -140,11 +141,31 @@ public class ARNUritInfoToGtfsRealTimeServices {
 					}
 					System.out.println(m[0]);
 					for (ServiceInfoServiceType info : feed.getValue().getServiceInfoList().getServiceInfo()){
+						switch(info.getServiceType()){
+						case CANCELLED_SERVICE:
+						case NORMAL_SERVICE:
+						case NEW_SERVICE:
+							break;
+						case DIVERTED_SERVICE:
+						case EXTENDED_SERVICE:
+						case SCHEDULE_CHANGED_SERVICE:
+						case SPLIT_SERVICE:
+							System.out.println(m[1]);
+						default:
+							break;
+						}
 						SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 						String id = String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode());
 						TrainProcessor jp = getOrCreateProcessorForId(id);
-						if (jp != null)
-							jp.process(info);
+						if (jp == null && info.getServiceType() == ServiceInfoKind.NEW_SERVICE){
+							jp = TrainProcessor.fromArnu(_ridService,info);
+							journeyProcessors.put(id, jp);
+						}
+						if (jp != null){
+							_tripUpdatesSink.handleIncrementalUpdate(jp.process(info));
+						}else{
+							_log.error("Train {} not found",id);
+						}
 					}
 				} catch (Exception e) {
 					_log.error("Error ARNU",e);

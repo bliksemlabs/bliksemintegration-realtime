@@ -3,6 +3,7 @@ package nl.ovapi.arnu;
 import java.util.Calendar;
 import java.util.Map;
 
+import lombok.Getter;
 import lombok.NonNull;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.gtfsrt.services.ARNUritInfoToGtfsRealTimeServices;
@@ -27,7 +28,7 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate.Schedu
  */
 
 public class JourneyProcessor {
-	private Journey _journey;
+	@Getter private Journey journey;
 	private Map<String,Patch> patches;
 	private static final Logger _log = LoggerFactory.getLogger(ARNUritInfoToGtfsRealTimeServices.class);
 	private static class Patch {
@@ -37,7 +38,7 @@ public class JourneyProcessor {
 	}
 
 	public JourneyProcessor(@NonNull Journey j){
-		_journey = j;
+		journey = j;
 		patches = Maps.newHashMap();
 	}
 
@@ -64,37 +65,40 @@ public class JourneyProcessor {
 				}
 			}else{
 				p.canceled = false;
+				if (station.getArrival() == null && station.getDeparture() == null){
+					continue;
+				}
 			}
 			if (station.getArrivalTimeDelay() != null){
 				p.arrivalDelay = Utils.toSeconds(station.getArrivalTimeDelay());
 				Calendar c = (Calendar) station.getArrival().toGregorianCalendar().clone();
 				station.getArrivalTimeDelay().addTo(c);
-				p.eta = c.getTimeInMillis();
+				p.eta = c.getTimeInMillis()/1000; // in Seconds since 1970
 			}else if (station.getArrival() != null){
-				p.eta = station.getArrival().toGregorianCalendar().getTimeInMillis();
+				p.eta = station.getArrival().toGregorianCalendar().getTimeInMillis()/1000; // in Seconds since 1970
 			}
 
 			if (station.getDepartureTimeDelay() != null){
 				p.departureDelay = Utils.toSeconds(station.getDepartureTimeDelay());
 				Calendar c = (Calendar) station.getDeparture().toGregorianCalendar().clone();
 				station.getDepartureTimeDelay().addTo(c);
-				p.etd = c.getTimeInMillis();
+				p.etd = c.getTimeInMillis()/1000; // in Seconds since 1970
 			}else if (station.getDeparture() != null){
-				p.etd = station.getDeparture().toGregorianCalendar().getTimeInMillis();
+				p.etd = station.getDeparture().toGregorianCalendar().getTimeInMillis()/1000; // in Seconds since 1970
 			}
 			patches.put(stationCode, p);
 		}
 	}
 
-	public void process(@NonNull ServiceInfoServiceType info){
+	public TripUpdate.Builder process(@NonNull ServiceInfoServiceType info){
 		updatePatches(info);
 		switch (info.getServiceType()){
 		case NORMAL_SERVICE:
-			break;
+		case NEW_SERVICE:
 		case CANCELLED_SERVICE:
+			break;
 		case DIVERTED_SERVICE:
 		case EXTENDED_SERVICE:
-		case NEW_SERVICE:
 		case SCHEDULE_CHANGED_SERVICE:
 		case SPLIT_SERVICE:
 			_log.debug("Unsupported serviceType {}",info);
@@ -103,15 +107,15 @@ public class JourneyProcessor {
 			break;
 
 		}
-		System.out.println(buildTripUpdate().build());
+		return buildTripUpdate();
 	}
-	
+
 	private TripUpdate.Builder buildTripUpdate(){
 		TripUpdate.Builder trip = TripUpdate.newBuilder();
 		//Keep track whether all stations are canceled along the journey
 		Boolean completelyCanceled = null; 
-		for (int i = 0;i < _journey.getJourneypattern().getPoints().size();i++){
-			JourneyPatternPoint jp = _journey.getJourneypattern().getPoints().get(i);
+		for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
+			JourneyPatternPoint jp = journey.getJourneypattern().getPoints().get(i);
 			StopTimeUpdate.Builder stop = StopTimeUpdate.newBuilder();
 			stop.setStopId(jp.getPointref()+"");
 			stop.setStopSequence(jp.getPointorder());
@@ -119,7 +123,7 @@ public class JourneyProcessor {
 			Patch p = patches.get(stationCode);
 			if (p != null){
 				stop.setScheduleRelationship(p.canceled ? ScheduleRelationship.SKIPPED :
-						ScheduleRelationship.SCHEDULED);
+					ScheduleRelationship.SCHEDULED);
 				if (p.canceled){
 					completelyCanceled = true; //Signal that there was a cancellation along the journey
 				}else if (completelyCanceled != null){
@@ -130,27 +134,27 @@ public class JourneyProcessor {
 				//TODO set static times or skip updates?
 				continue;
 			}
-			if (i != 0){
+			if (i != 0 && p.eta != null){
 				StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
 				arrival.setDelay(p.arrivalDelay == null ? 0 : p.arrivalDelay);
-				arrival.setTime(p.eta);
+				arrival.setTime(p.eta); //In seconds since 1970 
 				stop.setArrival(arrival);
 			}
-			if (i != _journey.getJourneypattern().getPoints().size()-1){
+			if (i != journey.getJourneypattern().getPoints().size()-1 && p.etd != null){
 				StopTimeEvent.Builder departure = StopTimeEvent.newBuilder();
 				departure.setDelay(p.departureDelay == null ? 0 : p.departureDelay);
-				departure.setTime(p.etd);
+				departure.setTime(p.etd); //In seconds since 1970 
 				stop.setDeparture(departure);
 			}
 			trip.addStopTimeUpdate(stop);
 		}
 		if (completelyCanceled != null && completelyCanceled){
 			trip.clearStopTimeUpdate();
-			_journey.setCanceled(true);
+			journey.setCanceled(true);
 		}else{
-			_journey.setCanceled(false);
+			journey.setCanceled(false);
 		}
-		trip.setTrip(_journey.tripDescriptor());
+		trip.setTrip(journey.tripDescriptor());
 		return trip;
 	}
 }
