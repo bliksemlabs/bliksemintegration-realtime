@@ -44,7 +44,7 @@ public class Journey {
 	/**
 	 * Trip_id of this journey
 	 */
-	private Long id;
+	private String id;
 	@Getter
 	@Setter
 	/**
@@ -63,7 +63,7 @@ public class Journey {
 	 * TimeDemandGroup of the Journey
 	 */
 	private TimeDemandGroup timedemandgroup;
-	
+
 	@Getter
 	@Setter
 	/**
@@ -97,6 +97,10 @@ public class Journey {
 	 */
 	private boolean isCanceled;
 
+	@Getter
+	@Setter
+	private boolean isAdded;
+
 	private static final Logger _log = LoggerFactory.getLogger(Journey.class);
 
 	/**
@@ -106,7 +110,9 @@ public class Journey {
 		TripDescriptor.Builder tripDescriptor = TripDescriptor.newBuilder();
 		tripDescriptor.setStartDate(operatingDay.replace("-", ""));
 		tripDescriptor.setTripId(id.toString());
-		tripDescriptor.setScheduleRelationship(isCanceled ? ScheduleRelationship.CANCELED : ScheduleRelationship.SCHEDULED);
+		tripDescriptor.setScheduleRelationship(isAdded ? ScheduleRelationship.ADDED : ScheduleRelationship.SCHEDULED);
+		if (isCanceled)
+			tripDescriptor.setScheduleRelationship(ScheduleRelationship.CANCELED);
 		OVapiTripDescriptor.Builder extension = OVapiTripDescriptor.newBuilder();
 		extension.setRealtimeTripId(privateCode);
 		tripDescriptor.setExtension(GtfsRealtimeOVapi.ovapiTripdescriptor, extension.build());
@@ -170,7 +176,7 @@ public class Journey {
 		throw new IllegalArgumentException("Pointorder "+pointorder+"does not exist");
 	}
 
-	
+
 	public JourneyPatternPoint getJourneyStop (String userstopcode,int passageSequencenumber){
 		for (int i = 0; i < timedemandgroup.getPoints().size(); i++) {
 			TimeDemandGroupPoint tpt = timedemandgroup.getPoints().get(i);

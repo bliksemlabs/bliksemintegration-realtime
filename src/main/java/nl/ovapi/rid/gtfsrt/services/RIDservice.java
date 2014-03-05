@@ -137,6 +137,20 @@ public class RIDservice {
 			return null;
 		}
 	}
+	
+	/**
+	 * 
+	 * @param station NS stationcode 
+	 * @return Long of identifier of stoppoint with undefined platform for that station
+	 */
+	public Long getRailStation(String station){
+		String id = String.format("IFF:%s:0", station);
+		ArrayList<Long> results = userstops.get(id);
+		if (results == null || results.size() == 0){
+			return null;
+		}
+		return results.get(0);
+	}
 
 	/**
 	 * @param id of stoppoint in database.
@@ -320,7 +334,7 @@ public class RIDservice {
 				}
 				newCount++;
 				Journey journey = new Journey();
-				journey.setId(rs.getLong(2));
+				journey.setId(rs.getLong(2)+"");
 				journey.setJourneypattern(newJourneypatterns.get(rs.getString(3).intern()));
 				if (journey.getJourneypattern() == null)
 					_log.error("JourneyPattern == null {} {}",rs.getString(1),rs.getString(3));

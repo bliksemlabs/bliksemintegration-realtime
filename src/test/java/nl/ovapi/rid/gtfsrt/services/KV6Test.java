@@ -125,7 +125,7 @@ public class KV6Test {
 		j.setAgencyId("QBUZZ");
 		Calendar c = Calendar.getInstance();
 		j.setDeparturetime(c.get(Calendar.HOUR_OF_DAY)*60*60+c.get(Calendar.MINUTE)*60+c.get(Calendar.SECOND));
-		j.setId(2552611L);
+		j.setId(2552611L+"");
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		j.setOperatingDay(df.format(c.getTime()));
 		j.setJourneypattern(testPattern());
