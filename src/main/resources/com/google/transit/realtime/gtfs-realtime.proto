@@ -209,6 +209,13 @@ message TripUpdate {
       // stops in the trip are considered to be unspecified as well.
       // Neither arrival nor departure should be supplied.
       NO_DATA = 2;
+      
+      // The vehicle will make a extra stop not in accordance to the scheduled schedule
+      // At least one of arrival and departure must be provided. If the schedule
+      // for this stop contains both arrival and departure times then so must
+      // this update. An update with only an arrival, say, where the schedule
+      // has both, indicates that the trip is terminating early at this stop.
+      ADDED = 3;
     }
     optional ScheduleRelationship schedule_relationship = 5
         [default = SCHEDULED];
