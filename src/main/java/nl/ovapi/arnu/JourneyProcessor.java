@@ -156,13 +156,13 @@ public class JourneyProcessor {
 				}
 				continue;
 			}
-			if (i != 0 && p.eta != null){
+			if (i != 0 && p.eta != null && !p.canceled){
 				StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
 				arrival.setDelay(p.arrivalDelay == null ? 0 : p.arrivalDelay);
 				arrival.setTime(p.eta); //In seconds since 1970 
 				stop.setArrival(arrival);
 			}
-			if (i != journey.getJourneypattern().getPoints().size()-1 && p.etd != null){
+			if (i != journey.getJourneypattern().getPoints().size()-1 && p.etd != null && !p.canceled){
 				StopTimeEvent.Builder departure = StopTimeEvent.newBuilder();
 				departure.setDelay(p.departureDelay == null ? 0 : p.departureDelay);
 				departure.setTime(p.etd); //In seconds since 1970 
