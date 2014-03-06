@@ -65,6 +65,14 @@ public class JourneyPattern {
 		 */
 		private boolean scheduled;
 
+		@Getter
+		@Setter
+		@NonNull
+		/**
+		 * This point is skipped.
+		 */
+		private boolean skipped = false;
+
 	}
 	
 	/**
