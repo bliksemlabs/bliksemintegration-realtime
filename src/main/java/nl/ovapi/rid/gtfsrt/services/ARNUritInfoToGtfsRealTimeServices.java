@@ -3,7 +3,6 @@ package nl.ovapi.rid.gtfsrt.services;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +19,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.stream.StreamSource;
 
 import lombok.NonNull;
@@ -32,12 +29,10 @@ import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 
-import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.Alerts;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripUpdates;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.XMLReader;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
@@ -86,7 +81,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			_executor = null;
 		}
 	}
-	
+
 	private TrainProcessor getOrCreateProcessorForId(@NonNull String id){
 		TrainProcessor jp = journeyProcessors.get(id);
 		if (jp != null){
@@ -107,12 +102,6 @@ public class ARNUritInfoToGtfsRealTimeServices {
 		int messagecounter = 0;
 		@Override
 		public void run() {
-			SAXParserFactory spf = SAXParserFactory.newInstance();
-			spf.setNamespaceAware(true);
-			SAXParser sp;
-			XMLReader xr = null;
-			try {sp = spf.newSAXParser();
-			xr = sp.getXMLReader();} catch (Exception e) {return;}
 			Context context = ZMQ.context(1);
 			Socket pull = context.socket(ZMQ.PULL);
 			pull.setRcvHWM(500000);
@@ -145,9 +134,9 @@ public class ARNUritInfoToGtfsRealTimeServices {
 						case CANCELLED_SERVICE:
 						case NORMAL_SERVICE:
 						case NEW_SERVICE:
+						case DIVERTED_SERVICE:
 						case SCHEDULE_CHANGED_SERVICE:
 							break;
-						case DIVERTED_SERVICE:
 						case EXTENDED_SERVICE:
 						case SPLIT_SERVICE:
 							System.out.println(m[1]);
@@ -157,16 +146,29 @@ public class ARNUritInfoToGtfsRealTimeServices {
 						SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 						String id = String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode());
 						TrainProcessor jp = getOrCreateProcessorForId(id);
-						if (jp == null && info.getServiceType() == ServiceInfoKind.NEW_SERVICE){
+						if (jp == null && info.getServiceType() != ServiceInfoKind.NORMAL_SERVICE){
 							jp = TrainProcessor.fromArnu(_ridService,info);
 							journeyProcessors.put(id, jp);
 						}
 						if (jp != null){
-							if (info.getServiceType() == ServiceInfoKind.SCHEDULE_CHANGED_SERVICE){
-								jp.changeService(info);
+							if (info.getServiceType() != null){
+								switch (info.getServiceType()){
+								case NORMAL_SERVICE:
+								case NEW_SERVICE:
+								case SPLIT_SERVICE:
+								case CANCELLED_SERVICE:
+									break;
+								case DIVERTED_SERVICE:
+								case EXTENDED_SERVICE:
+								case SCHEDULE_CHANGED_SERVICE:
+									jp.changeService(_ridService,info);
+								default:
+									break;
+								}
 							}
 							_tripUpdatesSink.handleIncrementalUpdate(jp.process(info));
 						}else{
+							System.out.println(m[1]);
 							_log.error("Train {} not found",id);
 						}
 					}
@@ -180,7 +182,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 		}
 	}
 
-	
+
 	private class ReceiveTask implements Runnable {
 		@Override
 		public void run() {
@@ -192,6 +194,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			push.setSndHWM(500000);
 			push.bind("tcp://*:"+INPROC_PORT);
 			_log.info("Connect to {}",pubAddress);
+			@SuppressWarnings("deprecation")
 			org.zeromq.ZMQ.Poller poller = context.poller();
 			poller.register(subscriber);
 			while (!Thread.interrupted()) {

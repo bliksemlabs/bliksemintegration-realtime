@@ -1,15 +1,22 @@
 package nl.ovapi.arnu;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
 import lombok.NonNull;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.gtfsrt.services.ARNUritInfoToGtfsRealTimeServices;
+import nl.ovapi.rid.gtfsrt.services.RIDservice;
 import nl.ovapi.rid.model.Journey;
+import nl.ovapi.rid.model.JourneyPattern;
+import nl.ovapi.rid.model.TimeDemandGroup;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
 
@@ -35,9 +42,9 @@ public class JourneyProcessor {
 	private static class Patch {
 		Long eta,etd;
 		Integer arrivalDelay,departureDelay;
-		Boolean canceled; 
+		boolean canceled; 
 	}
-
+	
 	public JourneyProcessor(@NonNull Journey j){
 		journey = j;
 		patches = Maps.newHashMap();
@@ -51,27 +58,113 @@ public class JourneyProcessor {
 	
 	public boolean containsStation(String stationCode){
 	    for (JourneyPatternPoint pt : journey.getJourneypattern().getPoints()){
-	    	if (stationCode.equals(stationCode)){
+	    	if (stationCode.equals(stationCode(pt))){
 	    		return true;
 	    	}
 	    }
 	    return false;
 	}
 	
+	public static String stationCode(JourneyPattern.JourneyPatternPoint point){
+		return point.getOperatorpointref().split(":")[0];
+	}
+
+	private static TimeDemandGroup timePatternFromArnu(Journey j,ServiceInfoServiceType info){
+		TimeDemandGroup tp = new TimeDemandGroup();
+		int departuretime = -1;
+		for (int i = 0; i < info.getStopList().getStop().size(); i++){
+			ServiceInfoStopType s = info.getStopList().getStop().get(i);
+			if (s.getArrival() == null && s.getDeparture() == null){
+				continue; //Train does not stop at this station;
+			}
+			if (departuretime == -1){
+				Calendar c = s.getDeparture().toGregorianCalendar();
+				SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+				j.setOperatingDay(df.format(c.getTime()));
+				//Seconds since midnight
+				departuretime = secondsSinceMidnight(c);
+				j.setDeparturetime(departuretime);
+				TimeDemandGroup.TimeDemandGroupPoint pt = new TimeDemandGroup.TimeDemandGroupPoint();
+				pt.setPointorder(i);
+				pt.setStopwaittime(0);
+				pt.setTotaldrivetime(0);
+				tp.add(pt);
+			}else{
+				Calendar c = s.getArrival().toGregorianCalendar();
+				//SEconds since midnight
+				int time = secondsSinceMidnight(c);
+				TimeDemandGroup.TimeDemandGroupPoint pt = new TimeDemandGroup.TimeDemandGroupPoint();
+				pt.setTotaldrivetime(time-departuretime);
+				if (s.getDeparture() != null){
+					c = s.getDeparture().toGregorianCalendar();
+					int depTime = secondsSinceMidnight(c);
+					pt.setStopwaittime(depTime-time);
+				}else{
+					pt.setStopwaittime(0);
+				}
+				tp.add(pt);
+			}
+		}
+		return tp;
+	}	
+	
+	private static JourneyPattern patternFromArnu(RIDservice ridService,ServiceInfoServiceType info){
+		JourneyPattern jp = new JourneyPattern();
+		try{
+			jp.setDirectiontype(Integer.parseInt(info.getServiceCode())%2 == 0 ? 2 :1);
+		}catch (Exception e){}
+		for (int i = 0; i < info.getStopList().getStop().size(); i++){
+			ServiceInfoStopType s = info.getStopList().getStop().get(i);
+			if (s.getArrival() == null && s.getDeparture() == null){
+				continue; //Train does not stop at this station;
+			}
+			JourneyPattern.JourneyPatternPoint pt = new JourneyPattern.JourneyPatternPoint();
+			pt.setPointorder((i+1)*10);
+			pt.setScheduled(true);
+			pt.setWaitpoint(true);
+			pt.setOperatorpointref(String.format("%s:0", s.getStopCode().toLowerCase()));
+			Long id = ridService.getRailStation(s.getStopCode().toLowerCase());
+			if (id == null){
+				_log.error("PointId for station {} not found",s.getStopCode());
+			}else{
+				pt.setPointref(id);
+				jp.add(pt);
+			}
+		}
+		return jp;
+	}
+			
+	public static int secondsSinceMidnight(Calendar c){
+		return c.get(Calendar.HOUR_OF_DAY)*60*60+c.get(Calendar.MINUTE)*60+c.get(Calendar.SECOND);
+	}
+
+	public static JourneyProcessor fromArnu(@NonNull RIDservice ridService,@NonNull ServiceInfoServiceType info){
+		Journey j = new Journey();
+		j.setAdded(true);
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		j.setPrivateCode(String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode()));
+		j.setId(j.getPrivateCode());
+		j.setJourneypattern(patternFromArnu(ridService,info));
+		j.setTimedemandgroup(timePatternFromArnu(j,info));
+		if (j.getJourneypattern().getPoints().size() != j.getTimedemandgroup().getPoints().size()){
+			throw new IllegalArgumentException("Size of timedemandgroup and journeypattern do not match");
+		}
+		return new JourneyProcessor(j);
+	}
+
 	private void updatePatches(ServiceInfoServiceType info){
 		if (info.getStopList() == null || info.getStopList().getStop() == null){
 			return;
 		}
+		
 		for (ServiceInfoStopType station : info.getStopList().getStop()){
 			String stationCode = station.getStopCode().toLowerCase();
 			Patch p = new Patch();
 			if (station.getStopType() != null){
 				switch (station.getStopType()){
 				case CANCELLED_STOP:
-					p.canceled = true;
-					break;
 				case DIVERTED_STOP:	
-					_log.debug("Divertion not supported {}",info);
+					p.canceled = true;
 					break;
 				case SPLIT_STOP:
 					_log.debug("Split stop not supported {}",info);
@@ -105,15 +198,16 @@ public class JourneyProcessor {
 	}
 
 	public TripUpdate.Builder process(@NonNull ServiceInfoServiceType info){
+		patches.clear(); //TODO Figure out whether ARNU updates are replacing each other.
 		updatePatches(info);
 		switch (info.getServiceType()){
 		case NORMAL_SERVICE:
 		case NEW_SERVICE:
 		case CANCELLED_SERVICE:
-			break;
 		case DIVERTED_SERVICE:
 		case EXTENDED_SERVICE:
 		case SCHEDULE_CHANGED_SERVICE:
+			break;
 		case SPLIT_SERVICE:
 			_log.debug("Unsupported serviceType {}",info);
 			break;
@@ -121,10 +215,10 @@ public class JourneyProcessor {
 			break;
 
 		}
-		return buildTripUpdate();
+		return buildTripUpdate(info);
 	}
 
-	private TripUpdate.Builder buildTripUpdate(){
+	private TripUpdate.Builder buildTripUpdate(@NonNull ServiceInfoServiceType info){
 		TripUpdate.Builder trip = TripUpdate.newBuilder();
 		//Keep track how many stations are canceled along the journey
 		int stopsCanceled = 0; 
@@ -141,7 +235,10 @@ public class JourneyProcessor {
 				if (p.canceled){
 					stopsCanceled++; //Signal that there was a cancellation along the journey
 				}
-			}else{
+			}else if (jp.isSkipped() || (info.getServiceType() != null && info.getServiceType() == ServiceInfoKind.EXTENDED_SERVICE)){
+				stop.setScheduleRelationship(ScheduleRelationship.SKIPPED);
+				stopsCanceled++;
+			}else if (!jp.isSkipped()){
 				if (i != 0){
 					StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
 					arrival.setDelay(0);
