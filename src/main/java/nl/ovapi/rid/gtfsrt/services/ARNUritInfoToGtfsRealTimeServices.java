@@ -81,6 +81,18 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			_executor = null;
 		}
 	}
+	
+	private TrainProcessor getProcessorForID(@NonNull String id){
+		TrainProcessor jp = journeyProcessors.get(id);
+		if (jp != null){
+			return jp;
+		}
+		List<Journey> trains = _ridService.getTrains(id);
+		if (trains == null || trains.size() == 0){
+			return null; //Journey not found
+		}
+		return jp;
+	}
 
 	private TrainProcessor getOrCreateProcessorForId(@NonNull String id){
 		TrainProcessor jp = journeyProcessors.get(id);
@@ -143,11 +155,22 @@ public class ARNUritInfoToGtfsRealTimeServices {
 						default:
 							break;
 						}
+						//TODO make dateswap.
 						SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-						String id = String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode());
+						Date d = new Date();
+						String id = String.format("%s:IFF:%s:%s",df.format(d),info.getTransportModeCode(),info.getServiceCode());
 						TrainProcessor jp = getOrCreateProcessorForId(id);
 						if (jp == null && info.getServiceType() != ServiceInfoKind.NORMAL_SERVICE){
 							jp = TrainProcessor.fromArnu(_ridService,info);
+							// If possible place this new train in an existing GTFS route. 
+							Integer originalTrainNumber = orginalTrainNumber(info.getServiceCode());
+							if (jp != null && originalTrainNumber != null){
+								String origId = String.format("%s:IFF:%s:%s",df.format(d),info.getTransportModeCode(),originalTrainNumber);
+								TrainProcessor origJp = getProcessorForID(origId);
+								if (origJp != null){
+									jp.setRouteId(origJp.getRouteId());
+								}
+							}
 							journeyProcessors.put(id, jp);
 						}
 						if (jp != null){
@@ -179,6 +202,31 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			}
 			_log.error("ARNU2GTFSrealtime service interrupted");
 			pull.disconnect(PULL_ADDRESS);
+		}
+	}
+	
+	private Integer orginalTrainNumber(String trainCode){
+		try{
+			int trainNumber = Integer.parseInt(trainCode);
+			if (trainNumber >= 300000 && trainNumber < 310000){
+				return trainNumber - 300000;
+			}else if (trainNumber >= 310000 && trainNumber < 320000){
+				return trainNumber - 310000;
+			}else if (trainNumber >= 320000 && trainNumber < 330000){
+				return trainNumber - 320000;
+			}else if (trainNumber >= 330000 && trainNumber < 340000){
+				return trainNumber - 330000;
+			}else if (trainNumber >= 340000 && trainNumber < 350000){
+				return trainNumber - 340000;
+			}else if (trainNumber >= 350000 && trainNumber < 360000){
+				return trainNumber - 350000;
+			}else if (trainNumber >= 360000 && trainNumber < 370000){
+				return trainNumber - 360000;
+			}else{
+				return null;
+			}
+		}catch (Exception e){
+			return null;
 		}
 	}
 

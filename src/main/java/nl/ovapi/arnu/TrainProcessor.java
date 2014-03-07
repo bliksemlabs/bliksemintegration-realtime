@@ -30,9 +30,31 @@ public class TrainProcessor {
 	}
 	
 	public TrainProcessor(@NonNull List<Journey> journeys){
+		if (journeys.size() == 0){
+			throw new IllegalArgumentException("No journeys given");
+		}
 		_processors = new ArrayList<JourneyProcessor>(journeys.size());
 		for (Journey j : journeys){
 			_processors.add(new JourneyProcessor(j));
+		}
+	}
+	
+	/**
+	 * @return the route_id this train is a part of;
+	 */
+	
+	public Long getRouteId(){
+		// We're definitely should assume that all (segments) of this train journey are part of the same (GTFS) route
+		return _processors.get(0).getJourney().getRouteId();
+	}
+	
+	/**
+	 * @param routeId will be set to all blocks in this train journey
+	 */
+	
+	public void setRouteId(Long routeId){
+		for (JourneyProcessor jp : _processors){
+			jp.getJourney().setRouteId(routeId);
 		}
 	}
 	
