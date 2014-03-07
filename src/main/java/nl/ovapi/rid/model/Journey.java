@@ -89,6 +89,14 @@ public class Journey {
 	 * ISO-8601 formatted (YYYY-MM-DD) OperatingDay.
 	 */
 	private String operatingDay;
+	
+	@Getter
+	@Setter
+	/**
+	 * ID of route.
+	 */
+	private Long routeId;
+
 
 	@Getter
 	@Setter
@@ -110,9 +118,16 @@ public class Journey {
 		TripDescriptor.Builder tripDescriptor = TripDescriptor.newBuilder();
 		tripDescriptor.setStartDate(operatingDay.replace("-", ""));
 		tripDescriptor.setTripId(id.toString());
-		tripDescriptor.setScheduleRelationship(isAdded ? ScheduleRelationship.ADDED : ScheduleRelationship.SCHEDULED);
-		if (isCanceled)
+		if (isAdded){
+			if (routeId != null){
+				tripDescriptor.setRouteId(routeId+"");
+			}
+			tripDescriptor.setScheduleRelationship(ScheduleRelationship.ADDED);
+		}else if (isCanceled){
 			tripDescriptor.setScheduleRelationship(ScheduleRelationship.CANCELED);
+		}else{
+			tripDescriptor.setScheduleRelationship(ScheduleRelationship.SCHEDULED);
+		}
 		OVapiTripDescriptor.Builder extension = OVapiTripDescriptor.newBuilder();
 		extension.setRealtimeTripId(privateCode);
 		tripDescriptor.setExtension(GtfsRealtimeOVapi.ovapiTripdescriptor, extension.build());

@@ -209,7 +209,6 @@ public class RIDservice {
 						message.addLinePlanningNumber(linePlanningNumber);
 					}
 				}
-
 				messages.add(message);
 			}
 		}finally{
@@ -352,6 +351,7 @@ public class RIDservice {
 					fromDate = date;
 				}
 				journey.setPrivateCode(rs.getString(9));
+				journey.setRouteId(rs.getLong(10));
 				if (newJourneys.containsKey(key)){ //Trains can have multiple journeys under same trainnumer
 					if (rs.getString(1).contains("ARR")){ 
 						continue;//But Arriva is just mucking around ;)

@@ -3,7 +3,7 @@ package nl.ovapi.rid;
 public class Database {
 
 	public final static String journeyQuery = 
-			"SELECT validdate||':'||journey.privatecode as key,journey.id,journeypatternref,timedemandgroupref,departuretime,(lowfloor or hasliftorramp) as wheelchairaccessible,o.privatecode as operatorcode,validdate::text,journey.privatecode \n" +
+			"SELECT validdate||':'||journey.privatecode as key,journey.id,journeypatternref,timedemandgroupref,departuretime,(lowfloor or hasliftorramp) as wheelchairaccessible,o.privatecode as operatorcode,validdate::text,journey.privatecode,lineref \n" +
 					"FROM journey JOIN availabilityconditionday USING (availabilityconditionref) LEFT JOIN journeypattern as j ON (j.id = journeypatternref) JOIN route as r ON (r.id = routeref) JOIN line as l ON (l.id = lineref) JOIN operator as o ON (operatorref = o.id) "+
 					"WHERE isavailable = true AND validdate in (date 'yesterday',date 'today',date 'tomorrow') AND coalesce(monitored,true) = true;";
 
