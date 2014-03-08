@@ -23,6 +23,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import lombok.NonNull;
 import nl.ovapi.ZeroMQUtils;
+import nl.ovapi.arnu.JourneyProcessor;
 import nl.ovapi.arnu.TrainProcessor;
 import nl.ovapi.rid.model.Journey;
 import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
@@ -80,18 +81,6 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			_executor.shutdownNow();
 			_executor = null;
 		}
-	}
-	
-	private TrainProcessor getProcessorForID(@NonNull String id){
-		TrainProcessor jp = journeyProcessors.get(id);
-		if (jp != null){
-			return jp;
-		}
-		List<Journey> trains = _ridService.getTrains(id);
-		if (trains == null || trains.size() == 0){
-			return null; //Journey not found
-		}
-		return jp;
 	}
 
 	private TrainProcessor getOrCreateProcessorForId(@NonNull String id){
@@ -155,23 +144,12 @@ public class ARNUritInfoToGtfsRealTimeServices {
 						default:
 							break;
 						}
-						//TODO make dateswap.
-						SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-						Date d = new Date();
-						String id = String.format("%s:IFF:%s:%s",df.format(d),info.getTransportModeCode(),info.getServiceCode());
+						String id = String.format("%s:IFF:%s:%s",getDate(info),info.getTransportModeCode(),info.getServiceCode());
 						TrainProcessor jp = getOrCreateProcessorForId(id);
 						if (jp == null && info.getServiceType() != ServiceInfoKind.NORMAL_SERVICE){
-							jp = TrainProcessor.fromArnu(_ridService,info);
-							// If possible place this new train in an existing GTFS route. 
-							Integer originalTrainNumber = orginalTrainNumber(info.getServiceCode());
-							if (jp != null && originalTrainNumber != null){
-								String origId = String.format("%s:IFF:%s:%s",df.format(d),info.getTransportModeCode(),originalTrainNumber);
-								TrainProcessor origJp = getProcessorForID(origId);
-								if (origJp != null){
-									jp.setRouteId(origJp.getRouteId());
-								}
-							}
-							journeyProcessors.put(id, jp);
+							jp = createFromARNU(info);
+							if (jp != null)
+								journeyProcessors.put(id, jp);
 						}
 						if (jp != null){
 							if (info.getServiceType() != null){
@@ -196,7 +174,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 						}
 					}
 				} catch (Exception e) {
-					_log.error("Error ARNU",e);
+					_log.error("Error ARNU {}",e);
 					e.printStackTrace();
 				}	
 			}
@@ -205,31 +183,34 @@ public class ARNUritInfoToGtfsRealTimeServices {
 		}
 	}
 	
-	private Integer orginalTrainNumber(String trainCode){
-		try{
-			int trainNumber = Integer.parseInt(trainCode);
-			if (trainNumber >= 300000 && trainNumber < 310000){
-				return trainNumber - 300000;
-			}else if (trainNumber >= 310000 && trainNumber < 320000){
-				return trainNumber - 310000;
-			}else if (trainNumber >= 320000 && trainNumber < 330000){
-				return trainNumber - 320000;
-			}else if (trainNumber >= 330000 && trainNumber < 340000){
-				return trainNumber - 330000;
-			}else if (trainNumber >= 340000 && trainNumber < 350000){
-				return trainNumber - 340000;
-			}else if (trainNumber >= 350000 && trainNumber < 360000){
-				return trainNumber - 350000;
-			}else if (trainNumber >= 360000 && trainNumber < 370000){
-				return trainNumber - 360000;
-			}else{
-				return null;
-			}
-		}catch (Exception e){
-			return null;
-		}
+	private String getDate(ServiceInfoServiceType info){
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		Date d = new Date();
+		return df.format(d);
 	}
 
+
+	private TrainProcessor createFromARNU(ServiceInfoServiceType info){
+		TrainProcessor jp = TrainProcessor.fromArnu(_ridService,info);
+		// If possible place this new train in an existing GTFS route. 
+		Integer originalTrainNumber = TrainProcessor.orginalTrainNumber(info.getServiceCode());
+		if (jp != null && originalTrainNumber != null){
+			TrainProcessor origJp = null;
+			// Fuzzy matching for ARNU bug where split Intercity's are suddenly Sneltrein etc. 
+			for (String transportModeCode : new String[] {info.getTransportModeCode(),"S","ST","SPR","HSN","IC","INT","THA","TGV"}){
+				String origId = String.format("%s:IFF:%s:%s",getDate(info),transportModeCode,originalTrainNumber);	
+				origJp = getOrCreateProcessorForId(origId);
+				//The original journey has to be the journey this new service is a subset of.
+				if (origJp != null && !jp.isDisjunct(origJp)){
+					_log.debug("set routeid {} for {} ",origJp.getRouteId(),info.getServiceCode());
+					//Set routeId for easier consumption of split trips 
+					jp.setRouteId(origJp.getRouteId());
+					break;
+				}
+			}
+		}
+		return jp;
+	}
 
 	private class ReceiveTask implements Runnable {
 		@Override
