@@ -73,6 +73,14 @@ public class JourneyPattern {
 		 */
 		private boolean skipped = false;
 
+		@Getter
+		@Setter
+		@NonNull
+		/**
+		 * This point is added on the planned schedule.
+		 */
+		private boolean added = false;
+
 	}
 	
 	/**

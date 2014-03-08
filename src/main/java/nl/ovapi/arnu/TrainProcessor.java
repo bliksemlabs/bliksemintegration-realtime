@@ -1,5 +1,6 @@
 package nl.ovapi.arnu;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,6 +9,7 @@ import nl.ovapi.rid.gtfsrt.services.RIDservice;
 import nl.ovapi.rid.model.Journey;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
 
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeIncrementalUpdate;
@@ -28,6 +30,62 @@ public class TrainProcessor {
 	private TrainProcessor(){
 		_processors = new ArrayList<JourneyProcessor>();
 	}
+	
+	/**
+	 * @param otherTrainProcessor 
+	 * @return whether both TrainProcessors do not share a single station.
+	 */
+	
+	public boolean isDisjunct(TrainProcessor otherTrainProcessor){
+	    ArrayList<String> pathLeft = new ArrayList<String>();
+	    for (JourneyPatternPoint pt : longestJourney().getJourneypattern().getPoints()){
+			String stationCode = JourneyProcessor.stationCode(pt);
+			pathLeft.add(stationCode);
+	    }
+	    for (JourneyPatternPoint pt : otherTrainProcessor.longestJourney().getJourneypattern().getPoints()){
+			String stationCode = JourneyProcessor.stationCode(pt);
+			if (pathLeft.contains(stationCode)){
+				return false;
+			}
+	    }
+	    return true;
+	}
+	
+	private long startEpoch(){
+		long res = Long.MAX_VALUE;
+		for (JourneyProcessor jp : _processors){
+			res = Math.min(jp.getJourney().getDepartureEpoch(),res);
+		}
+		return res;
+	}
+	
+	public static Integer orginalTrainNumber(String trainCode){
+		try{
+			int trainNumber = Integer.parseInt(trainCode);
+			if (trainNumber >= 300000 && trainNumber < 310000){
+				return trainNumber - 300000;
+			}else if (trainNumber >= 310000 && trainNumber < 320000){
+				return trainNumber - 310000;
+			}else if (trainNumber >= 320000 && trainNumber < 330000){
+				return trainNumber - 320000;
+			}else if (trainNumber >= 330000 && trainNumber < 340000){
+				return trainNumber - 330000;
+			}else if (trainNumber >= 340000 && trainNumber < 350000){
+				return trainNumber - 340000;
+			}else if (trainNumber >= 350000 && trainNumber < 360000){
+				return trainNumber - 350000;
+			}else if (trainNumber >= 360000 && trainNumber < 370000){
+				return trainNumber - 360000;
+			}else{
+				return trainNumber;
+			}
+		}catch (Exception e){
+			_log.error("Can't parse trainCode {}",trainCode);
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	
 	public TrainProcessor(@NonNull List<Journey> journeys){
 		if (journeys.size() == 0){
@@ -52,7 +110,7 @@ public class TrainProcessor {
 	 * @param routeId will be set to all blocks in this train journey
 	 */
 	
-	public void setRouteId(Long routeId){
+	public void setRouteId(@NonNull Long routeId){
 		for (JourneyProcessor jp : _processors){
 			jp.getJourney().setRouteId(routeId);
 		}
@@ -73,7 +131,7 @@ public class TrainProcessor {
 		return longestJourney;
 	}
 	
-	public void changeService(@NonNull RIDservice ridService,ServiceInfoServiceType info){
+	public void changeService(@NonNull RIDservice ridService,ServiceInfoServiceType info) throws ParseException{
 	    ArrayList<String> plannedPath = new ArrayList<String>();
 	    for (JourneyPatternPoint pt : longestJourney().getJourneypattern().getPoints()){
 			String stationCode = JourneyProcessor.stationCode(pt);
@@ -83,19 +141,21 @@ public class TrainProcessor {
 	    	_log.error("Journey path change not supported for multiple blocks...");
 	    	return;
 	    }
-	    boolean stationsAdded = false;
+	    String lastStation =null;
 		for (int i = 0; i < info.getStopList().getStop().size(); i++){
 			ServiceInfoStopType s = info.getStopList().getStop().get(i);
-			if (s.getArrival() == null && s.getDeparture() == null){
+			if ((s.getArrival() == null && s.getDeparture() == null ||
+					s.getStopType() == ServiceInfoStopKind.CANCELLED_STOP || 
+					s.getStopType() == ServiceInfoStopKind.DIVERTED_STOP)){
 				continue;
 			}
 			if (!plannedPath.contains(s.getStopCode().toLowerCase())){
-				stationsAdded = true;
-		    	_log.error("Add station {}",s.getStopCode());
+		    	_log.error("Add station {} ",s.getStopCode()+" after "+lastStation);
+		    	for (JourneyProcessor jp : _processors){
+		    		jp.addStoppoint(ridService,s, lastStation);
+		    	}
 			}
-		}
-		if (stationsAdded){
-			
+			lastStation = s.getStopCode().toLowerCase();
 		}
 	}
 	

@@ -1,11 +1,12 @@
 package nl.ovapi.arnu;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
+
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -14,10 +15,12 @@ import nl.ovapi.rid.gtfsrt.services.ARNUritInfoToGtfsRealTimeServices;
 import nl.ovapi.rid.gtfsrt.services.RIDservice;
 import nl.ovapi.rid.model.Journey;
 import nl.ovapi.rid.model.JourneyPattern;
-import nl.ovapi.rid.model.TimeDemandGroup;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
+import nl.ovapi.rid.model.TimeDemandGroup;
+import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
 
 import org.slf4j.Logger;
@@ -44,27 +47,74 @@ public class JourneyProcessor {
 		Integer arrivalDelay,departureDelay;
 		boolean canceled; 
 	}
-	
+
 	public JourneyProcessor(@NonNull Journey j){
 		journey = j;
 		patches = Maps.newHashMap();
 	}
-	
+
 	/**
 	 * 
 	 * @param stationCode NS stationcode such as lls, asd,asdz etc.
 	 * @return whether this journey contains station of stationCode
 	 */
-	
+
 	public boolean containsStation(String stationCode){
-	    for (JourneyPatternPoint pt : journey.getJourneypattern().getPoints()){
-	    	if (stationCode.equals(stationCode(pt))){
-	    		return true;
-	    	}
-	    }
-	    return false;
+		for (JourneyPatternPoint pt : journey.getJourneypattern().getPoints()){
+			if (stationCode.equals(stationCode(pt))){
+				return true;
+			}
+		}
+		return false;
 	}
-	
+
+	public void addStoppoint(RIDservice ridService,ServiceInfoStopType stop, @NonNull String afterStation) throws ParseException{
+		if (stop.getArrival() == null && stop.getDeparture() == null){
+			throw new IllegalArgumentException("No times for stop");
+		}
+		for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
+			JourneyPatternPoint pt = journey.getJourneypattern().getPoints().get(i);
+			String stationCode = stationCode(pt);
+			if (stationCode.equals(afterStation)){
+				JourneyPatternPoint jpt = new JourneyPatternPoint();
+				jpt.setAdded(true);
+				if (journey.getJourneypattern().getPoint(pt.getPointorder()+1) != null){
+					throw new IllegalArgumentException("Duplicate pointorder "+stop.getStopCode()+" "+stop.getStopServiceCode());
+				}
+				jpt.setPointorder(pt.getPointorder()+1);
+				pt.setScheduled(true);
+				pt.setWaitpoint(true);
+				pt.setOperatorpointref(String.format("%s:0", stop.getStopCode().toLowerCase()));
+				Long id = ridService.getRailStation(stop.getStopCode().toLowerCase());
+				if (id == null){
+					_log.error("PointId for station {} not found",stop.getStopCode());
+				}else{
+					pt.setPointref(id);
+					journey.getJourneypattern().getPoints().add(i+1,pt);
+				}
+				SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+				Date date = df.parse(journey.getOperatingDay());
+				XMLGregorianCalendar time = stop.getArrival() != null ? stop.getArrival() : stop.getDeparture();
+				int totaldrivetime = (int) ((time.toGregorianCalendar().getTimeInMillis() - date.getTime())/1000);
+				int stopwaittime = 0;
+				if (stop.getDeparture() != null){
+					stopwaittime = (int) ((stop.getDeparture().toGregorianCalendar().getTimeInMillis() -
+							         stop.getArrival().toGregorianCalendar().getTimeInMillis())/1000);
+				}
+				TimeDemandGroupPoint tpt = new TimeDemandGroup.TimeDemandGroupPoint();
+				tpt.setPointorder(pt.getPointorder()+1);
+				tpt.setStopwaittime(stopwaittime);
+				tpt.setTotaldrivetime(totaldrivetime);
+				journey.getTimedemandgroup().getPoints().add(i+1, tpt);
+				if (getJourney().getJourneypattern().getPoints().size() != getJourney().getTimedemandgroup().getPoints().size()){
+					throw new IllegalArgumentException("Adding point failed: Size of timedemandgroup and journeypattern do not match");
+				}
+				return;
+			}
+		}
+		_log.error("Station "+stop.getStopCode()+" after "+afterStation+" not added");
+	}
+
 	public static String stationCode(JourneyPattern.JourneyPatternPoint point){
 		return point.getOperatorpointref().split(":")[0];
 	}
@@ -107,7 +157,7 @@ public class JourneyProcessor {
 		}
 		return tp;
 	}	
-	
+
 	private static JourneyPattern patternFromArnu(RIDservice ridService,ServiceInfoServiceType info){
 		JourneyPattern jp = new JourneyPattern();
 		try{
@@ -133,30 +183,35 @@ public class JourneyProcessor {
 		}
 		return jp;
 	}
-			
+
 	public static int secondsSinceMidnight(Calendar c){
 		return c.get(Calendar.HOUR_OF_DAY)*60*60+c.get(Calendar.MINUTE)*60+c.get(Calendar.SECOND);
 	}
 
 	public static JourneyProcessor fromArnu(@NonNull RIDservice ridService,@NonNull ServiceInfoServiceType info){
-		Journey j = new Journey();
-		j.setAdded(true);
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-		j.setPrivateCode(String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode()));
-		j.setId(j.getPrivateCode());
-		j.setJourneypattern(patternFromArnu(ridService,info));
-		j.setTimedemandgroup(timePatternFromArnu(j,info));
-		if (j.getJourneypattern().getPoints().size() != j.getTimedemandgroup().getPoints().size()){
-			throw new IllegalArgumentException("Size of timedemandgroup and journeypattern do not match");
-		}
-		return new JourneyProcessor(j);
+		try{
+			Journey j = new Journey();
+			j.setAdded(true);
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+			j.setPrivateCode(String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode()));
+			j.setId(j.getPrivateCode());
+			j.setJourneypattern(patternFromArnu(ridService,info));
+			j.setTimedemandgroup(timePatternFromArnu(j,info));
+			if (j.getJourneypattern().getPoints().size() != j.getTimedemandgroup().getPoints().size()){
+				throw new IllegalArgumentException("Size of timedemandgroup and journeypattern do not match");
+			}
+			return new JourneyProcessor(j);
+		}catch (Exception e){
+			_log.error("Exception during Journey adding {}",info,e);
+			throw e;
+		} 
 	}
 
 	private void updatePatches(ServiceInfoServiceType info){
 		if (info.getStopList() == null || info.getStopList().getStop() == null){
 			return;
 		}
-		
+
 		for (ServiceInfoStopType station : info.getStopList().getStop()){
 			String stationCode = station.getStopCode().toLowerCase();
 			Patch p = new Patch();
@@ -174,13 +229,15 @@ public class JourneyProcessor {
 				}
 			}else{
 				//This also sets passage-stations as canceled, but that is assumed to be a non-issue
-				p.canceled = (station.getArrival() == null && station.getDeparture() == null);
+				p.canceled = ((station.getArrival() == null && station.getDeparture() == null) ||
+						station.getStopType() == ServiceInfoStopKind.CANCELLED_STOP || 
+						station.getStopType() == ServiceInfoStopKind.DIVERTED_STOP);
 			}
 			if (station.getArrivalTimeDelay() != null){
 				p.arrivalDelay = Utils.toSeconds(station.getArrivalTimeDelay());
 				Calendar c = (Calendar) station.getArrival().toGregorianCalendar().clone();
 				station.getArrivalTimeDelay().addTo(c);
-				p.eta = c.getTimeInMillis()/1000; // in Seconds since 1970
+				p.eta = (c.getTimeInMillis()/1000) + p.arrivalDelay; // in Seconds since 1970
 			}else if (station.getArrival() != null){
 				p.eta = station.getArrival().toGregorianCalendar().getTimeInMillis()/1000; // in Seconds since 1970
 			}
@@ -189,7 +246,7 @@ public class JourneyProcessor {
 				p.departureDelay = Utils.toSeconds(station.getDepartureTimeDelay());
 				Calendar c = (Calendar) station.getDeparture().toGregorianCalendar().clone();
 				station.getDepartureTimeDelay().addTo(c);
-				p.etd = c.getTimeInMillis()/1000; // in Seconds since 1970
+				p.etd = (c.getTimeInMillis()/1000) + p.departureDelay; // in Seconds since 1970
 			}else if (station.getDeparture() != null){
 				p.etd = station.getDeparture().toGregorianCalendar().getTimeInMillis()/1000; // in Seconds since 1970
 			}
@@ -198,7 +255,7 @@ public class JourneyProcessor {
 	}
 
 	public TripUpdate.Builder process(@NonNull ServiceInfoServiceType info){
-		patches.clear(); //TODO Figure out whether ARNU updates are replacing each other.
+		//patches.clear(); //TODO Figure out whether ARNU updates are replacing each other.
 		updatePatches(info);
 		switch (info.getServiceType()){
 		case NORMAL_SERVICE:
@@ -230,10 +287,13 @@ public class JourneyProcessor {
 			String stationCode = jp.getOperatorpointref().split(":")[0].toLowerCase();
 			Patch p = patches.get(stationCode);
 			if (p != null){
-				stop.setScheduleRelationship(p.canceled ? ScheduleRelationship.SKIPPED :
-					ScheduleRelationship.SCHEDULED);
-				if (p.canceled){
+				if (p.canceled || jp.isSkipped()){
+					stop.setScheduleRelationship(ScheduleRelationship.SKIPPED);
 					stopsCanceled++; //Signal that there was a cancellation along the journey
+				}else if (jp.isAdded()){
+					stop.setScheduleRelationship(ScheduleRelationship.ADDED);
+				}else{
+					stop.setScheduleRelationship(ScheduleRelationship.SCHEDULED);
 				}
 			}else if (jp.isSkipped() || (info.getServiceType() != null && info.getServiceType() == ServiceInfoKind.EXTENDED_SERVICE)){
 				stop.setScheduleRelationship(ScheduleRelationship.SKIPPED);
