@@ -14,6 +14,6 @@ public class Utils {
 	}
 	
 	public static int toSeconds(Duration d){
-		return d.getSeconds() + d.getMinutes()*60+ d.getHours()*60*60+d.getDays()*24*60*60;
+		return d == null ? 0 : d.getSeconds() + d.getMinutes()*60+ d.getHours()*60*60+d.getDays()*24*60*60;
 	}
 }
