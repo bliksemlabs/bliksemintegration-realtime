@@ -247,7 +247,6 @@ public class JourneyProcessor {
 			}else if (station.getArrival() != null){
 				p.eta = station.getArrival().toGregorianCalendar().getTimeInMillis()/1000; // in Seconds since 1970
 			}
-
 			if (station.getDepartureTimeDelay() != null){
 				p.departureDelay = Utils.toSeconds(station.getDepartureTimeDelay());
 				Calendar c = (Calendar) station.getDeparture().toGregorianCalendar().clone();
@@ -305,6 +304,8 @@ public class JourneyProcessor {
 				stop.setScheduleRelationship(ScheduleRelationship.SKIPPED);
 				stopsCanceled++;
 			}else if (!jp.isSkipped()){
+				_log.error("No Realtime stop info for {}",jp.getOperatorpointref());
+				/*
 				if (i != 0){
 					StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
 					arrival.setDelay(0);
@@ -317,7 +318,7 @@ public class JourneyProcessor {
 					departure.setTime(journey.getDepartureTime(jp.getPointorder())); //In seconds since 1970 
 					stop.setArrival(departure);
 				}
-				continue;
+				continue;*/
 			}
 			if (i != 0 && p.eta != null && !p.canceled){
 				StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
