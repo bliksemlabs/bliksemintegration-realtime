@@ -11,6 +11,7 @@ import lombok.ToString;
 @EqualsAndHashCode()
 public class TimeDemandGroup {
 
+	@ToString
 	public static class TimeDemandGroupPoint {
 		@Getter
 		@Setter
