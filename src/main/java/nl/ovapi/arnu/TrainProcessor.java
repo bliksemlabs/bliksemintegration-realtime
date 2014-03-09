@@ -26,31 +26,31 @@ public class TrainProcessor {
 	private static final Logger _log = LoggerFactory.getLogger(TrainProcessor.class);
 
 	private List<JourneyProcessor> _processors;
-	
+
 	private TrainProcessor(){
 		_processors = new ArrayList<JourneyProcessor>();
 	}
-	
+
 	/**
 	 * @param otherTrainProcessor 
 	 * @return whether both TrainProcessors do not share a single station.
 	 */
-	
+
 	public boolean isDisjunct(TrainProcessor otherTrainProcessor){
-	    ArrayList<String> pathLeft = new ArrayList<String>();
-	    for (JourneyPatternPoint pt : longestJourney().getJourneypattern().getPoints()){
+		ArrayList<String> pathLeft = new ArrayList<String>();
+		for (JourneyPatternPoint pt : longestJourney().getJourneypattern().getPoints()){
 			String stationCode = JourneyProcessor.stationCode(pt);
 			pathLeft.add(stationCode);
-	    }
-	    for (JourneyPatternPoint pt : otherTrainProcessor.longestJourney().getJourneypattern().getPoints()){
+		}
+		for (JourneyPatternPoint pt : otherTrainProcessor.longestJourney().getJourneypattern().getPoints()){
 			String stationCode = JourneyProcessor.stationCode(pt);
 			if (pathLeft.contains(stationCode)){
 				return false;
 			}
-	    }
-	    return true;
+		}
+		return true;
 	}
-	
+
 	private long startEpoch(){
 		long res = Long.MAX_VALUE;
 		for (JourneyProcessor jp : _processors){
@@ -58,7 +58,7 @@ public class TrainProcessor {
 		}
 		return res;
 	}
-	
+
 	public static Integer orginalTrainNumber(String trainCode){
 		try{
 			int trainNumber = Integer.parseInt(trainCode);
@@ -86,7 +86,7 @@ public class TrainProcessor {
 		}
 	}
 
-	
+
 	public TrainProcessor(@NonNull List<Journey> journeys){
 		if (journeys.size() == 0){
 			throw new IllegalArgumentException("No journeys given");
@@ -96,26 +96,26 @@ public class TrainProcessor {
 			_processors.add(new JourneyProcessor(j));
 		}
 	}
-	
+
 	/**
 	 * @return the route_id this train is a part of;
 	 */
-	
+
 	public Long getRouteId(){
 		// We're definitely should assume that all (segments) of this train journey are part of the same (GTFS) route
 		return _processors.get(0).getJourney().getRouteId();
 	}
-	
+
 	/**
 	 * @param routeId will be set to all blocks in this train journey
 	 */
-	
+
 	public void setRouteId(@NonNull Long routeId){
 		for (JourneyProcessor jp : _processors){
 			jp.getJourney().setRouteId(routeId);
 		}
 	}
-	
+
 	/**
 	 * @return the journey which visits the most stations, assumed to be the journey that describes the entire trainpath
 	 */
@@ -130,18 +130,18 @@ public class TrainProcessor {
 		}
 		return longestJourney;
 	}
-	
+
 	public void changeService(@NonNull RIDservice ridService,ServiceInfoServiceType info) throws ParseException{
-	    ArrayList<String> plannedPath = new ArrayList<String>();
-	    for (JourneyPatternPoint pt : longestJourney().getJourneypattern().getPoints()){
+		ArrayList<String> plannedPath = new ArrayList<String>();
+		for (JourneyPatternPoint pt : longestJourney().getJourneypattern().getPoints()){
 			String stationCode = JourneyProcessor.stationCode(pt);
 			plannedPath.add(stationCode);
-	    }
-	    if (_processors.size() > 1){
-	    	_log.error("Journey path change not supported for multiple blocks...");
-	    	return;
-	    }
-	    String lastStation =null;
+		}
+		if (_processors.size() > 1){
+			_log.error("Journey path change not supported for multiple blocks...");
+			return;
+		}
+		String lastStation =null;
 		for (int i = 0; i < info.getStopList().getStop().size(); i++){
 			ServiceInfoStopType s = info.getStopList().getStop().get(i);
 			if ((s.getArrival() == null && s.getDeparture() == null ||
@@ -150,21 +150,25 @@ public class TrainProcessor {
 				continue;
 			}
 			if (!plannedPath.contains(s.getStopCode().toLowerCase())){
-		    	_log.error("Add station {} ",s.getStopCode()+" after "+lastStation);
-		    	for (JourneyProcessor jp : _processors){
-		    		jp.addStoppoint(ridService,s, lastStation);
-		    	}
+				_log.error("Add station {} ",s.getStopCode()+" after "+lastStation);
+				for (JourneyProcessor jp : _processors){
+					try{
+						jp.addStoppoint(ridService,s, lastStation);
+					}catch (Exception e){
+						_log.error("Add station {} failed",s.getStopCode(),e);
+					}
+				}
 			}
 			lastStation = s.getStopCode().toLowerCase();
 		}
 	}
-	
+
 	public static TrainProcessor fromArnu(@NonNull RIDservice ridService,@NonNull ServiceInfoServiceType info){
 		TrainProcessor p = new TrainProcessor();
 		p._processors.add(JourneyProcessor.fromArnu(ridService, info));
 		return p;
 	}
-		
+
 	public GtfsRealtimeIncrementalUpdate process(ServiceInfoServiceType info){
 		GtfsRealtimeIncrementalUpdate update = new GtfsRealtimeIncrementalUpdate();
 		for (JourneyProcessor p : _processors){

@@ -185,19 +185,19 @@ public class ARNUritInfoToGtfsRealTimeServices {
 	}
 	
 	private String getDate(ServiceInfoServiceType info){
-		Calendar date = Calendar.getInstance();
-		date.set(Calendar.HOUR_OF_DAY, 0);
-		date.set(Calendar.MINUTE, 0);
-		date.set(Calendar.SECOND, 0);
-		date.set(Calendar.MILLISECOND, 0);
-		if (info.getStopList() != null && info.getStopList().getStop().size() > 0){
-			Calendar operatingDate = info.getStopList().getStop().get(0).getDeparture().toGregorianCalendar();
-			if (operatingDate.get(Calendar.HOUR_OF_DAY) < 4){
-				date.add(Calendar.HOUR_OF_DAY, -1);
-			}
+		if (info.getStopList() == null || info.getStopList().getStop() == null || info.getStopList().getStop().size() == 0){
+			return null;
 		}
+		Calendar operatingDate = info.getStopList().getStop().get(0).getDeparture().toGregorianCalendar();
+		if (operatingDate.get(Calendar.HOUR_OF_DAY) < 4){
+			operatingDate.add(Calendar.DAY_OF_MONTH, -1);
+		}
+		operatingDate.set(Calendar.HOUR_OF_DAY, 0);
+		operatingDate.set(Calendar.MINUTE, 0);
+		operatingDate.set(Calendar.SECOND, 0);
+		operatingDate.set(Calendar.MILLISECOND, 0);
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-		return df.format(date.getTime());
+		return df.format(operatingDate.getTime());
 	}
 
 
