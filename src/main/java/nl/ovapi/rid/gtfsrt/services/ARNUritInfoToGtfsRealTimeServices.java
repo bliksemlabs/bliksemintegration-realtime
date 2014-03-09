@@ -3,6 +3,7 @@ package nl.ovapi.rid.gtfsrt.services;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -155,10 +156,10 @@ public class ARNUritInfoToGtfsRealTimeServices {
 							if (info.getServiceType() != null){
 								switch (info.getServiceType()){
 								case NORMAL_SERVICE:
-								case NEW_SERVICE:
 								case SPLIT_SERVICE:
 								case CANCELLED_SERVICE:
 									break;
+								case NEW_SERVICE:
 								case DIVERTED_SERVICE:
 								case EXTENDED_SERVICE:
 								case SCHEDULE_CHANGED_SERVICE:
@@ -184,9 +185,19 @@ public class ARNUritInfoToGtfsRealTimeServices {
 	}
 	
 	private String getDate(ServiceInfoServiceType info){
+		Calendar date = Calendar.getInstance();
+		date.set(Calendar.HOUR_OF_DAY, 0);
+		date.set(Calendar.MINUTE, 0);
+		date.set(Calendar.SECOND, 0);
+		date.set(Calendar.MILLISECOND, 0);
+		if (info.getStopList() != null && info.getStopList().getStop().size() > 0){
+			Calendar operatingDate = info.getStopList().getStop().get(0).getDeparture().toGregorianCalendar();
+			if (operatingDate.get(Calendar.HOUR_OF_DAY) < 4){
+				date.add(Calendar.HOUR_OF_DAY, -1);
+			}
+		}
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-		Date d = new Date();
-		return df.format(d);
+		return df.format(date.getTime());
 	}
 
 
