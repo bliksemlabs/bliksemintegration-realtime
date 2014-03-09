@@ -75,22 +75,24 @@ public class JourneyProcessor {
 		for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
 			JourneyPatternPoint pt = journey.getJourneypattern().getPoints().get(i);
 			String stationCode = stationCode(pt);
+	    	_log.error("Adding station, checking {} ",stationCode);
 			if (stationCode.equals(afterStation)){
-				JourneyPatternPoint jpt = new JourneyPatternPoint();
-				jpt.setAdded(true);
+		    	_log.error("Found match at {} adding stop ",stationCode);
+				JourneyPatternPoint newJpt = new JourneyPatternPoint();
+				newJpt.setAdded(true);
 				if (journey.getJourneypattern().getPoint(pt.getPointorder()+1) != null){
 					throw new IllegalArgumentException("Duplicate pointorder "+stop.getStopCode()+" "+stop.getStopServiceCode());
 				}
-				jpt.setPointorder(pt.getPointorder()+1);
-				pt.setScheduled(true);
-				pt.setWaitpoint(true);
-				pt.setOperatorpointref(String.format("%s:0", stop.getStopCode().toLowerCase()));
+				newJpt.setPointorder(pt.getPointorder()+1);
+				newJpt.setScheduled(true);
+				newJpt.setWaitpoint(true);
+				newJpt.setOperatorpointref(String.format("%s:0", stop.getStopCode().toLowerCase()));
 				Long id = ridService.getRailStation(stop.getStopCode().toLowerCase());
 				if (id == null){
 					_log.error("PointId for station {} not found",stop.getStopCode());
 				}else{
-					pt.setPointref(id);
-					journey.getJourneypattern().getPoints().add(i+1,pt);
+					newJpt.setPointref(id);
+					journey.getJourneypattern().getPoints().add(i+1,newJpt);
 				}
 				SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 				Date date = df.parse(journey.getOperatingDay());
@@ -106,10 +108,14 @@ public class JourneyProcessor {
 				tpt.setStopwaittime(stopwaittime);
 				tpt.setTotaldrivetime(totaldrivetime);
 				journey.getTimedemandgroup().getPoints().add(i+1, tpt);
+		    	_log.error("Stop added ",stationCode);
+		    	_log.error("JourneyPattern {}",getJourney().getJourneypattern());
+		    	_log.error("TimeGroup {}",getJourney().getTimedemandgroup());
 				if (getJourney().getJourneypattern().getPoints().size() != getJourney().getTimedemandgroup().getPoints().size()){
-					throw new IllegalArgumentException("Adding point failed: Size of timedemandgroup and journeypattern do not match");
-				}
-				return;
+					throw new IllegalArgumentException("Adding point failed: Size of timedemandgroup and journeypattern do not match "+getJourney());
+				}				
+		    	_log.error("Service {} Stop {} added sucessfully for ",stop.getStopServiceCode(),stop.getStopCode());
+		    	return;
 			}
 		}
 		_log.error("Station "+stop.getStopCode()+" after "+afterStation+" not added");
