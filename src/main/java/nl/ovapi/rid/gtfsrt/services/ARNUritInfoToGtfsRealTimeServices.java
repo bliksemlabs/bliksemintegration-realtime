@@ -214,7 +214,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 		if (jp != null && originalTrainNumber != null){
 			TrainProcessor origJp = null;
 			// Fuzzy matching for ARNU bug where split Intercity's are suddenly Sneltrein etc. 
-			for (String transportModeCode : new String[] {info.getTransportModeCode(),"S","ST","SPR","HSN","IC","INT","THA","TGV"}){
+			for (String transportModeCode : new String[] {info.getTransportModeCode(),"S","ST","SPR","HSN","IC","INT","ICE","THA","TGV"}){
 				String origId = String.format("%s:IFF:%s:%s",getDate(info),transportModeCode,originalTrainNumber);	
 				origJp = getOrCreateProcessorForId(origId);
 				//The original journey has to be the journey this new service is a subset of.
