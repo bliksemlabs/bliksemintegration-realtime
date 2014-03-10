@@ -28,6 +28,7 @@ import nl.ovapi.rid.model.Block;
 import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
 
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripUpdates;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeSink;
@@ -186,7 +187,14 @@ public class ARNUritInfoToGtfsRealTimeServices {
 		if (info.getStopList() == null || info.getStopList().getStop() == null || info.getStopList().getStop().size() == 0){
 			return null;
 		}
-		Calendar operatingDate = info.getStopList().getStop().get(0).getDeparture().toGregorianCalendar();
+		
+		Calendar operatingDate = null;
+		for (ServiceInfoStopType s : info.getStopList().getStop()){
+			if (s.getDeparture() != null){
+				operatingDate = s.getDeparture().toGregorianCalendar();
+				break;
+			}
+		}
 		if (operatingDate.get(Calendar.HOUR_OF_DAY) < 4){
 			operatingDate.add(Calendar.DAY_OF_MONTH, -1);
 		}
