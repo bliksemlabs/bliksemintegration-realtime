@@ -55,7 +55,21 @@ public class TrainProcessor {
 	public static Integer orginalTrainNumber(String trainCode){
 		try{
 			int trainNumber = Integer.parseInt(trainCode);
-			if (trainNumber >= 300000 && trainNumber < 310000){
+			if (trainNumber >= 100000 && trainNumber < 110000){
+				return trainNumber - 100000;
+			}else if (trainNumber >= 110000 && trainNumber < 120000){
+				return trainNumber - 110000;
+			}else if (trainNumber >= 120000 && trainNumber < 130000){
+				return trainNumber - 120000;
+			}else if (trainNumber >= 200000 && trainNumber < 210000){
+				return trainNumber - 200000;
+			}else if (trainNumber >= 210000 && trainNumber < 220000){
+				return trainNumber - 210000;
+			}else if (trainNumber >= 220000 && trainNumber < 230000){
+				return trainNumber - 220000;
+			}else if (trainNumber >= 230000 && trainNumber < 240000){
+				return trainNumber - 230000;
+			}else if (trainNumber >= 300000 && trainNumber < 310000){
 				return trainNumber - 300000;
 			}else if (trainNumber >= 310000 && trainNumber < 320000){
 				return trainNumber - 310000;
@@ -149,7 +163,7 @@ public class TrainProcessor {
 		}
 		return update;
 	}
-	
+
 	/**
 	 * @param originalTrainNumber trainnumber of original (superset) trip
 	 * @return routeId of journey with originalTrainNumber
