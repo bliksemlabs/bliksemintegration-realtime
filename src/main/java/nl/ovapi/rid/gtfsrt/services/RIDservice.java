@@ -345,7 +345,7 @@ public class RIDservice {
 				journey.setPrivateCode(rs.getString(9));
 				journey.setRouteId(rs.getLong(10));
 				if (newJourneys.containsKey(key)){ //Trains can have multiple journeys under same trainnumer
-					_log.info("Duplicate privatecodes ignoring one of {}",key);
+					_log.info("Duplicate privatecodes ignoring one of {}",rs.getString(1));
 				}else{
 					newJourneys.put(key, journey);
 				}
