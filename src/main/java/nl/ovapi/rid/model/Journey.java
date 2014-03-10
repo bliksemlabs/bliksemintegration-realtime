@@ -108,6 +108,10 @@ public class Journey {
 	@Getter
 	@Setter
 	private boolean isAdded;
+	
+	@Getter
+	@Setter
+	private String blockRef;
 
 	private static final Logger _log = LoggerFactory.getLogger(Journey.class);
 

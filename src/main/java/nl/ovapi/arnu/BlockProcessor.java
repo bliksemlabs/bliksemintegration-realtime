@@ -2,9 +2,13 @@ package nl.ovapi.arnu;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -13,6 +17,7 @@ import lombok.NonNull;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.gtfsrt.services.ARNUritInfoToGtfsRealTimeServices;
 import nl.ovapi.rid.gtfsrt.services.RIDservice;
+import nl.ovapi.rid.model.Block;
 import nl.ovapi.rid.model.Journey;
 import nl.ovapi.rid.model.JourneyPattern;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
@@ -38,8 +43,8 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate.Schedu
  *
  */
 
-public class JourneyProcessor {
-	@Getter private Journey journey;
+public class BlockProcessor {
+	@Getter private Block block;
 	private Map<String,Patch> patches;
 	private static final Logger _log = LoggerFactory.getLogger(ARNUritInfoToGtfsRealTimeServices.class);
 	private static class Patch {
@@ -48,8 +53,8 @@ public class JourneyProcessor {
 		boolean canceled; 
 	}
 
-	public JourneyProcessor(@NonNull Journey j){
-		journey = j;
+	public BlockProcessor(@NonNull Block b){
+		block = b;
 		patches = Maps.newHashMap();
 	}
 
@@ -60,62 +65,78 @@ public class JourneyProcessor {
 	 */
 
 	public boolean containsStation(String stationCode){
-		for (JourneyPatternPoint pt : journey.getJourneypattern().getPoints()){
-			if (stationCode.equals(stationCode(pt))){
-				return true;
+		for (Journey journey : block.getSegments()){
+			for (JourneyPatternPoint pt : journey.getJourneypattern().getPoints()){
+				if (stationCode.equals(stationCode(pt))){
+					return true;
+				}
 			}
 		}
 		return false;
+	}
+
+	public Set<String> getStations(){
+		HashSet<String> stations = new HashSet<String>();
+		for (Journey journey : block.getSegments()){
+			for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
+				JourneyPatternPoint pt = journey.getJourneypattern().getPoints().get(i);
+				String stationCode = stationCode(pt);
+				stations.add(stationCode);
+			}
+		}
+		return stations;
 	}
 
 	public void addStoppoint(RIDservice ridService,ServiceInfoStopType stop, @NonNull String afterStation) throws ParseException{
 		if (stop.getArrival() == null && stop.getDeparture() == null){
 			throw new IllegalArgumentException("No times for stop");
 		}
-		for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
-			JourneyPatternPoint pt = journey.getJourneypattern().getPoints().get(i);
-			String stationCode = stationCode(pt);
-	    	_log.error("Adding station, checking {} ",stationCode);
-			if (stationCode.equals(afterStation)){
-		    	_log.error("Found match at {} adding stop ",stationCode);
-				JourneyPatternPoint newJpt = new JourneyPatternPoint();
-				newJpt.setAdded(true);
-				if (journey.getJourneypattern().getPoint(pt.getPointorder()+1) != null){
-					throw new IllegalArgumentException("Duplicate pointorder "+stop.getStopCode()+" "+stop.getStopServiceCode());
+		for (Journey journey : block.getSegments()){
+			for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
+				JourneyPatternPoint pt = journey.getJourneypattern().getPoints().get(i);
+				String stationCode = stationCode(pt);
+				_log.error("Adding station, checking {} ",stationCode);
+				if (stationCode.equals(afterStation)){
+					_log.error("Found match at {} adding stop ",stationCode);
+					JourneyPatternPoint newJpt = new JourneyPatternPoint();
+					newJpt.setAdded(true);
+					if (journey.getJourneypattern().getPoint(pt.getPointorder()+1) != null){
+						throw new IllegalArgumentException("Duplicate pointorder "+stop.getStopCode()+" "+stop.getStopServiceCode());
+					}
+					newJpt.setPointorder(pt.getPointorder()+1);
+					newJpt.setScheduled(true);
+					newJpt.setWaitpoint(true);
+					newJpt.setOperatorpointref(String.format("%s:0", stop.getStopCode().toLowerCase()));
+					Long id = ridService.getRailStation(stop.getStopCode().toLowerCase());
+					if (id == null){
+						_log.error("PointId for station {} not found",stop.getStopCode());
+					}else{
+						newJpt.setPointref(id);
+						journey.getJourneypattern().getPoints().add(i+1,newJpt);
+					}
+					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+					Date date = df.parse(journey.getOperatingDay());
+					XMLGregorianCalendar time = stop.getArrival() != null ? stop.getArrival() : stop.getDeparture();
+					int totaldrivetime = (int) ((time.toGregorianCalendar().getTimeInMillis() - date.getTime())/1000);
+					int stopwaittime = 0;
+					if (stop.getDeparture() != null){
+						stopwaittime = (int) ((stop.getDeparture().toGregorianCalendar().getTimeInMillis() -
+								stop.getArrival().toGregorianCalendar().getTimeInMillis())/1000);
+					}
+					TimeDemandGroupPoint tpt = new TimeDemandGroup.TimeDemandGroupPoint();
+					tpt.setPointorder(pt.getPointorder()+1);
+					tpt.setStopwaittime(stopwaittime);
+					tpt.setTotaldrivetime(totaldrivetime);
+					journey.getTimedemandgroup().getPoints().add(i+1, tpt);
+					_log.error("Stop added ",stationCode);
+					_log.error("JourneyPattern {}",journey.getJourneypattern());
+					_log.error("TimeGroup {}",journey.getTimedemandgroup());
+					if (journey.getJourneypattern().getPoints().size() != journey.getTimedemandgroup().getPoints().size()){
+						throw new IllegalArgumentException("Adding point failed: Size of timedemandgroup and journeypattern do not match "+journey);
+					}				
+					_log.error("Service {} Stop {} added sucessfully for ",stop.getStopServiceCode(),stop.getStopCode());
+					return;
 				}
-				newJpt.setPointorder(pt.getPointorder()+1);
-				newJpt.setScheduled(true);
-				newJpt.setWaitpoint(true);
-				newJpt.setOperatorpointref(String.format("%s:0", stop.getStopCode().toLowerCase()));
-				Long id = ridService.getRailStation(stop.getStopCode().toLowerCase());
-				if (id == null){
-					_log.error("PointId for station {} not found",stop.getStopCode());
-				}else{
-					newJpt.setPointref(id);
-					journey.getJourneypattern().getPoints().add(i+1,newJpt);
-				}
-				SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-				Date date = df.parse(journey.getOperatingDay());
-				XMLGregorianCalendar time = stop.getArrival() != null ? stop.getArrival() : stop.getDeparture();
-				int totaldrivetime = (int) ((time.toGregorianCalendar().getTimeInMillis() - date.getTime())/1000);
-				int stopwaittime = 0;
-				if (stop.getDeparture() != null){
-					stopwaittime = (int) ((stop.getDeparture().toGregorianCalendar().getTimeInMillis() -
-							         stop.getArrival().toGregorianCalendar().getTimeInMillis())/1000);
-				}
-				TimeDemandGroupPoint tpt = new TimeDemandGroup.TimeDemandGroupPoint();
-				tpt.setPointorder(pt.getPointorder()+1);
-				tpt.setStopwaittime(stopwaittime);
-				tpt.setTotaldrivetime(totaldrivetime);
-				journey.getTimedemandgroup().getPoints().add(i+1, tpt);
-		    	_log.error("Stop added ",stationCode);
-		    	_log.error("JourneyPattern {}",getJourney().getJourneypattern());
-		    	_log.error("TimeGroup {}",getJourney().getTimedemandgroup());
-				if (getJourney().getJourneypattern().getPoints().size() != getJourney().getTimedemandgroup().getPoints().size()){
-					throw new IllegalArgumentException("Adding point failed: Size of timedemandgroup and journeypattern do not match "+getJourney());
-				}				
-		    	_log.error("Service {} Stop {} added sucessfully for ",stop.getStopServiceCode(),stop.getStopCode());
-		    	return;
 			}
 		}
 		_log.error("Station "+stop.getStopCode()+" after "+afterStation+" not added");
@@ -194,7 +215,7 @@ public class JourneyProcessor {
 		return c.get(Calendar.HOUR_OF_DAY)*60*60+c.get(Calendar.MINUTE)*60+c.get(Calendar.SECOND);
 	}
 
-	public static JourneyProcessor fromArnu(@NonNull RIDservice ridService,@NonNull ServiceInfoServiceType info){
+	public static BlockProcessor fromArnu(@NonNull RIDservice ridService,@NonNull ServiceInfoServiceType info){
 		try{
 			Journey j = new Journey();
 			j.setAdded(true);
@@ -206,11 +227,27 @@ public class JourneyProcessor {
 			if (j.getJourneypattern().getPoints().size() != j.getTimedemandgroup().getPoints().size()){
 				throw new IllegalArgumentException("Size of timedemandgroup and journeypattern do not match");
 			}
-			return new JourneyProcessor(j);
+			Block b = new Block(null);
+			b.addJourney(j);
+			return new BlockProcessor(b);
 		}catch (Exception e){
 			_log.error("Exception during Journey adding {}",info,e);
 			throw e;
 		} 
+	}
+
+	public String getId(){
+		return block.getSegments().get(0).getId();
+	}
+
+	/**
+	 * @param routeId will be set to all blocks in this train journey
+	 */
+
+	public void setRouteId(@NonNull Long routeId){
+		for (Journey j : block.getSegments()){
+			j.setRouteId(routeId);
+		}
 	}
 
 	private void updatePatches(ServiceInfoServiceType info){
@@ -259,8 +296,8 @@ public class JourneyProcessor {
 		}
 	}
 
-	public TripUpdate.Builder process(@NonNull ServiceInfoServiceType info){
-		//patches.clear(); //TODO Figure out whether ARNU updates are replacing each other.
+	public List<TripUpdate.Builder> process(@NonNull ServiceInfoServiceType info){
+		patches.clear(); //TODO Figure out whether ARNU updates are replacing each other.
 		updatePatches(info);
 		switch (info.getServiceType()){
 		case NORMAL_SERVICE:
@@ -280,68 +317,71 @@ public class JourneyProcessor {
 		return buildTripUpdate(info);
 	}
 
-	private TripUpdate.Builder buildTripUpdate(@NonNull ServiceInfoServiceType info){
-		TripUpdate.Builder trip = TripUpdate.newBuilder();
-		//Keep track how many stations are canceled along the journey
-		int stopsCanceled = 0; 
-		for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
-			JourneyPatternPoint jp = journey.getJourneypattern().getPoints().get(i);
-			StopTimeUpdate.Builder stop = StopTimeUpdate.newBuilder();
-			stop.setStopId(jp.getPointref()+"");
-			stop.setStopSequence(jp.getPointorder());
-			String stationCode = jp.getOperatorpointref().split(":")[0].toLowerCase();
-			Patch p = patches.get(stationCode);
-			if (p != null){
-				if (p.canceled || jp.isSkipped()){
+	private List<TripUpdate.Builder> buildTripUpdate(@NonNull ServiceInfoServiceType info){
+		List<TripUpdate.Builder> updates = new ArrayList<TripUpdate.Builder>();
+		for (Journey journey : block.getSegments()){
+			TripUpdate.Builder trip = TripUpdate.newBuilder();
+			//Keep track how many stations are canceled along the journey
+			int stopsCanceled = 0; 
+			for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
+				JourneyPatternPoint jp = journey.getJourneypattern().getPoints().get(i);
+				StopTimeUpdate.Builder stop = StopTimeUpdate.newBuilder();
+				stop.setStopId(jp.getPointref()+"");
+				stop.setStopSequence(jp.getPointorder());
+				String stationCode = jp.getOperatorpointref().split(":")[0].toLowerCase();
+				Patch p = patches.get(stationCode);
+				if (p != null){
+					if (p.canceled || jp.isSkipped()){
+						stop.setScheduleRelationship(ScheduleRelationship.SKIPPED);
+						stopsCanceled++; //Signal that there was a cancellation along the journey
+					}else if (jp.isAdded()){
+						stop.setScheduleRelationship(ScheduleRelationship.ADDED);
+					}else{
+						stop.setScheduleRelationship(ScheduleRelationship.SCHEDULED);
+					}
+				}else if (jp.isSkipped() || (info.getServiceType() != null && info.getServiceType() == ServiceInfoKind.EXTENDED_SERVICE)){
 					stop.setScheduleRelationship(ScheduleRelationship.SKIPPED);
-					stopsCanceled++; //Signal that there was a cancellation along the journey
-				}else if (jp.isAdded()){
-					stop.setScheduleRelationship(ScheduleRelationship.ADDED);
-				}else{
-					stop.setScheduleRelationship(ScheduleRelationship.SCHEDULED);
+					stopsCanceled++;
+				}else if (!jp.isSkipped()){
+					_log.error("No Realtime stop info for {} {}",jp.getOperatorpointref(),info);
+					if (i != 0){
+						StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
+						arrival.setDelay(0);
+						arrival.setTime(journey.getArrivalTime(jp.getPointorder())); //In seconds since 1970 
+						stop.setArrival(arrival);
+					}
+					if (i != journey.getJourneypattern().getPoints().size()-1){
+						StopTimeEvent.Builder departure = StopTimeEvent.newBuilder();
+						departure.setDelay(0);
+						departure.setTime(journey.getDepartureTime(jp.getPointorder())); //In seconds since 1970 
+						stop.setArrival(departure);
+					}
+					continue;
 				}
-			}else if (jp.isSkipped() || (info.getServiceType() != null && info.getServiceType() == ServiceInfoKind.EXTENDED_SERVICE)){
-				stop.setScheduleRelationship(ScheduleRelationship.SKIPPED);
-				stopsCanceled++;
-			}else if (!jp.isSkipped()){
-				_log.error("No Realtime stop info for {}",jp.getOperatorpointref());
-				/*
-				if (i != 0){
+				if (i != 0 && p.eta != null && !p.canceled){
 					StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
-					arrival.setDelay(0);
-					arrival.setTime(journey.getArrivalTime(jp.getPointorder())); //In seconds since 1970 
+					arrival.setDelay(p.arrivalDelay == null ? 0 : p.arrivalDelay);
+					arrival.setTime(p.eta); //In seconds since 1970 
 					stop.setArrival(arrival);
 				}
-				if (i != journey.getJourneypattern().getPoints().size()-1){
+				if (i != journey.getJourneypattern().getPoints().size()-1 && p.etd != null && !p.canceled){
 					StopTimeEvent.Builder departure = StopTimeEvent.newBuilder();
-					departure.setDelay(0);
-					departure.setTime(journey.getDepartureTime(jp.getPointorder())); //In seconds since 1970 
-					stop.setArrival(departure);
+					departure.setDelay(p.departureDelay == null ? 0 : p.departureDelay);
+					departure.setTime(p.etd); //In seconds since 1970 
+					stop.setDeparture(departure);
 				}
-				continue;*/
+				trip.addStopTimeUpdate(stop);
 			}
-			if (i != 0 && p.eta != null && !p.canceled){
-				StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
-				arrival.setDelay(p.arrivalDelay == null ? 0 : p.arrivalDelay);
-				arrival.setTime(p.eta); //In seconds since 1970 
-				stop.setArrival(arrival);
+			if (stopsCanceled > journey.getJourneypattern().getPoints().size()-2){
+				//Journey now exists of a single stop or less
+				trip.clearStopTimeUpdate();
+				journey.setCanceled(true);
+			}else{
+				journey.setCanceled(false);
 			}
-			if (i != journey.getJourneypattern().getPoints().size()-1 && p.etd != null && !p.canceled){
-				StopTimeEvent.Builder departure = StopTimeEvent.newBuilder();
-				departure.setDelay(p.departureDelay == null ? 0 : p.departureDelay);
-				departure.setTime(p.etd); //In seconds since 1970 
-				stop.setDeparture(departure);
-			}
-			trip.addStopTimeUpdate(stop);
+			trip.setTrip(journey.tripDescriptor());
+			updates.add(trip);
 		}
-		if (stopsCanceled > journey.getJourneypattern().getPoints().size()-2){
-			//Journey now exists of a single stop or less
-			trip.clearStopTimeUpdate();
-			journey.setCanceled(true);
-		}else{
-			journey.setCanceled(false);
-		}
-		trip.setTrip(journey.tripDescriptor());
-		return trip;
+		return updates;
 	}
 }

@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,6 +34,7 @@ import nl.ovapi.bison.model.SubMeasureType;
 import nl.ovapi.bison.model.SubReasonType;
 import nl.ovapi.bison.sax.DateUtils;
 import nl.ovapi.rid.Database;
+import nl.ovapi.rid.model.Block;
 import nl.ovapi.rid.model.Journey;
 import nl.ovapi.rid.model.JourneyPattern;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
@@ -59,7 +61,7 @@ public class RIDservice {
 	private HashFunction hf = Hashing.crc32();
 
 	private Map<String, Journey> journeys = Maps.newHashMapWithExpectedSize(0);
-	private Map<String, ArrayList<Journey>> trains = Maps.newHashMapWithExpectedSize(0);
+	private Map<String, ArrayList<Block>> trains = Maps.newHashMapWithExpectedSize(0);
 	private Map<String, TimeDemandGroup> timedemandgroups = Maps.newHashMapWithExpectedSize(0);
 	private Map<String, JourneyPattern> journeypatterns = Maps.newHashMapWithExpectedSize(0);
 	private Map<String, StopPoint> stoppoints = Maps.newHashMapWithExpectedSize(0);
@@ -81,28 +83,21 @@ public class RIDservice {
 	}
 
 	/**
+	 * @param id OperatingDay+':'+DataOwnerCode+':'+LinePlanningNumber+':'+JourneyNumber
+	 * @return If id does not exist NULL, else a List of blocks with said identifier. 
+	 */
+	public ArrayList<Block> getTrains(String id){
+		String key = hf.hashString(id).toString();
+		ArrayList<Block> blocks = trains.get(key);
+		return blocks;
+	}
+	/**
 	 * @param oldId OperatingDay+':'+DataOwnerCode+':'+LinePlanningNumber+':'+JourneyNumber in legacy KV1 deliveries.
 	 * @return OperatingDay+':'+DataOwnerCode+':'+LinePlanningNumber+':'+JourneyNumber of new KV1 system, if known otherwise NULL.
 	 */
 	public String getGVBdeltaId(String oldId){
 		String key = hf.hashString(oldId).toString();
 		return gvbJourneys.get(key);
-	}
-
-	/**
-	 * This is a special method for returning multple objects for the same trainnumber
-	 * @param id OperatingDay+':'+DataOwnerCode+':'+LinePlanningNumber+':'+JourneyNumber
-	 * @return (empty) List with Journey objects with id in parameter.
-	 */
-	public ArrayList<Journey> getTrains(String id){
-		String key = hf.hashString(id).toString();
-		if (trains.containsKey(key)){
-			return trains.get(key);
-		}
-		ArrayList<Journey> journey = new ArrayList<Journey>();
-		if (journeys.containsKey(key))
-			journey.add(journeys.get(key));
-		return journey;
 	}
 
 	/**
@@ -137,7 +132,7 @@ public class RIDservice {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param station NS stationcode 
@@ -266,7 +261,7 @@ public class RIDservice {
 			Map<String, TimeDemandGroup> newTimedemandgroups = Maps.newHashMapWithExpectedSize(10000);
 			Map<String, JourneyPattern> newJourneypatterns = Maps.newHashMapWithExpectedSize(5000);
 			Map<String, Journey> newJourneys = Maps.newHashMapWithExpectedSize(0);
-			Map<String, ArrayList<Journey>> newTrains = Maps.newHashMapWithExpectedSize(0);
+			Map<String, ArrayList<Block>> newTrains = Maps.newHashMapWithExpectedSize(0);
 			while (rs.next()) {
 				//timedemandgroupref,pointorder,totaldrivetime,stopwaittime
 				String curRef = rs.getString(1).intern();
@@ -326,9 +321,6 @@ public class RIDservice {
 				long id = rs.getLong(2);
 				if (journeys.containsKey(key) && journeys.get(key).getId().equals(id)){
 					newJourneys.put(key, journeys.get(key));
-					if (trains.containsKey(key)){
-						newTrains.put(key, trains.get(key));
-					}
 					continue;
 				}
 				newCount++;
@@ -353,21 +345,54 @@ public class RIDservice {
 				journey.setPrivateCode(rs.getString(9));
 				journey.setRouteId(rs.getLong(10));
 				if (newJourneys.containsKey(key)){ //Trains can have multiple journeys under same trainnumer
-					if (rs.getString(1).contains("ARR")){ 
-						continue;//But Arriva is just mucking around ;)
-					}
-					if (newTrains.containsKey(key)){
-						newTrains.get(key).add(journey);
-					}else{
-						ArrayList<Journey> trains = new ArrayList<Journey>();
-						trains.add(journey);
-						newTrains.put(key, trains);
-					}
+					_log.info("Duplicate privatecodes ignoring one of {}",key);
 				}else{
 					newJourneys.put(key, journey);
 				}
 			}
 			_log.info("{} New journeys",newCount);
+
+
+			st = conn.prepareStatement(Database.trainQuery);
+			rs = st.executeQuery();
+			Block block = null;
+			while (rs.next()) {
+				String key = hf.hashString(rs.getString(1)).toString();
+				long id = rs.getLong(2);
+				Journey journey = new Journey();
+				journey.setId(rs.getLong(2)+"");
+				journey.setJourneypattern(newJourneypatterns.get(rs.getString(3).intern()));
+				if (journey.getJourneypattern() == null)
+					_log.error("JourneyPattern == null {} {}",rs.getString(1),rs.getString(3));
+				journey.setTimedemandgroup(newTimedemandgroups.get(rs.getString(4).intern()));
+				if (journey.getTimedemandgroup() == null)
+					_log.error("TimeDemandGroup == null {} {}",rs.getString(1),rs.getString(4));
+				journey.setDeparturetime(rs.getInt(5));
+				if (rs.getString(6) != null){
+					journey.setWheelchairaccessible("true".equals(rs.getString(6)));
+				}
+				journey.setAgencyId(rs.getString(7));
+				journey.setOperatingDay(rs.getString(8));
+				long date = new SimpleDateFormat("yyyy-MM-dd").parse(rs.getString(8)).getTime();
+				if (fromDate == 0 || date < fromDate){
+					fromDate = date;
+				}
+				journey.setPrivateCode(rs.getString(9));
+				journey.setRouteId(rs.getLong(10));
+				journey.setBlockRef(rs.getString(11));
+				if (block != null && block.getBlockRef().equals(journey.getBlockRef())){
+					block.addJourney(journey);
+				}else{
+					block = new Block(journey.getBlockRef());
+					block.addJourney(journey);
+					ArrayList<Block> blocks = newTrains.get(key);
+					if (blocks == null){
+						blocks = new ArrayList<Block>();
+					}
+					blocks.add(block);
+					newTrains.put(key, blocks);
+				}
+			}			
 			st = conn.prepareStatement(Database.stoppointQuery);
 			rs = st.executeQuery();
 			while (rs.next()) {
@@ -434,6 +459,7 @@ public class RIDservice {
 	private String simpleStats(){
 		StringBuilder sb = new StringBuilder();
 		sb.append(String.format("%d journeys\n", journeys.size()));
+		sb.append(String.format("%d trains\n", trains.size()));
 		sb.append(String.format("%d journeypatterns\n", journeypatterns.size()));
 		sb.append(String.format("%d timepatterns\n", timedemandgroups.size()));
 		sb.append(String.format("%d stoppoints\n", stoppoints.size()));

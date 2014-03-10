@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -24,9 +23,8 @@ import javax.xml.transform.stream.StreamSource;
 
 import lombok.NonNull;
 import nl.ovapi.ZeroMQUtils;
-import nl.ovapi.arnu.JourneyProcessor;
 import nl.ovapi.arnu.TrainProcessor;
-import nl.ovapi.rid.model.Journey;
+import nl.ovapi.rid.model.Block;
 import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
@@ -85,17 +83,17 @@ public class ARNUritInfoToGtfsRealTimeServices {
 	}
 
 	private TrainProcessor getOrCreateProcessorForId(@NonNull String id){
-		TrainProcessor jp = journeyProcessors.get(id);
-		if (jp != null){
-			return jp;
+		TrainProcessor tp = journeyProcessors.get(id);
+		if (tp != null){
+			return tp;
 		}
-		List<Journey> trains = _ridService.getTrains(id);
+		List<Block> trains = _ridService.getTrains(id);
 		if (trains == null || trains.size() == 0){
 			return null; //Journey not found
 		}
-		jp = new TrainProcessor(trains);
-		journeyProcessors.put(id, jp);
-		return jp;
+		tp = new TrainProcessor(trains);
+		journeyProcessors.put(id, tp);
+		return tp;
 	}
 
 	private final static String INPROC_PORT = "51546";
@@ -212,10 +210,10 @@ public class ARNUritInfoToGtfsRealTimeServices {
 				String origId = String.format("%s:IFF:%s:%s",getDate(info),transportModeCode,originalTrainNumber);	
 				origJp = getOrCreateProcessorForId(origId);
 				//The original journey has to be the journey this new service is a subset of.
-				if (origJp != null && !jp.isDisjunct(origJp)){
-					_log.debug("set routeid {} for {} ",origJp.getRouteId(),info.getServiceCode());
+				if (origJp != null && !jp.isDisjoint(origJp)){
+					_log.debug("set routeid {} for {} ",origJp.getRouteId(originalTrainNumber),info.getServiceCode());
 					//Set routeId for easier consumption of split trips 
-					jp.setRouteId(origJp.getRouteId());
+					jp.setRouteId(origJp.getRouteId(originalTrainNumber));
 					break;
 				}
 			}

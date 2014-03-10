@@ -2,12 +2,14 @@ package nl.ovapi.arnu;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import lombok.NonNull;
 import nl.ovapi.rid.gtfsrt.services.RIDservice;
+import nl.ovapi.rid.model.Block;
 import nl.ovapi.rid.model.Journey;
-import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
@@ -17,18 +19,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
+import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 
 /**
- * Keeps collection of journeys with the same trainnumber in different blocks
+ * Keeps collection of blocks starting with the same trainnumber in different blocks
  * @author Thomas Koch
  */
 public class TrainProcessor {
 	private static final Logger _log = LoggerFactory.getLogger(TrainProcessor.class);
 
-	private List<JourneyProcessor> _processors;
+	private List<BlockProcessor> _processors;
 
 	private TrainProcessor(){
-		_processors = new ArrayList<JourneyProcessor>();
+		_processors = new ArrayList<BlockProcessor>();
 	}
 
 	/**
@@ -36,27 +39,17 @@ public class TrainProcessor {
 	 * @return whether both TrainProcessors do not share a single station.
 	 */
 
-	public boolean isDisjunct(TrainProcessor otherTrainProcessor){
-		ArrayList<String> pathLeft = new ArrayList<String>();
-		for (JourneyPatternPoint pt : longestJourney().getJourneypattern().getPoints()){
-			String stationCode = JourneyProcessor.stationCode(pt);
-			pathLeft.add(stationCode);
+	public boolean isDisjoint(TrainProcessor otherTrainProcessor){
+		HashSet<String> plannedLeft = new HashSet<String>();
+		for (BlockProcessor p : _processors){
+			plannedLeft.addAll(p.getStations());
 		}
-		for (JourneyPatternPoint pt : otherTrainProcessor.longestJourney().getJourneypattern().getPoints()){
-			String stationCode = JourneyProcessor.stationCode(pt);
-			if (pathLeft.contains(stationCode)){
-				return false;
-			}
-		}
-		return true;
-	}
 
-	private long startEpoch(){
-		long res = Long.MAX_VALUE;
-		for (JourneyProcessor jp : _processors){
-			res = Math.min(jp.getJourney().getDepartureEpoch(),res);
+		HashSet<String> plannedRight = new HashSet<String>();
+		for (BlockProcessor p : otherTrainProcessor._processors){
+			plannedRight.addAll(p.getStations());
 		}
-		return res;
+		return Collections.disjoint(plannedLeft, plannedRight);
 	}
 
 	public static Integer orginalTrainNumber(String trainCode){
@@ -87,23 +80,14 @@ public class TrainProcessor {
 	}
 
 
-	public TrainProcessor(@NonNull List<Journey> journeys){
-		if (journeys.size() == 0){
+	public TrainProcessor(@NonNull List<Block> blocks){
+		if (blocks.size() == 0){
 			throw new IllegalArgumentException("No journeys given");
 		}
-		_processors = new ArrayList<JourneyProcessor>(journeys.size());
-		for (Journey j : journeys){
-			_processors.add(new JourneyProcessor(j));
+		_processors = new ArrayList<BlockProcessor>(blocks.size());
+		for (Block b : blocks){
+			_processors.add(new BlockProcessor(b));
 		}
-	}
-
-	/**
-	 * @return the route_id this train is a part of;
-	 */
-
-	public Long getRouteId(){
-		// We're definitely should assume that all (segments) of this train journey are part of the same (GTFS) route
-		return _processors.get(0).getJourney().getRouteId();
 	}
 
 	/**
@@ -111,35 +95,15 @@ public class TrainProcessor {
 	 */
 
 	public void setRouteId(@NonNull Long routeId){
-		for (JourneyProcessor jp : _processors){
-			jp.getJourney().setRouteId(routeId);
+		for (BlockProcessor jp : _processors){
+			jp.getBlock().getSegments().get(0).setRouteId(routeId);
 		}
-	}
-
-	/**
-	 * @return the journey which visits the most stations, assumed to be the journey that describes the entire trainpath
-	 */
-	private Journey longestJourney(){
-		int maxLength = -1;
-		Journey longestJourney = null;
-		for (JourneyProcessor j : this._processors){
-			if (j.getJourney().getJourneypattern().getPoints().size() > maxLength){
-				maxLength = j.getJourney().getJourneypattern().getPoints().size();
-				longestJourney = j.getJourney();
-			}
-		}
-		return longestJourney;
 	}
 
 	public void changeService(@NonNull RIDservice ridService,ServiceInfoServiceType info) throws ParseException{
-		ArrayList<String> plannedPath = new ArrayList<String>();
-		for (JourneyPatternPoint pt : longestJourney().getJourneypattern().getPoints()){
-			String stationCode = JourneyProcessor.stationCode(pt);
-			plannedPath.add(stationCode);
-		}
-		if (_processors.size() > 1){
-			_log.error("Journey path change not supported for multiple blocks...");
-			return;
+		HashSet<String> plannedPath = new HashSet<String>();
+		for (BlockProcessor p : _processors){
+			plannedPath.addAll(p.getStations());
 		}
 		String lastStation =null;
 		for (int i = 0; i < info.getStopList().getStop().size(); i++){
@@ -151,7 +115,7 @@ public class TrainProcessor {
 			}
 			if (!plannedPath.contains(s.getStopCode().toLowerCase())){
 				_log.error("Add station {} ",s.getStopCode()+" after "+lastStation);
-				for (JourneyProcessor jp : _processors){
+				for (BlockProcessor jp : _processors){
 					try{
 						jp.addStoppoint(ridService,s, lastStation);
 					}catch (Exception e){
@@ -165,18 +129,40 @@ public class TrainProcessor {
 
 	public static TrainProcessor fromArnu(@NonNull RIDservice ridService,@NonNull ServiceInfoServiceType info){
 		TrainProcessor p = new TrainProcessor();
-		p._processors.add(JourneyProcessor.fromArnu(ridService, info));
+		p._processors.add(BlockProcessor.fromArnu(ridService, info));
 		return p;
 	}
 
 	public GtfsRealtimeIncrementalUpdate process(ServiceInfoServiceType info){
 		GtfsRealtimeIncrementalUpdate update = new GtfsRealtimeIncrementalUpdate();
-		for (JourneyProcessor p : _processors){
+		for (BlockProcessor p : _processors){
 			FeedEntity.Builder entity = FeedEntity.newBuilder();
-			entity.setTripUpdate(p.process(info));
-			entity.setId(p.getJourney().getId()+"");
-			update.addUpdatedEntity(entity.build());
+			List<TripUpdate.Builder> updates = p.process(info);
+			if (updates == null){
+				continue;
+			}
+			for (TripUpdate.Builder u : updates){
+				entity.setTripUpdate(u);
+				entity.setId(p.getId());
+				update.addUpdatedEntity(entity.build());
+			}
 		}
 		return update;
+	}
+	
+	/**
+	 * @param originalTrainNumber trainnumber of original (superset) trip
+	 * @return routeId of journey with originalTrainNumber
+	 */
+
+	public Long getRouteId(Integer originalTrainNumber) {
+		for (BlockProcessor bp : _processors){
+			for (Journey j : bp.getBlock().getSegments()){
+				if (j.getPrivateCode() != null && j.getPrivateCode().endsWith(":"+originalTrainNumber)){
+					return j.getRouteId();
+				}
+			}
+		}
+		return null;
 	}
 }
