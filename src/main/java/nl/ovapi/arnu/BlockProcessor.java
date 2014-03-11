@@ -23,7 +23,6 @@ import nl.ovapi.rid.model.JourneyPattern;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.TimeDemandGroup;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
-import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
@@ -342,21 +341,21 @@ public class BlockProcessor {
 					}else{
 						stop.setScheduleRelationship(ScheduleRelationship.SCHEDULED);
 					}
+					if (i != 0 && p.eta != null && !p.canceled){
+						StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
+						arrival.setDelay(p.arrivalDelay == null ? 0 : p.arrivalDelay);
+						arrival.setTime(p.eta); //In seconds since 1970 
+						stop.setArrival(arrival);
+					}
+					if (i != journey.getJourneypattern().getPoints().size()-1 && p.etd != null && !p.canceled){
+						StopTimeEvent.Builder departure = StopTimeEvent.newBuilder();
+						departure.setDelay(p.departureDelay == null ? 0 : p.departureDelay);
+						departure.setTime(p.etd); //In seconds since 1970 
+						stop.setDeparture(departure);
+					}
 				}else{
 					stop.setScheduleRelationship(ScheduleRelationship.SKIPPED);
 					stopsCanceled++;
-				}
-				if (i != 0 && p.eta != null && !p.canceled){
-					StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
-					arrival.setDelay(p.arrivalDelay == null ? 0 : p.arrivalDelay);
-					arrival.setTime(p.eta); //In seconds since 1970 
-					stop.setArrival(arrival);
-				}
-				if (i != journey.getJourneypattern().getPoints().size()-1 && p.etd != null && !p.canceled){
-					StopTimeEvent.Builder departure = StopTimeEvent.newBuilder();
-					departure.setDelay(p.departureDelay == null ? 0 : p.departureDelay);
-					departure.setTime(p.etd); //In seconds since 1970 
-					stop.setDeparture(departure);
 				}
 				trip.addStopTimeUpdate(stop);
 			}
