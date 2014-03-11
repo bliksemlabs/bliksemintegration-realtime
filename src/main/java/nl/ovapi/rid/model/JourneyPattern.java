@@ -10,8 +10,20 @@ import lombok.ToString;
 
 @ToString()
 @EqualsAndHashCode()
-public class JourneyPattern {
+public class JourneyPattern implements Cloneable{
 
+	public JourneyPattern (JourneyPattern toClone) {
+		this.directiontype = toClone.directiontype == null ? null : toClone.directiontype.intValue();
+		this.points = new ArrayList<JourneyPatternPoint>(toClone.getPoints().size());
+		for (JourneyPatternPoint pt : toClone.getPoints()){
+			this.points.add(pt.clone());
+		}
+	}
+	
+	public JourneyPattern clone() {
+	    return new JourneyPattern(this);
+	}
+	
 	@Getter
 	@Setter
 	/**
@@ -20,7 +32,26 @@ public class JourneyPattern {
 	public Integer directiontype;
 	
 	@ToString()
-	public static class JourneyPatternPoint {
+	public static class JourneyPatternPoint implements Cloneable{
+		
+		public  JourneyPatternPoint(JourneyPatternPoint toClone){
+			this.added = toClone.added;
+			this.distancefromstartroute = toClone.distancefromstartroute == null ? null : toClone.distancefromstartroute.intValue();
+			this.operatorpointref = toClone.operatorpointref;
+			this.pointorder = toClone.pointorder == null ? null : toClone.pointorder.intValue();
+			this.pointref = toClone.pointref == null ? null : toClone.pointref.longValue();
+			this.scheduled = toClone.scheduled;
+			this.skipped = toClone.skipped;
+			this.waitpoint = toClone.waitpoint;
+		}
+		
+		@Override
+		public JourneyPatternPoint clone(){
+			return new JourneyPatternPoint(this);
+		}
+		
+		public JourneyPatternPoint(){}
+		
 		@Getter
 		@Setter
 		@NonNull
@@ -48,7 +79,7 @@ public class JourneyPattern {
 		/**
 		 * Whether this point is a WaitPoint/TimingPoint, if true a vehicle is not expected to depart early from this stop
 		 */
-		public boolean waitpoint;
+		private boolean waitpoint;
 		@Getter
 		@Setter
 		@NonNull
