@@ -87,11 +87,13 @@ public class BlockProcessor {
 		return stations;
 	}
 
-	public void addStoppoint(RIDservice ridService,ServiceInfoStopType stop, @NonNull String afterStation) throws ParseException{
+	public synchronized void addStoppoint(RIDservice ridService,ServiceInfoStopType stop, @NonNull String afterStation) throws ParseException{
 		if (stop.getArrival() == null && stop.getDeparture() == null){
 			throw new IllegalArgumentException("No times for stop");
 		}
 		for (Journey journey : block.getSegments()){
+			journey.setJourneypattern(journey.getJourneypattern().clone());
+			journey.setTimedemandgroup(journey.getTimedemandgroup().clone());
 			for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
 				JourneyPatternPoint pt = journey.getJourneypattern().getPoints().get(i);
 				String stationCode = stationCode(pt);
