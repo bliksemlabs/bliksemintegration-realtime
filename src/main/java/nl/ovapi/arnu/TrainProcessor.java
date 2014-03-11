@@ -133,7 +133,7 @@ public class TrainProcessor {
 					try{
 						jp.addStoppoint(ridService,s, lastStation);
 					}catch (Exception e){
-						_log.error("Add station {} failed",s.getStopCode(),e);
+						_log.error("Add station "+s.getStopCode()+" failed",e);
 					}
 				}
 			}
