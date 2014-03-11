@@ -167,7 +167,8 @@ public class BlockProcessor {
 				pt.setTotaldrivetime(0);
 				tp.add(pt);
 			}else{
-				Calendar c = s.getArrival().toGregorianCalendar();
+				Calendar c = s.getArrival() == null ? s.getDeparture().toGregorianCalendar() : 
+					s.getArrival().toGregorianCalendar();
 				//SEconds since midnight
 				int time = secondsSinceMidnight(c);
 				TimeDemandGroup.TimeDemandGroupPoint pt = new TimeDemandGroup.TimeDemandGroupPoint();
@@ -339,24 +340,9 @@ public class BlockProcessor {
 					}else{
 						stop.setScheduleRelationship(ScheduleRelationship.SCHEDULED);
 					}
-				}else if (jp.isSkipped() || (info.getServiceType() != null && info.getServiceType() == ServiceInfoKind.EXTENDED_SERVICE)){
+				}else{
 					stop.setScheduleRelationship(ScheduleRelationship.SKIPPED);
 					stopsCanceled++;
-				}else if (!jp.isSkipped()){
-					_log.error("No Realtime stop info for {} {}",jp.getOperatorpointref(),info);
-					if (i != 0){
-						StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
-						arrival.setDelay(0);
-						arrival.setTime(journey.getArrivalTime(jp.getPointorder())); //In seconds since 1970 
-						stop.setArrival(arrival);
-					}
-					if (i != journey.getJourneypattern().getPoints().size()-1){
-						StopTimeEvent.Builder departure = StopTimeEvent.newBuilder();
-						departure.setDelay(0);
-						departure.setTime(journey.getDepartureTime(jp.getPointorder())); //In seconds since 1970 
-						stop.setArrival(departure);
-					}
-					continue;
 				}
 				if (i != 0 && p.eta != null && !p.canceled){
 					StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
