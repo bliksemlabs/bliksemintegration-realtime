@@ -14,6 +14,14 @@ public class Block {
 		segments = new ArrayList<Journey>();
 		this.blockRef = blockRef;
 	}
+	
+	public long getDepartureEpoch(){
+		return segments.get(0).getDepartureEpoch();
+	}
+	
+	public long getEndEpoch(){
+		return segments.get(segments.size()).getEndEpoch();
+	}
 		
 	public void addJourney(Journey journey){
 		if (journey.getBlockRef() != blockRef && !blockRef.equals(journey.getBlockRef())){
