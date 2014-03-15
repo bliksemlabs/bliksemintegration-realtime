@@ -450,7 +450,7 @@ public class Journey {
 					lastDelay = update.getDeparture().getDelay();
 				}
 			}
-			if (update.hasArrival()){
+			if (update.hasArrival() || (update.hasDeparture() && i == 0)){
 				updates.add(update);
 			}
 			lastSchedule = update.hasScheduleRelationship() ? StopTimeUpdate.ScheduleRelationship.SCHEDULED :
