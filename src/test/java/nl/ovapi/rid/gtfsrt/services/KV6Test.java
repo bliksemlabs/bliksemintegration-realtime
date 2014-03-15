@@ -2,6 +2,7 @@ package nl.ovapi.rid.gtfsrt.services;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.text.DateFormat;
@@ -149,7 +150,6 @@ public class KV6Test {
 		posinfo.setTimestamp(journey.getDepartureEpoch()-60);
 		posinfo.setPassagesequencenumber(-120);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
-		System.out.println(tripUpdate.build());
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),journey.getDepartureEpoch()-60);
@@ -203,8 +203,7 @@ public class KV6Test {
 		posinfo.setTimestamp(journey.getDepartureEpoch()+100);
 		posinfo.setPassagesequencenumber(0);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
-		assertTrue(tripUpdate.getStopTimeUpdateCount() == 2);
-		System.out.println(tripUpdate.build());
+		assertEquals(2,tripUpdate.getStopTimeUpdateCount());
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),0);
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getTime(),journey.getDepartureEpoch());
@@ -228,7 +227,8 @@ public class KV6Test {
 		posinfo.setTimestamp(journey.getDepartureEpoch()-120);
 		posinfo.setPassagesequencenumber(0);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
-		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
+		assertEquals(1,tripUpdate.getStopTimeUpdateCount());
+		assertFalse(tripUpdate.getStopTimeUpdate(0).hasArrival());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getDelay(),0);
 	}
 }

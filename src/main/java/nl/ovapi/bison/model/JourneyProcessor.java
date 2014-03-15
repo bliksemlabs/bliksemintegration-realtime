@@ -244,13 +244,12 @@ public class JourneyProcessor {
 			}
 			if (update.hasDeparture()){
 				if (update.getDeparture().getDelay() == lastDelay && (i != 0) && !override){
-					if (!update.hasArrival())
-						update.clearDeparture();
+					//update.clearDeparture();
 				}else{
 					lastDelay = update.getDeparture().getDelay();
 				}
 			}
-			if (update.hasArrival() || update.hasDeparture()){
+			if (update.hasArrival() || (update.hasDeparture() && i == 0)){
 				updates.add(update);
 			}
 			lastSchedule = update.hasScheduleRelationship() ? StopTimeUpdate.ScheduleRelationship.SCHEDULED :
