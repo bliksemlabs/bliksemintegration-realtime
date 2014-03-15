@@ -195,7 +195,6 @@ public class Journey {
 		throw new IllegalArgumentException("Pointorder "+pointorder+"does not exist");
 	}
 
-
 	public JourneyPatternPoint getJourneyStop (String userstopcode,int passageSequencenumber){
 		for (int i = 0; i < timedemandgroup.getPoints().size(); i++) {
 			TimeDemandGroupPoint tpt = timedemandgroup.getPoints().get(i);
