@@ -33,6 +33,8 @@ import org.eclipse.jetty.websocket.api.UpgradeResponse;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
 import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
@@ -116,10 +118,11 @@ public class GtfsRealtimeServlet extends WebSocketServlet implements
    ****/
 
   class WebsocketCreatorImpl implements WebSocketCreator {
-    @Override
-    public Object createWebSocket(UpgradeRequest req, UpgradeResponse resp) {
-      return new DataWebSocket();
-    }
+	@Override
+	public Object createWebSocket(ServletUpgradeRequest arg0,
+			ServletUpgradeResponse arg1) {
+	      return new DataWebSocket();
+	}
 
   }
 
@@ -179,7 +182,6 @@ public class GtfsRealtimeServlet extends WebSocketServlet implements
       } catch (Exception ex) {
         // If anything goes wrong, we close the connection.
         _log.error("error sending message to remote WebSocket client", ex);
-        try {
           // The @OnWebSocketClose event might have already been trigger during
           // our attempt to write, but if not, let's close the connection
           // ourselves.
@@ -187,9 +189,6 @@ public class GtfsRealtimeServlet extends WebSocketServlet implements
             // This should automatically trigger an @OnWebSocketClose event.
             _session.close();
           }
-        } catch (IOException ex2) {
-          _log.error("error closing remote WebSocket connection", ex2);
-        }
       }
     }
   }
