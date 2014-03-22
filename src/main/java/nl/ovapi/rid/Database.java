@@ -36,5 +36,5 @@ public class Database {
 			"        FROM  kv15_stopmessage_userstopcode GROUP BY dataownercode,messagecodedate,messagecodenumber) as u USING (dataownercode,messagecodedate,messagecodenumber) "+
 			" LEFT JOIN (SELECT dataownercode,messagecodedate,messagecodenumber,string_agg(lineplanningnumber,';') as lineplanningnumbers "+
 			"        FROM  kv15_stopmessage_lineplanningnumber GROUP BY dataownercode,messagecodedate,messagecodenumber) as l USING (dataownercode,messagecodedate,messagecodenumber) "+
-			"WHERE messageendtime > date 'now' and isdeleted = false AND messagepriority != 'COMMERCIAL'";
+			"WHERE ((messagetype != 'REMOVE' AND messageendtime is null) OR messageendtime > date 'now') and coalesce(isdeleted,false) = false AND (dataownercode = 'QBUZZ' OR messagepriority != 'COMMERCIAL')";
 }
