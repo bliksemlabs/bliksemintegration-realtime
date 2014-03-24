@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import javax.xml.datatype.Duration;
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -65,12 +66,14 @@ public class ServiceInfoStopType {
     @XmlElement(name = "StopServiceCode", required = true)
     protected String stopServiceCode;
     @XmlElement(name = "Arrival")
+    @XmlJavaTypeAdapter(DateAdapter.class)
     @XmlSchemaType(name = "dateTime")
     protected XMLGregorianCalendar arrival;
     @XmlElement(name = "ArrivalTimeDelay")
     protected Duration arrivalTimeDelay;
     @XmlElement(name = "Departure")
     @XmlSchemaType(name = "dateTime")
+    @XmlJavaTypeAdapter(DateAdapter.class)
     protected XMLGregorianCalendar departure;
     @XmlElement(name = "DepartureTimeDelay")
     protected Duration departureTimeDelay;
