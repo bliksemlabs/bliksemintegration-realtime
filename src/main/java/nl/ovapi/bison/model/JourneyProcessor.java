@@ -4,12 +4,15 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.datatype.DatatypeFactory;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -25,22 +28,31 @@ import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.gtfsrt.services.GeometryService;
 import nl.ovapi.rid.gtfsrt.services.RIDservice;
 import nl.ovapi.rid.model.Journey;
-import nl.ovapi.rid.model.StopPoint;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
+import nl.ovapi.rid.model.StopPoint;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
+import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceList;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType.StopList;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopKind;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.Position;
-import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
-import com.google.transit.realtime.GtfsRealtime.TripUpdate;
-import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
 import com.google.transit.realtime.GtfsRealtime.Position.Builder;
+import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
+import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeEvent;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
-import com.google.transit.realtime.GtfsRealtime.VehiclePosition.VehicleStopStatus;
 import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
+import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
+import com.google.transit.realtime.GtfsRealtime.VehiclePosition.VehicleStopStatus;
 import com.google.transit.realtime.GtfsRealtimeOVapi;
 import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate;
 import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiVehiclePosition;
@@ -53,9 +65,9 @@ public class JourneyProcessor {
 	 * Last received KV6posinfo for this Journey
 	 */
 	private KV6posinfo posinfo;
-	
+
 	private Map<Integer, ArrayList<Mutation>> mutations;
-	
+
 	@Getter
 	@Setter
 	/**
@@ -64,7 +76,7 @@ public class JourneyProcessor {
 	private Map<Integer, KV6posinfo> reinforcements;
 	private Map<Integer, Long> realizedArrivals;
 	private Map<Integer, Long> realizedDepartures;
-	
+
 	private static final Logger _log = LoggerFactory.getLogger(JourneyProcessor.class);
 
 	private Journey _journey;
@@ -75,7 +87,7 @@ public class JourneyProcessor {
 		realizedArrivals = Maps.newHashMap();
 		realizedDepartures = Maps.newHashMap();
 	}
-	
+
 
 	public void clearKV6(){
 		posinfo = null;
@@ -98,11 +110,11 @@ public class JourneyProcessor {
 	// punctuality.
 
 
-	
+
 	public boolean hasMutations(){
 		return mutations.size() > 0 || _journey.isCanceled();
 	}
-	
+
 
 	public StopTimeEvent.Builder stopTimeEventDeparture(TimeDemandGroupPoint tpt,JourneyPatternPoint pt, int punctuality){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
@@ -131,7 +143,7 @@ public class JourneyProcessor {
 		}
 		return stopTimeEvent;
 	}
-	
+
 
 	private StopTimeEvent.Builder stopTimeEventArrivalRecorded(TimeDemandGroupPoint tpt, long time){
 		StopTimeEvent.Builder stopTimeEvent = StopTimeEvent.newBuilder();
@@ -146,7 +158,7 @@ public class JourneyProcessor {
 		}
 		return stopTimeEvent;
 	}
-	
+
 	/**
 	 * @return POSIX time when journey end in seconds since January 1st 1970 00:00:00 UTC
 	 */
@@ -318,7 +330,7 @@ public class JourneyProcessor {
 				if (tpt.getStopwaittime() == 0){
 					stopTimeEvent.setTime(time);
 					stopTimeEvent.setDelay(delay);
-					
+
 				}else if (delay <= 0){
 					stopTimeEvent.setTime(targettime);
 					stopTimeEvent.setDelay(0);
@@ -376,6 +388,15 @@ public class JourneyProcessor {
 		int punctuality = Math
 				.max(MIN_PUNCTUALITY, posinfo.getPunctuality() == null ? 0
 						: posinfo.getPunctuality());
+		PutServiceInfoIn putServiceinfo = new PutServiceInfoIn();
+		ServiceInfoServiceList serviceInfoList = new ServiceInfoServiceList();
+		putServiceinfo.setServiceInfoList(serviceInfoList);
+		ServiceInfoServiceType serviceInfo = new ServiceInfoServiceType();
+		serviceInfoList.getServiceInfo().add(serviceInfo);
+		serviceInfo.setCompanyCode(_journey.getAgencyId());
+		serviceInfo.setTransportModeCode(_journey.getRouteId()+"");
+		serviceInfo.setServiceCode(_journey.getId());
+		serviceInfo.setStopList(new StopList());
 		TripUpdate.Builder tripUpdate = TripUpdate.newBuilder();
 		tripUpdate.setTrip(_journey.tripDescriptor());
 		tripUpdate.setTimestamp(posinfo.getTimestamp());
@@ -512,7 +533,6 @@ public class JourneyProcessor {
 				if (pt.isScheduled()){
 					tripUpdate.addStopTimeUpdate(stopTimeUpdate);
 				}
-
 				punctuality = stopTimeUpdate.getDeparture().getDelay();
 				if (i+1 < _journey.getTimedemandgroup().getPoints().size()){
 					TimeDemandGroupPoint ntpt = _journey.getTimedemandgroup().getPoints().get(i+1);
@@ -547,6 +567,42 @@ public class JourneyProcessor {
 			}
 		}
 		this.posinfo = posinfo;
+		try{
+			for (StopTimeUpdate stopUpdate : tripUpdate.getStopTimeUpdateList()){
+				ServiceInfoStopType stop = new ServiceInfoStopType();
+				stop.setStopCode(stopUpdate.getStopId());
+				stop.setStopServiceCode(_journey.getId());
+				if (stopUpdate.getScheduleRelationship() == com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate.ScheduleRelationship.SKIPPED){
+					stop.setStopType(ServiceInfoStopKind.CANCELLED_STOP);
+				}
+				if (stopUpdate.hasArrival()){
+					GregorianCalendar cal = new GregorianCalendar();
+					cal.setTimeInMillis(stopUpdate.getArrival().getTime()*1000+stopUpdate.getArrival().getDelay()*1000);
+					stop.setArrival(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
+					stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(stopUpdate.getArrival().getDelay()*1000));			
+				}
+				if (stopUpdate.hasDeparture()){
+					GregorianCalendar cal = new GregorianCalendar();
+					cal.setTimeInMillis(stopUpdate.getDeparture().getTime()*1000+stopUpdate.getDeparture().getDelay()*1000);
+					stop.setDeparture(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
+					stop.setDepartureTimeDelay(DatatypeFactory.newInstance().newDuration(stopUpdate.getDeparture().getDelay()*1000));			
+				}
+				serviceInfo.getStopList().getStop().add(stop);
+				JAXBContext jc = null;
+				Marshaller marshaller = null;
+				try {
+					jc = JAXBContext.newInstance(PutServiceInfoIn.class);
+					marshaller = jc.createMarshaller();
+					marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+				} catch (JAXBException e1) {
+					_log.error("Error with JAXB",e1);
+					e1.printStackTrace();
+				}
+				marshaller.marshal(serviceInfo, System.out);
+			}
+		}catch (Exception e){
+			e.printStackTrace();
+		}
 		tripUpdate = filter(tripUpdate);
 		if (tripUpdate.getStopTimeUpdateCount() > 0)
 			return tripUpdate;
@@ -578,7 +634,7 @@ public class JourneyProcessor {
 		}
 	}
 
-	
+
 	private void parseMutateJourneyStop(Long timestamp, Mutation m)
 			throws StopNotFoundException {
 		JourneyPatternPoint pst = _journey.getJourneyStop(m.getUserstopcode(),m.getPassagesequencenumber());
@@ -601,7 +657,7 @@ public class JourneyProcessor {
 			break;
 		}
 	}
-	
+
 	public FeedEntity vehiclePosition(String id,JourneyProcessor journey,KV6posinfo posinfo,RIDservice ridService,GeometryService geomService){
 		FeedEntity.Builder feedEntity = FeedEntity.newBuilder();
 		feedEntity.setId(id);

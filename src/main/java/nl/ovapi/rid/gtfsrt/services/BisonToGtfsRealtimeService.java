@@ -253,8 +253,8 @@ public class BisonToGtfsRealtimeService {
 		_executor = Executors.newCachedThreadPool();
 		_scheduler = Executors.newScheduledThreadPool(5);
 		_scheduler.scheduleAtFixedRate(new GarbageCollectorTask(), 60, GARBAGE_COLLECTOR_INTERVAL_SECONDS, TimeUnit.SECONDS);
-		//_task = _executor.submit(new ProcessTask());
-		//_task = _executor.submit(new ReceiveTask());
+		_task = _executor.submit(new ProcessTask());
+		_task = _executor.submit(new ReceiveTask());
 		try {
 			_executor.submit(new ProcessKV15Task(_ridService.getActiveKV15messages()));
 		} catch (SQLException e) {
