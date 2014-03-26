@@ -97,7 +97,13 @@ public class Journey {
 	 */
 	private Long routeId;
 
-
+	@Getter
+	@Setter
+	/**
+	 * Availabilitycondition.
+	 */
+	private Long availabilityConditionRef;
+	
 	@Getter
 	@Setter
 	/**

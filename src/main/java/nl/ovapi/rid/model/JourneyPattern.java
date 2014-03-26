@@ -111,6 +111,13 @@ public class JourneyPattern implements Cloneable{
 		 * This point is added on the planned schedule.
 		 */
 		private boolean added = false;
+		
+		@Getter
+		@Setter
+		/**
+		 * DestinationCode as set in Koppelvlak1;
+		 */
+		private String destinationCode;
 
 	}
 	

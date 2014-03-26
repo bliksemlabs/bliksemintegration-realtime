@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -57,7 +56,6 @@ public class RIDservice {
 	private static final String url = "jdbc:postgresql://localhost/ridprod";
 	private static final String user = "rid";
 	private static final String password = "bliksem";
-
 	private HashFunction hf = Hashing.crc32();
 
 	private Map<String, Journey> journeys = Maps.newHashMapWithExpectedSize(0);
@@ -216,7 +214,6 @@ public class RIDservice {
 	public void start() throws SQLException {
 		update();
 		_scheduler = Executors.newScheduledThreadPool(5);
-
 		Calendar c = Calendar.getInstance();
 		c.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));		
 		long now = c.getTimeInMillis();
@@ -310,6 +307,8 @@ public class RIDservice {
 				point.setWaitpoint(rs.getBoolean(5));
 				point.setDistancefromstartroute(rs.getInt(6));
 				point.setScheduled(rs.getBoolean(7));
+				point.setDestinationCode(rs.getString(8));
+				System.out.println(rs.getString(8));
 				jp.add(point);
 			}
 			journeypatterns.put(journeypatternRef, jp);
@@ -344,6 +343,7 @@ public class RIDservice {
 				}
 				journey.setPrivateCode(rs.getString(9));
 				journey.setRouteId(rs.getLong(10));
+				journey.setAvailabilityConditionRef(rs.getLong(11));
 				if (newJourneys.containsKey(key)){ //Trains can have multiple journeys under same trainnumer
 					_log.info("Duplicate privatecodes ignoring one of {}",rs.getString(1));
 				}else{
