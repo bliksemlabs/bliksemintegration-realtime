@@ -309,6 +309,8 @@ public class RIDservice {
 				point.setScheduled(rs.getBoolean(7));
 				point.setDestinationCode(rs.getString(8));
 				point.setPlatformCode(rs.getString(9));
+				jp.setDirectiontype(rs.getInt(10));
+				jp.setJourneyPatternRef(journeypatternRef);
 				jp.add(point);
 			}
 			journeypatterns.put(journeypatternRef, jp);
@@ -358,7 +360,6 @@ public class RIDservice {
 			Block block = null;
 			while (rs.next()) {
 				String key = hf.hashString(rs.getString(1)).toString();
-				long id = rs.getLong(2);
 				Journey journey = new Journey();
 				journey.setId(rs.getLong(2)+"");
 				journey.setJourneypattern(newJourneypatterns.get(rs.getString(3).intern()));

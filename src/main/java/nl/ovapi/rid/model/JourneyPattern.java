@@ -14,6 +14,7 @@ public class JourneyPattern implements Cloneable{
 
 	public JourneyPattern (JourneyPattern toClone) {
 		this.directiontype = toClone.directiontype == null ? null : toClone.directiontype.intValue();
+		this.journeyPatternRef = toClone.journeyPatternRef;
 		this.points = new ArrayList<JourneyPatternPoint>(toClone.getPoints().size());
 		for (JourneyPatternPoint pt : toClone.getPoints()){
 			this.points.add(pt.clone());
@@ -43,6 +44,8 @@ public class JourneyPattern implements Cloneable{
 			this.scheduled = toClone.scheduled;
 			this.skipped = toClone.skipped;
 			this.waitpoint = toClone.waitpoint;
+			this.destinationCode = toClone.destinationCode;
+			this.platformCode = toClone.platformCode;
 		}
 		
 		@Override
@@ -118,7 +121,13 @@ public class JourneyPattern implements Cloneable{
 		 * DestinationCode as set in Koppelvlak1;
 		 */
 		private String destinationCode;
-
+		
+		@Getter
+		@Setter
+		/**
+		 * PlatformCode / sideCode;
+		 */
+		private String platformCode;
 	}
 	
 	/**
@@ -154,6 +163,8 @@ public class JourneyPattern implements Cloneable{
 	 * List with StopPoints in JourneyPattern
 	 */
 	@Getter private ArrayList<JourneyPatternPoint> points;
+	
+	@Getter @Setter private String journeyPatternRef;
 	
 	/**
 	 * Add point to JourneyPattern

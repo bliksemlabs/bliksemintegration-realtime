@@ -2,7 +2,6 @@ package nl.ovapi.rid.model;
 
 import java.util.ArrayList;
 
-import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;

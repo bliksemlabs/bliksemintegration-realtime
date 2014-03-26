@@ -14,7 +14,7 @@ public class Database {
 			"ORDER BY validdate,blockref,departuretime;";
 	
 	public final static String journeyPatternQuery = 
-			"SELECT journeypatternref,pointorder,pointref,s.privatecode,iswaitpoint,distancefromstartroute,isscheduled,split_part(coalesce(d.operator_id,dj.operator_id),':',2) as destinationcode,platformcode FROM pointinjourneypattern JOIN stoppoint as s ON (s.id = pointref) LEFT JOIN destinationdisplay as d ON (d.id = destinationdisplayref) JOIN journeypattern as jp ON (jp.id = journeypatternref) LEFT JOIN destinationdisplay as dj ON (dj.id = jp.destinationdisplayref)"+
+			"SELECT journeypatternref,pointorder,pointref,s.privatecode,iswaitpoint,distancefromstartroute,isscheduled,split_part(coalesce(d.operator_id,dj.operator_id),':',2) as destinationcode,platformcode,directiontype FROM pointinjourneypattern JOIN stoppoint as s ON (s.id = pointref) LEFT JOIN destinationdisplay as d ON (d.id = destinationdisplayref) JOIN journeypattern as jp ON (jp.id = journeypatternref) LEFT JOIN destinationdisplay as dj ON (dj.id = jp.destinationdisplayref)"+
 					"WHERE journeypatternref in (SELECT DISTINCT journeypatternref FROM journey JOIN availabilityconditionday USING (availabilityconditionref) JOIN journeypattern as j ON (j.id = journeypatternref) JOIN route as r ON (r.id = routeref) JOIN line as l ON (l.id = lineref) WHERE isavailable = true AND validdate in (date 'yesterday',date 'today',date 'tomorrow') AND coalesce(monitored,true) = true) "+
 					"ORDER BY journeypatternref,pointorder;";
 
