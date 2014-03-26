@@ -308,7 +308,7 @@ public class RIDservice {
 				point.setDistancefromstartroute(rs.getInt(6));
 				point.setScheduled(rs.getBoolean(7));
 				point.setDestinationCode(rs.getString(8));
-				System.out.println(rs.getString(8));
+				point.setPlatformCode(rs.getString(9));
 				jp.add(point);
 			}
 			journeypatterns.put(journeypatternRef, jp);
