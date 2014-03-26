@@ -44,6 +44,8 @@ public class DatedPasstime {
 	@Getter @Setter private JourneyStopType journeyStopType;
 	@Getter @Setter private Integer targetArrivalTime;
 	@Getter @Setter private Integer targetDepartureTime;
+	@Getter @Setter private Integer recordedArrivalTime;
+	@Getter @Setter private Integer recordedDepartureTime;
 
 	private static int secondsSinceMidnight(String hhmmss) {
 		String[] time = hhmmss.split(":");
