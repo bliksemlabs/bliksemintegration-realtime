@@ -50,6 +50,7 @@ public class KV17Test {
 
 	public static JourneyPattern testPattern(){
 		JourneyPattern jp = new JourneyPattern();
+		jp.setJourneyPatternRef("403");
 		jp.setDirectiontype(2);
 		JourneyPatternPoint pt = new JourneyPatternPoint();
 		pt.setDistancefromstartroute(0);
