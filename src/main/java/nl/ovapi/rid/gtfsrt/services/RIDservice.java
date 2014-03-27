@@ -334,8 +334,10 @@ public class RIDservice {
 				if (journey.getTimedemandgroup() == null)
 					_log.error("TimeDemandGroup == null {} {}",rs.getString(1),rs.getString(4));
 				journey.setDeparturetime(rs.getInt(5));
-				if (rs.getString(6) != null){
-					journey.setWheelchairaccessible("true".equals(rs.getString(6)));
+				if (rs.getString(6) == null){
+					journey.setWheelchairaccessible(null);
+				}else{
+					journey.setWheelchairaccessible(rs.getBoolean(6));
 				}
 				journey.setAgencyId(rs.getString(7));
 				journey.setOperatingDay(rs.getString(8));
@@ -369,8 +371,10 @@ public class RIDservice {
 				if (journey.getTimedemandgroup() == null)
 					_log.error("TimeDemandGroup == null {} {}",rs.getString(1),rs.getString(4));
 				journey.setDeparturetime(rs.getInt(5));
-				if (rs.getString(6) != null){
-					journey.setWheelchairaccessible("true".equals(rs.getString(6)));
+				if (rs.getString(6) == null){
+					journey.setWheelchairaccessible(null);
+				}else{
+					journey.setWheelchairaccessible(rs.getBoolean(6));
 				}
 				journey.setAgencyId(rs.getString(7));
 				journey.setOperatingDay(rs.getString(8));
