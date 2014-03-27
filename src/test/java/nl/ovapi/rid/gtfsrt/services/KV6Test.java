@@ -2,13 +2,11 @@ package nl.ovapi.rid.gtfsrt.services;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 
 import nl.ovapi.bison.model.DataOwnerCode;
 import nl.ovapi.bison.model.JourneyProcessor;
@@ -130,6 +128,7 @@ public class KV6Test {
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		j.setOperatingDay(df.format(c.getTime()));
 		j.setJourneypattern(testPattern());
+		j.setAvailabilityConditionRef(0L);
 		j.setTimedemandgroup(testGroup());
 		j.setPrivateCode("QBUZZ:g005:1045");
 		return j;
