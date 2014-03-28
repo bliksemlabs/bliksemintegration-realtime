@@ -500,16 +500,16 @@ public class JourneyProcessor {
 		clearKV17mutations();
 
 		for (KV17cvlinfo cvlinfo : cvlinfos) {
-			for (Mutation mut : cvlinfo.getMutations()) {
+			SCAN_MUTATIONS: for (Mutation mut : cvlinfo.getMutations()) {
 				try {
 					timestamp = Math.max(timestamp, cvlinfo.getTimestamp());
 					switch (mut.getMessagetype()) {
 					case KV17MUTATEJOURNEY:
 						parseMutateJourney(cvlinfo.getTimestamp(), mut);
-						continue;
+						continue SCAN_MUTATIONS;
 					case KV17MUTATEJOURNEYSTOP:
 						parseMutateJourneyStop(cvlinfo.getTimestamp(), mut);
-						continue;
+						continue SCAN_MUTATIONS;
 					}
 				} catch (Exception e) {
 					_log.error("Error applying KV17",e);
@@ -809,7 +809,11 @@ public class JourneyProcessor {
 		return decayeddelay;
 	}
 
-	public TripUpdate.Builder tripUpdateFromKV8() throws ParseException{
+	/**
+	 * @return
+	 * @throws ParseException
+	 */
+	public TripUpdate.Builder tripUpdateFromKV8(){
 		TripUpdate.Builder trip = TripUpdate.newBuilder();
 		trip.setTrip(_journey.tripDescriptor());
 		for (DatedPasstime dp : datedPasstimes){
@@ -858,9 +862,13 @@ public class JourneyProcessor {
 		return trip;
 	}
 
-	public int secondsSince1970(String operatingDate, int secondsSinceMidnight) throws ParseException{
+	public int secondsSince1970(String operatingDate, int secondsSinceMidnight){
 		Calendar c = Calendar.getInstance(TimeZone.getDefault());
-		c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(_journey.getOperatingDay()));
+		try{
+			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(_journey.getOperatingDay()));
+		}catch (Exception e){
+			_log.error("Parse operatingday fail {}",_journey.getOperatingDay());
+		}
 		c.set(Calendar.HOUR, 0);
 		c.set(Calendar.MINUTE, 0);
 		c.set(Calendar.SECOND, 0);
