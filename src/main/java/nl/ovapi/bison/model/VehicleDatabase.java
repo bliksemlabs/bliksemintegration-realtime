@@ -69,8 +69,12 @@ public class VehicleDatabase {
 				return new VehicleType("Mercedes-Benz Sprinter",false);
 			}
 			return null;
-		}else if (DataOwnerCode.QBUZZ == posinfo.getDataownercode()){
-			
+		}else if (DataOwnerCode.ARR == posinfo.getDataownercode()){
+			if (posinfo.getVehiclenumber() >= 6451 && posinfo.getVehiclenumber() <= 6464){
+				return new VehicleType("Irisbus Crossway LE",true);
+			}else if (posinfo.getVehiclenumber() == 6522){
+				return new VehicleType("Mercedes-Benz Sprinter",false);
+			}
 		}
 		return null;
 	}
