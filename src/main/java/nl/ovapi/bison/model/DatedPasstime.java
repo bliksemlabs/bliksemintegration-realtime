@@ -1,13 +1,15 @@
 package nl.ovapi.bison.model;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
-import com.google.common.base.Objects;
-
-import nl.ovapi.bison.sax.DateUtils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import nl.ovapi.bison.sax.DateUtils;
+
+import com.google.common.base.Objects;
 
 @ToString()
 /**
@@ -55,6 +57,16 @@ public class DatedPasstime {
 	@Getter private Integer recordedArrivalTime;
 	@Getter private Integer recordedDepartureTime;
 
+	/**
+	 * KV17 lag in seconds
+	 */
+	@Getter @Setter private Integer lag;
+	
+	/**
+	 * Distance since start trip in meters
+	 */
+	@Getter @Setter private Integer distanceDriven;
+		
 	public void setReasonType(ReasonType reasonType) {
 		if (!Objects.equal(reasonType, this.reasonType)){
 			this.setLastUpdateTimeStamp(System.currentTimeMillis());
@@ -304,6 +316,70 @@ public class DatedPasstime {
 		int seconds = Integer.parseInt(time[2]);
 		return (hours * 60 + minutes) * 60 + seconds;
 	}
+	
+	private static String to32Time(Integer secondsSinceMidnight) {
+		if (secondsSinceMidnight == null){
+			return null;
+		}
+		int hours = secondsSinceMidnight/3600;
+		int seconds = secondsSinceMidnight % 3600;
+		int minutes = seconds / 60;
+		seconds = seconds % 60;
+		return String.format("%02d:%02d:%02d",hours,minutes,seconds);
+	}
+	
+
+	public String toCtxLine(){
+		StringBuilder sb = new StringBuilder();
+		sb.append(dataOwnerCode.name()).append('|');
+		sb.append(operationDate).append('|');
+		sb.append(linePlanningNumber).append('|');
+		sb.append(journeyNumber).append('|');
+		sb.append(fortifyOrderNumber).append('|');
+		sb.append(userStopOrderNumber).append('|');
+		sb.append(userStopCode).append('|');
+		sb.append(localServiceLevelCode).append('|');
+		sb.append(journeyPatternCode).append('|');
+		sb.append(lineDirection).append('|');
+		SimpleDateFormat iso8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+		sb.append(iso8601.format(new Date(lastUpdateTimeStamp))).append('|');
+		sb.append(destinationCode).append('|');
+		sb.append(isTimingStop ? 1 : 0).append('|');
+		String eta = to32Time(expectedArrivalTime);
+		sb.append(eta == null ? "\\0" : eta).append('|');
+		String etd = to32Time(expectedArrivalTime);
+		sb.append(etd == null ? "\\0" : etd).append('|');
+		sb.append(tripStopStatus.name()).append('|');
+		sb.append(messageContent == null ? "\\0" : messageContent).append('|');
+		sb.append(messageType == null ? "\\0" : messageType).append('|');
+		sb.append(sideCode == null ? "\\0" : sideCode).append('|');
+		sb.append(numberOfCoaches == null ? "\\0" : numberOfCoaches).append('|');
+		sb.append(wheelChairAccessible == null ? WheelChairAccessible.UNKNOWN : wheelChairAccessible).append('|');
+		sb.append(operatorCode == null ? "\\0" : operatorCode).append('|');
+		
+		sb.append(reasonType == null ? "\\0" : reasonType.name()).append('|');
+		sb.append(subReasonType == null ? "\\0" : subReasonType.name()).append('|');
+		sb.append(reasonContent == null ? "\\0" : reasonContent).append('|');
+		
+		sb.append(adviceType == null ? "\\0" : adviceType.name()).append('|');
+		sb.append(subAdviceType == null ? "\\0" : subAdviceType.name()).append('|');
+		sb.append(adviceContent == null ? "\\0" : adviceContent).append('|');
+
+		sb.append(timingPointDataOwnerCode == null ? "\\0" : timingPointDataOwnerCode.name()).append('|');
+		sb.append(timingPointCode == null ? "\\0" : timingPointCode).append('|');
+		sb.append(journeyStopType == null ? "\\0" : journeyStopType.name()).append('|');
+		
+		String tta = to32Time(targetArrivalTime);
+		sb.append(tta == null ? "\\0" : tta).append('|');
+		String ttd = to32Time(targetDepartureTime);
+		sb.append(ttd == null ? "\\0" : ttd).append('|');
+		String rta = to32Time(recordedArrivalTime);
+		sb.append(rta == null ? "\\0" : rta).append('|');
+		String rtd = to32Time(recordedDepartureTime);
+		sb.append(rtd == null ? "\\0" : rtd).append('|');
+		return sb.toString();
+	}
+
 
 	public static DatedPasstime fromCtxLine(String line){
 		String[] v = line.split("\\|");

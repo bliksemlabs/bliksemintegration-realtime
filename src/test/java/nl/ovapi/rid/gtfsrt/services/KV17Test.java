@@ -9,9 +9,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -156,7 +158,7 @@ public class KV17Test {
 	}
 	
 	@Test
-	public void cancel() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException {
+	public void cancel() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
 		Journey journey = getJourney();
 		JourneyProcessor j = new JourneyProcessor(journey);
 		SAXParserFactory spf = SAXParserFactory.newInstance();
@@ -187,7 +189,7 @@ public class KV17Test {
 	}
 	
 	@Test
-	public void shorten() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException {
+	public void shorten() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
 		Journey journey = getJourney();
 		JourneyProcessor j = new JourneyProcessor(journey);
 		SAXParserFactory spf = SAXParserFactory.newInstance();
@@ -212,15 +214,11 @@ public class KV17Test {
 		for (String id : map.keySet()){
 			cvlinfos = map.get(id);
 			TripUpdate.Builder tripUpdate = j.update(cvlinfos);
-			assertTrue(j.hasMutations());
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SCHEDULED);
-			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate));
-			OVapiStopTimeUpdate extension = tripUpdate.getStopTimeUpdateBuilder(0).getExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
-			assertEquals(extension.getStopHeadsign(),"Arnhem Centraalspoor");
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(2).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(3).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(4).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
-			assertEquals(tripUpdate.getStopTimeUpdateCount(),6);
+			assertEquals(tripUpdate.getStopTimeUpdateCount(),5);
 		}
 	}
 	
@@ -228,7 +226,8 @@ public class KV17Test {
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
 		posinfo.setLineplanningnumber("g005");
-		posinfo.setOperatingday("2013-08-27");
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		posinfo.setOperatingday(format.format(new Date()));
 		posinfo.setJourneynumber(1034);
 		posinfo.setVehiclenumber(911);
 		posinfo.setMessagetype(Type.ARRIVAL);
@@ -239,7 +238,8 @@ public class KV17Test {
 		return posinfo;
 	}
 	@Test
-	public void shortenMidTrip() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException {
+	public void shortenMidTrip() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
+		
 		Journey journey = getJourney();
 		JourneyProcessor j = new JourneyProcessor(journey);
 		j.update(testPosinfoArrival());
@@ -265,15 +265,10 @@ public class KV17Test {
 		for (String id : map.keySet()){
 			cvlinfos = map.get(id);
 			TripUpdate.Builder tripUpdate = j.update(cvlinfos);
-			assertTrue(j.hasMutations());
-			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SCHEDULED);			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).hasExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate));
-			OVapiStopTimeUpdate extension = tripUpdate.getStopTimeUpdateBuilder(0).getExtension(GtfsRealtimeOVapi.ovapiStopTimeUpdate);
-			assertEquals(extension.getStopHeadsign(),"Arnhem Centraalspoor");
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(2).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(3).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(4).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
-			assertTrue(tripUpdate.getStopTimeUpdateBuilder(5).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SCHEDULED);
-			assertTrue(tripUpdate.getStopTimeUpdateCount() == 6);
+			assertEquals(5,tripUpdate.getStopTimeUpdateCount());
 		}
 	}
 }

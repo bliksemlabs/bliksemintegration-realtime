@@ -4,7 +4,7 @@ public enum ReasonType{
 
 	public static ReasonType parse(String value){
 		if (value == null)
-			value = "";
+			return null;
 		if ("0".equals(value))
 			return UNKNOWN;
 		else if ("1".equals(value))

@@ -4,7 +4,7 @@ public enum SubAdviceType{
 
 	public static SubAdviceType parse(String value){
 		if (value == null)
-			value = "";
+			return null;
 		if ("0".equals(value))
 			return NONE;
 		else if ("1".equals(value))
@@ -17,6 +17,6 @@ public enum SubAdviceType{
 			return TRAVEL_VIA;
 		else if ("3_3".equals(value))
 			return BOARD_EXIT;	
-		else return NONE;
+		else return null;
 	}
 }

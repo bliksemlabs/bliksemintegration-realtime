@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -135,8 +136,9 @@ public class KV6Test {
 		return j;
 	}
 	@Test
-	public void testNegativeOnFirstStopAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException{
+	public void testNegativeOnFirstStopAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
 		Journey journey = getJourney();
+		journey.setPrivateCode("QBUZZ:g005:432");
 		JourneyProcessor j = new JourneyProcessor(journey);
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
@@ -148,7 +150,7 @@ public class KV6Test {
 		posinfo.setUserstopcode("10006900");
 		posinfo.setPunctuality(-120);
 		posinfo.setTimestamp(journey.getDepartureEpoch()-60);
-		posinfo.setPassagesequencenumber(-120);
+		posinfo.setPassagesequencenumber(0);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
@@ -161,7 +163,7 @@ public class KV6Test {
 	}
 	
 	@Test
-	public void testNegativeOnFirstStopNotAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException{
+	public void testNegativeOnFirstStopNotAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
 		Journey journey = getJourney();
 		JourneyProcessor j = new JourneyProcessor(journey);
 		journey.getJourneypattern().getPoint(1).setWaitpoint(false);
@@ -187,7 +189,7 @@ public class KV6Test {
 
 	}
 	@Test
-	public void testNegativeOnTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException{
+	public void testNegativeOnTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
 		Journey journey = getJourney();
 		JourneyProcessor j = new JourneyProcessor(journey);
 		journey.getJourneypattern().getPoint(3).setWaitpoint(true);
@@ -212,8 +214,9 @@ public class KV6Test {
 	}
 	
 	@Test
-	public void testNegativeOnDepartureFirstStop() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException{
+	public void testNegativeOnDepartureFirstStop() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
 		Journey journey = getJourney();
+		journey.setPrivateCode("CXX:TOOEARLYF:112");
 		JourneyProcessor j = new JourneyProcessor(journey);
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
@@ -230,5 +233,28 @@ public class KV6Test {
 		assertEquals(1,tripUpdate.getStopTimeUpdateCount());
 		assertFalse(tripUpdate.getStopTimeUpdate(0).hasArrival());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getDelay(),0);
+	}
+	
+	@Test
+	public void testDelayOnDepartureFirstStop() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
+		Journey journey = getJourney();
+		journey.setPrivateCode("CXX:DELAYF:113");
+		JourneyProcessor j = new JourneyProcessor(journey);
+		KV6posinfo posinfo = new KV6posinfo();
+		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
+		posinfo.setLineplanningnumber("g005");
+		posinfo.setOperatingday(journey.getOperatingDay());
+		posinfo.setJourneynumber(1034);
+		posinfo.setVehiclenumber(911);
+		posinfo.setMessagetype(Type.DEPARTURE);
+		posinfo.setUserstopcode("10006900");
+		posinfo.setPunctuality(+100);
+		posinfo.setTimestamp(journey.getDepartureEpoch()+20);
+		posinfo.setPassagesequencenumber(0);
+		TripUpdate.Builder tripUpdate = j.update(posinfo);
+		System.out.println(tripUpdate.build());
+		assertEquals(5,tripUpdate.getStopTimeUpdateCount());
+		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
+		assertEquals(tripUpdate.getStopTimeUpdate(4).getDeparture().getDelay(),0);
 	}
 }

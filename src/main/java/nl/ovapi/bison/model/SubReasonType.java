@@ -16,7 +16,7 @@ public enum SubReasonType{
 
 	public static SubReasonType parse(String value){
 		if (value == null)
-			value = "";
+			return null;
 		if ("0_1".equals(value))
 			return Eerdere_verstoring;
 		else if ("26_1".equals(value))
@@ -154,6 +154,6 @@ public enum SubReasonType{
 		else if ("255_1".equals(value))
 			return Blikseminslag;
 		else
-			return Onbekend;
+			return null;
 	}
 }
