@@ -265,7 +265,7 @@ public class JourneyProcessor {
 			datedPasstimes.add(dp);
 		}
 	}
-	
+
 	/**
 	 * Clear
 	 *  KV6 posinfo object.
@@ -404,91 +404,88 @@ public class JourneyProcessor {
 	}
 
 	public FeedEntity vehiclePosition(String id,JourneyProcessor journey,KV6posinfo posinfo,RIDservice ridService,GeometryService geomService){
+		switch(posinfo.getMessagetype()){
+		case DELAY:
+		case END://These messagetype do not contain vehicle-position information
+			return null;
+		default:
+			break;
+		}
 		FeedEntity.Builder feedEntity = FeedEntity.newBuilder();
 		feedEntity.setId(id);
 		VehiclePosition.Builder vehiclePosition = VehiclePosition.newBuilder();
 		int delay = posinfo.getPunctuality() == null ? 0 : posinfo.getPunctuality();
-		switch (posinfo.getMessagetype()){
-		case END:
-			return null;
-		case DELAY:
-			TimeDemandGroupPoint firstTimePoint = _journey.getTimedemandgroup().getPoints().get(0);
-			JourneyPatternPoint firstPatternPoint = _journey.getJourneypattern().getPoint(firstTimePoint.getPointorder());
-			vehiclePosition.setStopId(firstPatternPoint.getPointref().toString());
-			vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
-			vehiclePosition.setCurrentStopSequence(firstTimePoint.getPointorder());
-			delay = Math.max(0, delay);
-			break;
-		case INIT:
-		case ARRIVAL:
-		case ONSTOP:
-			for (JourneyPatternPoint point : _journey.getJourneypattern().getPoints()){
-				if (point.getOperatorpointref().equals(posinfo.getUserstopcode())){
-					vehiclePosition.setStopId(point.getPointref().toString());
-					vehiclePosition.setCurrentStopSequence(point.getPointorder());
+
+		int passageSequence = 0; //Counter for how many times we came across the userstopcode in posinfo
+
+		for (int i = 0; i < datedPasstimes.size();i++){
+			DatedPasstime dp = datedPasstimes.get(i);
+			boolean userStopMatches = dp.getUserStopCode().equals(posinfo.getUserstopcode());
+			if (userStopMatches && passageSequence == posinfo.getPassagesequencenumber()){
+				//Find datedpasstime of next scheduled stoppoint
+				DatedPasstime dpNext = null;
+				SCAN_NEXT : for (int j = i; i < datedPasstimes.size();i++){
+					if (datedPasstimes.get(i).getJourneyStopType() != JourneyStopType.INFOPOINT){
+						dpNext = datedPasstimes.get(i); // First non Dummy stop
+						break SCAN_NEXT;
+					}
+				}
+				switch (posinfo.getMessagetype()){
+				case ARRIVAL:
+				case ONSTOP:
+				case INIT:
 					vehiclePosition.setCurrentStatus(VehicleStopStatus.STOPPED_AT);
-					StopPoint sp = ridService.getStopPoint(point.getPointref());
-					if ((posinfo.getRd_x() == null || posinfo.getRd_x() == -1) && sp != null){
+					vehiclePosition.setCurrentStopSequence(dp.getUserStopOrderNumber());
+					StopPoint sp = ridService.getStopPoint(Long.valueOf(dp.getTimingPointCode()));
+					if (sp != null){
 						Builder position = Position.newBuilder();
 						position.setLatitude(sp.getLatitude());
 						position.setLongitude(sp.getLongitude());
 						vehiclePosition.setPosition(position);
 					}
-					if (point.isWaitpoint() && delay < 0){
+					break;
+				case DEPARTURE: //Set location of stop
+					sp = ridService.getStopPoint(Long.valueOf(dp.getTimingPointCode()));
+					if (sp != null){
+						Builder position = Position.newBuilder();
+						position.setLatitude(sp.getLatitude());
+						position.setLongitude(sp.getLongitude());
+						vehiclePosition.setPosition(position);
+					}
+					break;
+				case OFFROUTE:
+				case ONROUTE:
+					vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
+					vehiclePosition.setStopId(dpNext.getTimingPointCode());
+					vehiclePosition.setCurrentStopSequence(dpNext.getUserStopOrderNumber());
+					break;
+				default:
+					return null;
+				}
+				if (posinfo.getRd_x() != null){
+					Position position = geomService.toWGS84(posinfo.getRd_x(), posinfo.getRd_y());
+					if (position != null)
+						vehiclePosition.setPosition(position);
+				}
+				TripDescriptor.Builder tripDescription = _journey.tripDescriptor();
+				if (posinfo.getReinforcementnumber() > 0){
+					tripDescription.setScheduleRelationship(ScheduleRelationship.ADDED);
+				}
+				//Set punctuality in OVapi extension
+				if (posinfo.getPunctuality() != null){
+					OVapiVehiclePosition.Builder ovapiVehiclePosition = OVapiVehiclePosition.newBuilder();
+					if (vehiclePosition.hasCurrentStopSequence() && vehiclePosition.getCurrentStopSequence() <= 1 && delay < 0){
 						delay = 0;
 					}
+					ovapiVehiclePosition.setDelay(delay);
+					vehiclePosition.setExtension(GtfsRealtimeOVapi.ovapiVehiclePosition, ovapiVehiclePosition.build());
 				}
+				feedEntity.setVehicle(vehiclePosition);
+			}else if (userStopMatches){
+				passageSequence++;
 			}
-			break;
-		case DEPARTURE:
-		case OFFROUTE:
-		case ONROUTE:
-			boolean passed = false;
-			for (JourneyPatternPoint point : _journey.getJourneypattern().getPoints()){
-				if (point.getOperatorpointref().equals(posinfo.getUserstopcode())){
-					passed = true;
-					StopPoint sp = ridService.getStopPoint(point.getPointref());
-					vehiclePosition.setCurrentStopSequence(point.getPointorder());
-					if (posinfo.getMessagetype() == Type.DEPARTURE && sp != null){
-						Builder position = Position.newBuilder();
-						position.setLatitude(sp.getLatitude());
-						position.setLongitude(sp.getLongitude());
-						vehiclePosition.setPosition(position);
-						if (delay < 0 &&  point.isWaitpoint()){
-							delay = 0;
-						}
-					}
-				}else if (passed && point.isScheduled()){
-					vehiclePosition.setStopId(point.getPointref().toString());
-					vehiclePosition.setCurrentStopSequence(point.getPointorder());
-					vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
-				}
-			}
-			break;
 		}
-		if (posinfo.getRd_x() != null){
-			Position position = geomService.toWGS84(posinfo.getRd_x(), posinfo.getRd_y());
-			if (position != null)
-				vehiclePosition.setPosition(position);
-		}
-		TripDescriptor.Builder tripDescription = _journey.tripDescriptor();
-		if (posinfo.getReinforcementnumber() > 0){
-			tripDescription.setScheduleRelationship(ScheduleRelationship.ADDED);
-		}
-		vehiclePosition.setTrip(tripDescription);
-		if (posinfo.getVehicleDescription() != null)
-			vehiclePosition.setVehicle(posinfo.getVehicleDescription());
-		vehiclePosition.setTimestamp(posinfo.getTimestamp());
-		if (posinfo.getPunctuality() != null){
-			OVapiVehiclePosition.Builder ovapiVehiclePosition = OVapiVehiclePosition.newBuilder();
-			if (vehiclePosition.hasCurrentStopSequence() && vehiclePosition.getCurrentStopSequence() <= 1 && delay < 0){
-				delay = 0;
-			}
-			ovapiVehiclePosition.setDelay(delay);
-			vehiclePosition.setExtension(GtfsRealtimeOVapi.ovapiVehiclePosition, ovapiVehiclePosition.build());
-		}
-		feedEntity.setVehicle(vehiclePosition);
-		return feedEntity.build();
+		return null;
 	}	
 
 	public TripUpdate.Builder update(ArrayList<KV17cvlinfo> cvlinfos) throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
@@ -621,7 +618,6 @@ public class JourneyProcessor {
 	 * @param posinfo KV6posinfo object
 	 */
 	private void setTripStatus(KV6posinfo posinfo){
-
 		//beforeCurrent: we're scanning prior to the current stop in Posinfo
 		//Delay messages are always "before the current stop"
 		boolean beforeCurrent = posinfo.getMessagetype() != Type.DELAY; 
@@ -897,7 +893,6 @@ public class JourneyProcessor {
 		}
 		setRecordedTimes(posinfo);
 		if (this.posinfo == null || posinfo.getTimestamp() >= this.posinfo.getTimestamp()){  //This condition makes sure we're not overriding good information with out-of-sequence/old position info's
-
 			if (posinfo.getMessagetype() == Type.INIT)
 				initTrip(posinfo);
 			setTripStatus(posinfo);
