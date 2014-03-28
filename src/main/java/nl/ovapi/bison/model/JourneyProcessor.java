@@ -424,8 +424,8 @@ public class JourneyProcessor {
 			if (userStopMatches && passageSequence == posinfo.getPassagesequencenumber()){
 				//Find datedpasstime of next scheduled stoppoint
 				DatedPasstime dpNext = null;
-				SCAN_NEXT : for (int j = i; i < datedPasstimes.size();i++){
-					if (datedPasstimes.get(i).getJourneyStopType() != JourneyStopType.INFOPOINT){
+				SCAN_NEXT : for (int j = i+1; j < datedPasstimes.size();j++){
+					if (datedPasstimes.get(j).getJourneyStopType() != JourneyStopType.INFOPOINT){
 						dpNext = datedPasstimes.get(i); // First non Dummy stop
 						break SCAN_NEXT;
 					}
@@ -452,7 +452,6 @@ public class JourneyProcessor {
 						position.setLongitude(sp.getLongitude());
 						vehiclePosition.setPosition(position);
 					}
-					break;
 				case OFFROUTE:
 				case ONROUTE:
 					vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
@@ -481,6 +480,7 @@ public class JourneyProcessor {
 					vehiclePosition.setExtension(GtfsRealtimeOVapi.ovapiVehiclePosition, ovapiVehiclePosition.build());
 				}
 				feedEntity.setVehicle(vehiclePosition);
+				return feedEntity.build();
 			}else if (userStopMatches){
 				passageSequence++;
 			}
@@ -906,12 +906,12 @@ public class JourneyProcessor {
 			setTripStatus(posinfo);
 			setPunctuality(posinfo);
 			this.posinfo = posinfo;
-			StringBuilder sb = new StringBuilder();
+			/*StringBuilder sb = new StringBuilder();
 			for (DatedPasstime dp : datedPasstimes){
 				sb.append(dp.toCtxLine());
 				sb.append("\n");
 			}
-			System.out.println(sb.toString());
+			System.out.println(sb.toString());*/
 		}
 		return filter(tripUpdateFromKV8());
 	}		
