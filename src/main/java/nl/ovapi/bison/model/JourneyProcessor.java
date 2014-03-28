@@ -454,6 +454,9 @@ public class JourneyProcessor {
 					}
 				case OFFROUTE:
 				case ONROUTE:
+					if (dpNext == null){
+						return null;
+					}
 					vehiclePosition.setCurrentStatus(VehicleStopStatus.IN_TRANSIT_TO);
 					vehiclePosition.setStopId(dpNext.getTimingPointCode());
 					vehiclePosition.setCurrentStopSequence(dpNext.getUserStopOrderNumber());
