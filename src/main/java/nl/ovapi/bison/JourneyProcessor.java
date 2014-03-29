@@ -748,7 +748,7 @@ public class JourneyProcessor {
 						//Negative punctuality
 						int driveTime = dpNext.getTargetArrivalTime()-dp.getTargetDepartureTime();
 						int theoreticalMinDriveTime = theoreticalMinDriveTime(dpNext.getDistanceDriven()-dp.getDistanceDriven());
-						if (driveTime > theoreticalMinDriveTime){
+						if (driveTime < theoreticalMinDriveTime){
 							// Use too fast legs to reduce negative punctuality.
 							prognosis = decayByDistance(prognosis,
 									dpNext.getTargetArrivalTime()-dp.getTargetDepartureTime(),
