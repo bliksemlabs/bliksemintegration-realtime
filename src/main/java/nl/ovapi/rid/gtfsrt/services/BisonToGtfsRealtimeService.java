@@ -42,9 +42,6 @@ import nl.ovapi.exceptions.TooOldException;
 import nl.ovapi.exceptions.UnknownKV6PosinfoType;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.Journey;
-import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
-import nl.ovapi.rid.model.StopPoint;
-import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
 
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.Alerts;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripUpdates;
@@ -65,19 +62,11 @@ import com.google.common.collect.Maps;
 import com.google.transit.realtime.GtfsRealtime.Alert;
 import com.google.transit.realtime.GtfsRealtime.EntitySelector;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
-import com.google.transit.realtime.GtfsRealtime.Position;
-import com.google.transit.realtime.GtfsRealtime.Position.Builder;
 import com.google.transit.realtime.GtfsRealtime.TimeRange;
 import com.google.transit.realtime.GtfsRealtime.TranslatedString;
 import com.google.transit.realtime.GtfsRealtime.TranslatedString.Translation;
-import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
-import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
-import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
-import com.google.transit.realtime.GtfsRealtime.VehiclePosition.VehicleStopStatus;
-import com.google.transit.realtime.GtfsRealtimeOVapi;
-import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiVehiclePosition;
 
 @Singleton
 public class BisonToGtfsRealtimeService {
@@ -357,13 +346,6 @@ public class BisonToGtfsRealtimeService {
 				posinfo.getDataownercode().name(),
 				posinfo.getLineplanningnumber(),
 				posinfo.getJourneynumber());
-		if (posinfo.getDataownercode() == DataOwnerCode.GVB){
-			String newId = _ridService.getGVBdeltaId(id);
-			if (newId != null){
-				return newId;
-			}
-			_log.info("GVB delta ID not found {}",id);
-		}
 		return id;
 	}
 	private class ProcessKV6Task implements Runnable{

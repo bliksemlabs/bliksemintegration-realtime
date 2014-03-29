@@ -28,7 +28,7 @@ public class Database {
 	public final static String lineQuery = "SELECT id,operator_id FROM line";
 	
 	public final static String gvbJourneyQuery = "select concat_ws(':',validdate,olddataownercode,oldlineplanningnumber,oldjourneynumber) as oldprivatecode,concat_ws(':',validdate,dataownercode,lineplanningnumber,journeynumber) as privatecode \n"+
-                  "from gvb_journeynumber_mapping where validdate in (date 'yesterday', date 'today', date 'tomorrow');";
+                  "from gvb_journeynumber_mapping where validdate in (date 'yesterday', date 'today', date 'tomorrow') AND journeynumber != oldjourneynumber;;";
 
 
 	public final static String kv15Query = "SELECT dataownercode,messagecodedate,messagecodenumber,userstopcodes,messagepriority,messagetype,messagedurationtype,messagestarttime,messageendtime,messagecontent,reasontype,subreasontype,reasoncontent,effecttype,subeffecttype,effectcontent,advicetype,subadvicetype,advicecontent,messagetimestamp,measuretype,submeasuretype,measurecontent,lineplanningnumbers "+
