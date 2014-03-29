@@ -19,6 +19,7 @@ import javax.annotation.PreDestroy;
 import javax.inject.Singleton;
 
 import lombok.Getter;
+import nl.ovapi.bison.DateUtils;
 import nl.ovapi.bison.model.AdviceType;
 import nl.ovapi.bison.model.DataOwnerCode;
 import nl.ovapi.bison.model.EffectType;
@@ -31,7 +32,6 @@ import nl.ovapi.bison.model.SubAdviceType;
 import nl.ovapi.bison.model.SubEffectType;
 import nl.ovapi.bison.model.SubMeasureType;
 import nl.ovapi.bison.model.SubReasonType;
-import nl.ovapi.bison.sax.DateUtils;
 import nl.ovapi.rid.Database;
 import nl.ovapi.rid.model.Block;
 import nl.ovapi.rid.model.Journey;

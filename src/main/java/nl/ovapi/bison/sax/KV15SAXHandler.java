@@ -3,6 +3,7 @@ package nl.ovapi.bison.sax;
 import java.util.ArrayList;
 
 import lombok.Getter;
+import nl.ovapi.bison.DateUtils;
 import nl.ovapi.bison.model.AdviceType;
 import nl.ovapi.bison.model.DataOwnerCode;
 import nl.ovapi.bison.model.EffectType;

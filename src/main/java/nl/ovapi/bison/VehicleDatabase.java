@@ -1,7 +1,9 @@
-package nl.ovapi.bison.model;
+package nl.ovapi.bison;
 
 import lombok.Getter;
 import lombok.Setter;
+import nl.ovapi.bison.model.DataOwnerCode;
+import nl.ovapi.bison.model.KV6posinfo;
 
 public class VehicleDatabase {
 	public static class VehicleType{

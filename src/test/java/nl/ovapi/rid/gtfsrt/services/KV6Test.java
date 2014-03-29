@@ -9,8 +9,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import nl.ovapi.bison.JourneyProcessor;
 import nl.ovapi.bison.model.DataOwnerCode;
-import nl.ovapi.bison.model.JourneyProcessor;
 import nl.ovapi.bison.model.KV6posinfo;
 import nl.ovapi.bison.model.KV6posinfo.Type;
 import nl.ovapi.exceptions.StopNotFoundException;

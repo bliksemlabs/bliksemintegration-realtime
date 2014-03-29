@@ -3,7 +3,6 @@ package nl.ovapi.rid.model;
 import java.util.ArrayList;
 
 import lombok.Getter;
-import lombok.NonNull;
 
 public class Block {
 

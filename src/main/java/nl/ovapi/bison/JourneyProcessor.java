@@ -1,4 +1,4 @@
-package nl.ovapi.bison.model;
+package nl.ovapi.bison;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -12,9 +12,20 @@ import java.util.TimeZone;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import nl.ovapi.bison.VehicleDatabase.VehicleType;
+import nl.ovapi.bison.model.AdviceType;
+import nl.ovapi.bison.model.DataOwnerCode;
+import nl.ovapi.bison.model.DatedPasstime;
+import nl.ovapi.bison.model.JourneyStopType;
+import nl.ovapi.bison.model.KV17cvlinfo;
 import nl.ovapi.bison.model.KV17cvlinfo.Mutation;
+import nl.ovapi.bison.model.KV6posinfo;
 import nl.ovapi.bison.model.KV6posinfo.Type;
-import nl.ovapi.bison.model.VehicleDatabase.VehicleType;
+import nl.ovapi.bison.model.ReasonType;
+import nl.ovapi.bison.model.SubAdviceType;
+import nl.ovapi.bison.model.SubReasonType;
+import nl.ovapi.bison.model.TripStopStatus;
+import nl.ovapi.bison.model.WheelChairAccessible;
 import nl.ovapi.exceptions.StopNotFoundException;
 import nl.ovapi.exceptions.TooEarlyException;
 import nl.ovapi.exceptions.TooOldException;

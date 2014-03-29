@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import lombok.Getter;
+import nl.ovapi.bison.DateUtils;
 import nl.ovapi.bison.model.DataOwnerCode;
 import nl.ovapi.bison.model.JourneyStopType;
 import nl.ovapi.bison.model.KV17cvlinfo;

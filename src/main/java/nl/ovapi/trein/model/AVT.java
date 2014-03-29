@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import nl.ovapi.bison.sax.DateUtils;
+import nl.ovapi.bison.DateUtils;
 
 @ToString()
 public class AVT {

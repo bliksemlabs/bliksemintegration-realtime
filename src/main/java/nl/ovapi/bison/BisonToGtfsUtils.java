@@ -1,4 +1,4 @@
-package nl.ovapi.bison.sax;
+package nl.ovapi.bison;
 
 import java.util.ArrayList;
 

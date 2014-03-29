@@ -20,8 +20,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import nl.ovapi.bison.JourneyProcessor;
 import nl.ovapi.bison.model.DataOwnerCode;
-import nl.ovapi.bison.model.JourneyProcessor;
 import nl.ovapi.bison.model.KV17cvlinfo;
 import nl.ovapi.bison.model.KV6posinfo;
 import nl.ovapi.bison.model.KV6posinfo.Type;

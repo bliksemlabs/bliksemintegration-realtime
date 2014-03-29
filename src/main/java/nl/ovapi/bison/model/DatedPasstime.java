@@ -7,7 +7,7 @@ import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import nl.ovapi.bison.sax.DateUtils;
+import nl.ovapi.bison.DateUtils;
 
 import com.google.common.base.Objects;
 

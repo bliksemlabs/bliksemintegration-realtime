@@ -3,7 +3,8 @@ package nl.ovapi.bison.model;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import nl.ovapi.bison.model.VehicleDatabase.VehicleType;
+import nl.ovapi.bison.VehicleDatabase;
+import nl.ovapi.bison.VehicleDatabase.VehicleType;
 
 import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
 import com.google.transit.realtime.GtfsRealtimeOVapi;
