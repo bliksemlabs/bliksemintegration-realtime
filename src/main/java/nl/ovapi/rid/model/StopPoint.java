@@ -32,7 +32,7 @@ public class StopPoint {
 		/**
 		 * @return StopPoint instance with content set in builder
 		 */
-		public StopPoint Build(){
+		public StopPoint build(){
 			return new StopPoint(latitude,longitude);
 		}
 	}
