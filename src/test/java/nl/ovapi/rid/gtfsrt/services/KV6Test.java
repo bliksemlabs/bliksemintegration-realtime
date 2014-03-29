@@ -86,41 +86,16 @@ public class KV6Test {
 	}
 	
 	public TimeDemandGroup testGroup(){
-		TimeDemandGroup td = new TimeDemandGroup();
-		TimeDemandGroupPoint tp = new TimeDemandGroupPoint();
-		tp.setTotaldrivetime(0);
-		tp.setStopwaittime(0);
-		tp.setPointorder(1);
-		td.add(tp);
-		tp = new TimeDemandGroupPoint();
-		tp.setTotaldrivetime(60);
-		tp.setStopwaittime(0);
-		tp.setPointorder(2);
-		td.add(tp);
-		tp = new TimeDemandGroupPoint();
-		tp.setTotaldrivetime(120);
-		tp.setStopwaittime(60);
-		tp.setPointorder(3);
-		td.add(tp);
-		tp = new TimeDemandGroupPoint();
-		tp.setTotaldrivetime(240);
-		tp.setStopwaittime(0);
-		tp.setPointorder(4);
-		td.add(tp);
-		tp = new TimeDemandGroupPoint();
-		tp.setTotaldrivetime(300);
-		tp.setStopwaittime(0);
-		tp.setPointorder(5);
-		td.add(tp);
-		tp = new TimeDemandGroupPoint();
-		tp.setTotaldrivetime(360);
-		tp.setStopwaittime(0);
-		tp.setPointorder(6);
-		td.add(tp);
-		return td;
-
+		TimeDemandGroup.Builder td = TimeDemandGroup.newBuilder();
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(0).setStopWaitTime(0).setPointOrder(1).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(60).setStopWaitTime(60).setPointOrder(2).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(120).setStopWaitTime(120).setPointOrder(3).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(180).setStopWaitTime(180).setPointOrder(4).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(240).setStopWaitTime(240).setPointOrder(5).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(300).setStopWaitTime(300).setPointOrder(6).build());
+		return td.build();
 	}
-
+	
 	public Journey getJourney(){
 		Journey j = new Journey();
 		j.setAgencyId("QBUZZ");

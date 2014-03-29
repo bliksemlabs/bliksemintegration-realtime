@@ -45,8 +45,6 @@ import org.xml.sax.XMLReader;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
-import com.google.transit.realtime.GtfsRealtimeOVapi;
-import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate;
 
 public class KV17Test {
 
@@ -107,39 +105,14 @@ public class KV17Test {
 	}
 	
 	public TimeDemandGroup testGroup(){
-		TimeDemandGroup td = new TimeDemandGroup();
-		TimeDemandGroupPoint tp = new TimeDemandGroupPoint();
-		tp.setTotaldrivetime(0);
-		tp.setStopwaittime(0);
-		tp.setPointorder(1);
-		td.add(tp);
-		tp = new TimeDemandGroupPoint();
-		tp.setTotaldrivetime(60);
-		tp.setStopwaittime(60);
-		tp.setPointorder(2);
-		td.add(tp);
-		tp = new TimeDemandGroupPoint();
-		tp.setTotaldrivetime(120);
-		tp.setStopwaittime(120);
-		tp.setPointorder(3);
-		td.add(tp);
-		tp = new TimeDemandGroupPoint();
-		tp.setTotaldrivetime(180);
-		tp.setStopwaittime(180);
-		tp.setPointorder(4);
-		td.add(tp);
-		tp = new TimeDemandGroupPoint();
-		tp.setTotaldrivetime(240);
-		tp.setStopwaittime(240);
-		tp.setPointorder(5);
-		td.add(tp);
-		tp = new TimeDemandGroupPoint();
-		tp.setTotaldrivetime(300);
-		tp.setStopwaittime(300);
-		tp.setPointorder(6);
-		td.add(tp);
-		return td;
-
+		TimeDemandGroup.Builder td = TimeDemandGroup.newBuilder();
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(0).setStopWaitTime(0).setPointOrder(1).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(60).setStopWaitTime(60).setPointOrder(2).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(120).setStopWaitTime(120).setPointOrder(3).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(180).setStopWaitTime(180).setPointOrder(4).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(240).setStopWaitTime(240).setPointOrder(5).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(300).setStopWaitTime(300).setPointOrder(6).build());
+		return td.build();
 	}
 
 	public Journey getJourney(){

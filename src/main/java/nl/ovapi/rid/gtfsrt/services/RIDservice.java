@@ -254,7 +254,7 @@ public class RIDservice {
 			PreparedStatement st = conn.prepareStatement(Database.timepatternQuery);
 			ResultSet rs = st.executeQuery();
 			String timedemandgroupref = null;
-			TimeDemandGroup group = null;
+			TimeDemandGroup.Builder group = null;
 			Map<String, TimeDemandGroup> newTimedemandgroups = Maps.newHashMapWithExpectedSize(10000);
 			Map<String, JourneyPattern> newJourneypatterns = Maps.newHashMapWithExpectedSize(5000);
 			Map<String, Journey> newJourneys = Maps.newHashMapWithExpectedSize(0);
@@ -263,25 +263,24 @@ public class RIDservice {
 				//timedemandgroupref,pointorder,totaldrivetime,stopwaittime
 				String curRef = rs.getString(1).intern();
 				if (!curRef.equals(timedemandgroupref)){
+					if (group != null){
+						newTimedemandgroups.put(timedemandgroupref, group.build());
+					}
 					group = null;
-					timedemandgroupref = curRef;
 					if (timedemandgroups.containsKey(timedemandgroupref)){ //Interning
 						newTimedemandgroups.put(timedemandgroupref, timedemandgroups.get(timedemandgroupref));
 						continue;
 					}
-					group = new TimeDemandGroup();
-					newTimedemandgroups.put(timedemandgroupref, group);
-				}else if (group == null){
-					continue;
+					group = TimeDemandGroup.newBuilder();
 				}
-				TimeDemandGroupPoint point = new TimeDemandGroup.TimeDemandGroupPoint();
-				point.setPointorder(rs.getInt(2));
-				point.setTotaldrivetime(rs.getInt(3));
-				point.setStopwaittime(rs.getInt(4));
-				if (group != null)
-					group.add(point);
+				timedemandgroupref = curRef;
+				TimeDemandGroupPoint point = TimeDemandGroup.TimeDemandGroupPoint.newBuilder()
+						.setPointOrder(rs.getInt("pointorder"))
+						.setTotalDriveTime(rs.getInt("totaldrivetime"))
+						.setStopWaitTime(rs.getInt("stopwaittime")).build();
+				group.add(point);
 			}
-			timedemandgroups.put(timedemandgroupref, group);
+			newTimedemandgroups.put(timedemandgroupref, group.build());
 			st = conn.prepareStatement(Database.journeyPatternQuery);
 			rs = st.executeQuery();
 			String journeypatternRef = null;
@@ -313,7 +312,7 @@ public class RIDservice {
 				jp.setJourneyPatternRef(journeypatternRef);
 				jp.add(point);
 			}
-			journeypatterns.put(journeypatternRef, jp);
+			newJourneypatterns.put(journeypatternRef, jp);
 			st = conn.prepareStatement(Database.journeyQuery);
 			rs = st.executeQuery();
 			int newCount = 0;
@@ -358,7 +357,6 @@ public class RIDservice {
 				}
 			}
 			_log.info("{} New journeys",newCount);
-
 
 			st = conn.prepareStatement(Database.trainQuery);
 			rs = st.executeQuery();

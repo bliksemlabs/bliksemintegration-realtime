@@ -124,11 +124,13 @@ public class BlockProcessor {
 						stopwaittime = (int) ((stop.getDeparture().toGregorianCalendar().getTimeInMillis() -
 								stop.getArrival().toGregorianCalendar().getTimeInMillis())/1000);
 					}
-					TimeDemandGroupPoint tpt = new TimeDemandGroup.TimeDemandGroupPoint();
-					tpt.setPointorder(pt.getPointorder()+1);
-					tpt.setStopwaittime(stopwaittime);
-					tpt.setTotaldrivetime(totaldrivetime);
-					journey.getTimedemandgroup().getPoints().add(i+1, tpt);
+					TimeDemandGroup.Builder td = journey.getTimedemandgroup().edit();
+					TimeDemandGroupPoint tpt = TimeDemandGroupPoint.newBuilder()
+							.setPointOrder(pt.getPointorder()+1)
+							.setStopWaitTime(stopwaittime)
+							.setTotalDriveTime(totaldrivetime).build();
+					td.add(i+1, tpt);
+					journey.setTimedemandgroup(td.build());
 					_log.error("Stop added ",stationCode);
 					_log.error("JourneyPattern {}",journey.getJourneypattern());
 					_log.error("TimeGroup {}",journey.getTimedemandgroup());
@@ -148,7 +150,7 @@ public class BlockProcessor {
 	}
 
 	private static TimeDemandGroup timePatternFromArnu(Journey j,ServiceInfoServiceType info){
-		TimeDemandGroup tp = new TimeDemandGroup();
+		TimeDemandGroup.Builder tp = TimeDemandGroup.newBuilder();
 		int departuretime = -1;
 		for (int i = 0; i < info.getStopList().getStop().size(); i++){
 			ServiceInfoStopType s = info.getStopList().getStop().get(i);
@@ -162,29 +164,29 @@ public class BlockProcessor {
 				//Seconds since midnight
 				departuretime = secondsSinceMidnight(c);
 				j.setDeparturetime(departuretime);
-				TimeDemandGroup.TimeDemandGroupPoint pt = new TimeDemandGroup.TimeDemandGroupPoint();
-				pt.setPointorder(i);
-				pt.setStopwaittime(0);
-				pt.setTotaldrivetime(0);
+				TimeDemandGroup.TimeDemandGroupPoint pt = TimeDemandGroupPoint.newBuilder()
+						.setPointOrder(i)
+						.setStopWaitTime(0)
+						.setTotalDriveTime(0).build();
 				tp.add(pt);
 			}else{
 				Calendar c = s.getArrival() == null ? s.getDeparture().toGregorianCalendar() : 
 					s.getArrival().toGregorianCalendar();
 				//SEconds since midnight
 				int time = secondsSinceMidnight(c);
-				TimeDemandGroup.TimeDemandGroupPoint pt = new TimeDemandGroup.TimeDemandGroupPoint();
-				pt.setTotaldrivetime(time-departuretime);
+				TimeDemandGroup.TimeDemandGroupPoint.Builder pt = TimeDemandGroupPoint.newBuilder();
+				pt.setTotalDriveTime(time-departuretime);
 				if (s.getDeparture() != null){
 					c = s.getDeparture().toGregorianCalendar();
 					int depTime = secondsSinceMidnight(c);
-					pt.setStopwaittime(depTime-time);
+					pt.setStopWaitTime(depTime-time);
 				}else{
-					pt.setStopwaittime(0);
+					pt.setStopWaitTime(0);
 				}
-				tp.add(pt);
+				tp.add(pt.build());
 			}
 		}
-		return tp;
+		return tp.build();
 	}	
 
 	private static JourneyPattern patternFromArnu(RIDservice ridService,ServiceInfoServiceType info){

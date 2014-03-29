@@ -8,16 +8,30 @@ public class StopPoint {
 		private Float latitude;
 		private Float longitude;
 
+		private Builder(){}
+		
+		/**
+		 * 
+		 * @param latitude of stoppoint
+		 * @return builder instance
+		 */
 		public Builder setLatitude(Float latitude){
 			this.latitude = latitude;
 			return this;
 		}
 		
+		/**
+		 * 
+		 * @param longitude of stoppoint
+		 * @return builder instance
+		 */
 		public Builder setLongitude(Float longitude){
 			this.longitude = longitude;
 			return this;
 		}
-		
+		/**
+		 * @return StopPoint instance with content set in builder
+		 */
 		public StopPoint Build(){
 			return new StopPoint(latitude,longitude);
 		}
