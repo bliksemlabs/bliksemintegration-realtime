@@ -2,40 +2,21 @@ package nl.ovapi.rid.model;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import nl.ovapi.bison.model.KV17cvlinfo;
-import nl.ovapi.bison.model.KV17cvlinfo.Mutation;
-import nl.ovapi.bison.model.KV17cvlinfo.Mutation.MutationType;
-import nl.ovapi.bison.model.KV6posinfo;
-import nl.ovapi.bison.model.KV6posinfo.Type;
-import nl.ovapi.exceptions.StopNotFoundException;
-import nl.ovapi.exceptions.TooEarlyException;
-import nl.ovapi.exceptions.TooOldException;
-import nl.ovapi.exceptions.UnknownKV6PosinfoType;
-import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
-import com.google.transit.realtime.GtfsRealtime.TripUpdate;
-import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeEvent;
-import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
-import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
 import com.google.transit.realtime.GtfsRealtimeOVapi;
-import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiStopTimeUpdate;
 import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripDescriptor;
 @ToString()
 public class Journey {

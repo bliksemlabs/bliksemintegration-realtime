@@ -59,13 +59,8 @@ import org.zeromq.ZMQ.Socket;
 import org.zeromq.ZMsg;
 
 import com.google.common.collect.Maps;
-import com.google.transit.realtime.GtfsRealtime.Alert;
 import com.google.transit.realtime.GtfsRealtime.Alert.Builder;
-import com.google.transit.realtime.GtfsRealtime.EntitySelector;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
-import com.google.transit.realtime.GtfsRealtime.TimeRange;
-import com.google.transit.realtime.GtfsRealtime.TranslatedString;
-import com.google.transit.realtime.GtfsRealtime.TranslatedString.Translation;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 

@@ -7,9 +7,9 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import nl.ovapi.rid.gtfsrt.services.ARNUritInfoToGtfsRealTimeServices;
 import nl.ovapi.rid.gtfsrt.services.BisonToGtfsRealtimeService;
 import nl.ovapi.rid.gtfsrt.services.KV78TurboToPseudoKV6Service;
-import nl.ovapi.rid.gtfsrt.services.ARNUritInfoToGtfsRealTimeServices;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;

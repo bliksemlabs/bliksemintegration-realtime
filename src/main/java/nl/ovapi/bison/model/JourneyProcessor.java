@@ -74,7 +74,6 @@ public class JourneyProcessor {
 		datedPasstimes = new ArrayList<DatedPasstime>(journey.getJourneypattern().getPoints().size());
 		materializeDatedPasstimes(journey);
 	}
-	private static final boolean RECORD_TIMES = true;
 
 	//Speeds used to calculate theoretical fastest speeds
 	private static final int DEFAULT_SPEED = (int) (75 / 3.6); // meters per seconds

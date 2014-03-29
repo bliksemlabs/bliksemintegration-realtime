@@ -9,11 +9,11 @@ import nl.ovapi.bison.model.SubReasonType;
 import nl.ovapi.rid.gtfsrt.services.RIDservice;
 
 import com.google.transit.realtime.GtfsRealtime.Alert;
+import com.google.transit.realtime.GtfsRealtime.Alert.Cause;
+import com.google.transit.realtime.GtfsRealtime.Alert.Effect;
 import com.google.transit.realtime.GtfsRealtime.EntitySelector;
 import com.google.transit.realtime.GtfsRealtime.TimeRange;
 import com.google.transit.realtime.GtfsRealtime.TranslatedString;
-import com.google.transit.realtime.GtfsRealtime.Alert.Cause;
-import com.google.transit.realtime.GtfsRealtime.Alert.Effect;
 import com.google.transit.realtime.GtfsRealtime.TranslatedString.Translation;
 
 public class BisonToGtfsUtils {
