@@ -1,26 +1,104 @@
 package nl.ovapi.bison.sax;
 
+import java.util.ArrayList;
+
 import nl.ovapi.bison.model.KV15message;
 import nl.ovapi.bison.model.SubEffectType;
 import nl.ovapi.bison.model.SubMeasureType;
 import nl.ovapi.bison.model.SubReasonType;
+import nl.ovapi.rid.gtfsrt.services.RIDservice;
 
+import com.google.transit.realtime.GtfsRealtime.Alert;
+import com.google.transit.realtime.GtfsRealtime.EntitySelector;
+import com.google.transit.realtime.GtfsRealtime.TimeRange;
+import com.google.transit.realtime.GtfsRealtime.TranslatedString;
 import com.google.transit.realtime.GtfsRealtime.Alert.Cause;
 import com.google.transit.realtime.GtfsRealtime.Alert.Effect;
+import com.google.transit.realtime.GtfsRealtime.TranslatedString.Translation;
 
 public class BisonToGtfsUtils {
-	
+
+	/**
+	 * Translate BISON KV15 stopmessage into GTFSrealtime alert.
+	 * @param stopMessage KV15 stopmessage object
+	 * @param ridService databaseService to translate BISON id's into GTFS id's
+	 * @return GTFSrealtime Alert.builder with content of KV15 message
+	 */
+	public static Alert.Builder translateKV15ToGTFSRT(KV15message message,RIDservice ridService) {
+		Alert.Builder alert = Alert.newBuilder();
+		if (message.getMessageStartTime() != null || message.getMessageEndTime() != null){
+			TimeRange.Builder timeRange = TimeRange.newBuilder();
+			if (message.getMessageStartTime() != null){
+				timeRange.setStart(message.getMessageStartTime().longValue());
+			}
+			if (message.getMessageEndTime() != null){
+				timeRange.setEnd(message.getMessageEndTime().longValue());
+			}
+			alert.addActivePeriod(timeRange);
+		}
+		alert.setCause(BisonToGtfsUtils.getCause(message));
+		alert.setEffect(BisonToGtfsUtils.getEffect(message));
+		TranslatedString.Builder translation = TranslatedString.newBuilder();
+		Translation.Builder text = Translation.newBuilder();
+		text.setLanguage("nl");
+		text.setText(BisonToGtfsUtils.text(message));
+		translation.addTranslation(text);
+		alert.setDescriptionText(translation);
+		if (message.getMessageContent() != null){
+			translation = TranslatedString.newBuilder();
+			text = Translation.newBuilder();
+			text.setLanguage("nl");
+			text.setText(message.getMessageContent());
+			translation.addTranslation(text);
+			alert.setHeaderText(translation);
+		}
+		if (message.getUserstopCodes().size() > 0){
+			for (String userstopcode : message.getUserstopCodes()){
+				ArrayList<Long> stopIds = ridService.getStopIds(message.getDataOwnerCode(), userstopcode);
+				if (stopIds != null){
+					for (Long stopId : stopIds) {
+						if (message.getLinePlanningNumbers().size() == 0){
+							EntitySelector.Builder selector = EntitySelector.newBuilder();
+							selector.setStopId(stopId.toString());
+							alert.addInformedEntity(selector);
+						}else{
+							for (String linePlanningNumber : message.getLinePlanningNumbers()){
+								ArrayList<String> lineIds = ridService.getLineIds(message.getDataOwnerCode(), linePlanningNumber);
+								for (String lineId : lineIds){ //Restrict alert to linenumbers
+									EntitySelector.Builder selector = EntitySelector.newBuilder();
+									selector.setStopId(stopId.toString());
+									selector.setRouteId(lineId);
+									alert.addInformedEntity(selector);
+								}
+							}
+						}
+					}
+				}
+			}
+		}else if (message.getLinePlanningNumbers().size() > 0){
+			for (String linePlanningNumber : message.getLinePlanningNumbers()){
+				ArrayList<String> lineIds = ridService.getLineIds(message.getDataOwnerCode(), linePlanningNumber);
+				for (String lineId : lineIds){ //Restrict alert to linenumbers
+					EntitySelector.Builder selector = EntitySelector.newBuilder();
+					selector.setRouteId(lineId);
+					alert.addInformedEntity(selector);
+				}
+			}
+		}
+		return alert;
+	}
+
 	private static boolean hasCause(KV15message msg){
 		return (msg.getSubReasonType() != null && msg.getSubReasonType() != SubReasonType.Onbekend)
 				|| msg.getReasonContent() != null && !msg.getReasonContent().equals(msg.getMessageContent());
-				
+
 	}
-	
+
 	private static boolean hasEffect(KV15message msg){
 		return (msg.getSubEffectType() != null && msg.getSubEffectType() != SubEffectType.UNKNOWN)
-			|| msg.getEffectContent() != null && !msg.getEffectContent().equals(msg.getMessageContent());
+				|| msg.getEffectContent() != null && !msg.getEffectContent().equals(msg.getMessageContent());
 	}
-	
+
 	private static boolean hasMeasure(KV15message msg){
 		return msg.getSubMeasureType() != null && msg.getSubMeasureType() != SubMeasureType.UNKNOWN || 
 				msg.getMeasureContent() != null && !msg.getMeasureContent().equals(msg.getMessageContent());

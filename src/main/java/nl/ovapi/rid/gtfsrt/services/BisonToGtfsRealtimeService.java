@@ -60,6 +60,7 @@ import org.zeromq.ZMsg;
 
 import com.google.common.collect.Maps;
 import com.google.transit.realtime.GtfsRealtime.Alert;
+import com.google.transit.realtime.GtfsRealtime.Alert.Builder;
 import com.google.transit.realtime.GtfsRealtime.EntitySelector;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.TimeRange;
@@ -134,82 +135,25 @@ public class BisonToGtfsRealtimeService {
 			GtfsRealtimeIncrementalUpdate update = new GtfsRealtimeIncrementalUpdate();
 			for (KV15message msg : messages){
 				try{
-					if (msg.getMessagePriority() == MessagePriority.COMMERCIAL){
-						if (msg.getDataOwnerCode() != DataOwnerCode.QBUZZ)
-							continue;
-					}
 					String id = String.format("KV15:%s:%s:%s", msg.getDataOwnerCode().name(),msg.getMessageCodeDate(),msg.getMessageCodeNumber());
 					if (msg.getIsDelete()){
 						update.addDeletedEntity(id);
 						_log.info("Deleted KV15 {} : {}",id,msg);
 						continue;
 					}
-					_log.info("Add KV15 {} : {}",id,msg);
+					if (msg.getMessagePriority() == MessagePriority.COMMERCIAL && msg.getDataOwnerCode() != DataOwnerCode.QBUZZ){
+						_log.info("Ignore KV15 {}",msg);
+						continue;
+					}
 					FeedEntity.Builder entity = FeedEntity.newBuilder();
-					Alert.Builder alert = Alert.newBuilder();
 					entity.setId(id);
-					if (msg.getMessageStartTime() != null || msg.getMessageEndTime() != null){
-						TimeRange.Builder timeRange = TimeRange.newBuilder();
-						if (msg.getMessageStartTime() != null){
-							timeRange.setStart(msg.getMessageStartTime().longValue());
-						}
-						if (msg.getMessageEndTime() != null){
-							timeRange.setEnd(msg.getMessageEndTime().longValue());
-						}
-						alert.addActivePeriod(timeRange);
-					}
-					alert.setCause(BisonToGtfsUtils.getCause(msg));
-					alert.setEffect(BisonToGtfsUtils.getEffect(msg));
-					TranslatedString.Builder translation = TranslatedString.newBuilder();
-					Translation.Builder text = Translation.newBuilder();
-					text.setLanguage("nl");
-					text.setText(BisonToGtfsUtils.text(msg));
-					translation.addTranslation(text);
-					alert.setDescriptionText(translation);
-					if (msg.getMessageContent() != null){
-						translation = TranslatedString.newBuilder();
-						text = Translation.newBuilder();
-						text.setLanguage("nl");
-						text.setText(msg.getMessageContent());
-						translation.addTranslation(text);
-						alert.setHeaderText(translation);
-					}
-					if (msg.getUserstopCodes().size() > 0){
-						for (String userstopcode : msg.getUserstopCodes()){
-							ArrayList<Long> stopIds = _ridService.getStopIds(msg.getDataOwnerCode(), userstopcode);
-							if (stopIds != null){
-								for (Long stopId : stopIds) {
-									if (msg.getLinePlanningNumbers().size() == 0){
-										EntitySelector.Builder selector = EntitySelector.newBuilder();
-										selector.setStopId(stopId.toString());
-										alert.addInformedEntity(selector);
-									}else{
-										for (String linePlanningNumber : msg.getLinePlanningNumbers()){
-											ArrayList<String> lineIds = _ridService.getLineIds(msg.getDataOwnerCode(), linePlanningNumber);
-											for (String lineId : lineIds){ //Restrict alert to linenumbers
-												EntitySelector.Builder selector = EntitySelector.newBuilder();
-												selector.setStopId(stopId.toString());
-												selector.setRouteId(lineId);
-												alert.addInformedEntity(selector);
-											}
-										}
-									}
-								}
-							}
-						}
-					}else if (msg.getLinePlanningNumbers().size() > 0){
-						for (String linePlanningNumber : msg.getLinePlanningNumbers()){
-							ArrayList<String> lineIds = _ridService.getLineIds(msg.getDataOwnerCode(), linePlanningNumber);
-							for (String lineId : lineIds){ //Restrict alert to linenumbers
-								EntitySelector.Builder selector = EntitySelector.newBuilder();
-								selector.setRouteId(lineId);
-								alert.addInformedEntity(selector);
-							}
-						}
-					}
+					Builder alert = BisonToGtfsUtils.translateKV15ToGTFSRT(msg, _ridService);
 					if (alert.getInformedEntityCount() > 0){
+						_log.info("Add KV15 {} : {}",id,msg);
 						entity.setAlert(alert);
 						update.addUpdatedEntity(entity.build());
+					}else{
+						_log.info("Ignore KV15, not entities found{}",msg);
 					}
 				}catch (Exception e){
 					_log.error("Processing KV15 {}",msg,e);
@@ -219,7 +163,7 @@ public class BisonToGtfsRealtimeService {
 				_alertsSink.handleIncrementalUpdate(update);
 		}
 	}
-	
+
 	private JourneyProcessor getOrCreateProcessorForId(@NonNull String privateCode){
 		JourneyProcessor jp = journeyProcessors.get(privateCode);
 		if (jp != null){
@@ -488,17 +432,17 @@ public class BisonToGtfsRealtimeService {
 	void process(ArrayList<KV6posinfo> posinfos){
 		_executor.submit(new ProcessKV6Task(posinfos));
 	}
-	
-    public boolean startsWithBom(String line) {  
-        char myChar = line.charAt(0);  
-        int intValue = (int) myChar;  
-        // Hexa value of BOM = EF BB BF  => int 65279  
-        if (intValue == 65279) {  
-                return true;  
-        } else {  
-                return false;  
-        }  
-    }  
+
+	public boolean startsWithBom(String line) {  
+		char myChar = line.charAt(0);  
+		int intValue = (int) myChar;  
+		// Hexa value of BOM = EF BB BF  => int 65279  
+		if (intValue == 65279) {  
+			return true;  
+		} else {  
+			return false;  
+		}  
+	}  
 
 	private class ProcessTask implements Runnable {
 		int messagecounter = 0;
