@@ -341,6 +341,9 @@ public class RIDservice {
 				}
 				journey.setAgencyId(rs.getString(7));
 				journey.setOperatingDay(rs.getString(8));
+				if (journey.getEndEpoch() < (System.currentTimeMillis()/1000 - 3600*2)){
+					continue;
+				}
 				long date = new SimpleDateFormat("yyyy-MM-dd").parse(rs.getString(8)).getTime();
 				if (fromDate == 0 || date < fromDate){
 					fromDate = date;
@@ -401,9 +404,9 @@ public class RIDservice {
 			st = conn.prepareStatement(Database.stoppointQuery);
 			rs = st.executeQuery();
 			while (rs.next()) {
-				StopPoint sp = new StopPoint();
-				sp.setLatitude(rs.getFloat(2));
-				sp.setLongitude(rs.getFloat(3));
+				StopPoint sp = StopPoint.newBuilder()
+						.setLatitude(rs.getFloat("latitude"))
+						.setLongitude(rs.getFloat("longitude")).Build();
 				String stopId = rs.getString(4);
 				if (userstops.containsKey(stopId)){
 					if (!userstops.get(stopId).contains(rs.getLong(1)))
