@@ -45,19 +45,19 @@ public class TimeDemandGroup implements Cloneable{
 		/**
 		 * Sequential order in JourneyPattern and TimeDemandGroup
 		 */
-		public Integer pointorder;
+		private Integer pointorder;
 		@Getter
 		@Setter
 		/**
 		 * Seconds since start of trip
 		 */
-		public Integer totaldrivetime;
+		private Integer totaldrivetime;
 		@Getter
 		@Setter
 		/**
 		 * Seconds between arrivaltime and departuretime at this stop.
 		 */
-		public Integer stopwaittime;
+		private Integer stopwaittime;
 	}
 
 	/**

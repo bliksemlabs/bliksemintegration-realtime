@@ -185,7 +185,7 @@ public class Journey {
 	public JourneyPatternPoint getJourneyStop (String userstopcode,int passageSequencenumber){
 		for (int i = 0; i < timedemandgroup.getPoints().size(); i++) {
 			TimeDemandGroupPoint tpt = timedemandgroup.getPoints().get(i);
-			JourneyPatternPoint pt = journeypattern.getPoint(tpt.pointorder);
+			JourneyPatternPoint pt = journeypattern.getPoint(tpt.getPointorder());
 			if (pt.getOperatorpointref().equals(userstopcode)){
 				if (passageSequencenumber > 0){
 					passageSequencenumber--;
