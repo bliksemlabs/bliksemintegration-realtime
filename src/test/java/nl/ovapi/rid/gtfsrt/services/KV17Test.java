@@ -49,69 +49,68 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 public class KV17Test {
 
 	public static JourneyPattern testPattern(){
-		JourneyPattern jp = new JourneyPattern();
-		jp.setJourneyPatternRef("403");
-		jp.setDirectiontype(2);
-		JourneyPatternPoint pt = new JourneyPatternPoint();
-		pt.setDistancefromstartroute(0);
-		pt.setPointorder(1);
-		pt.setOperatorpointref("10006900");
-		pt.setPointref(56858L);
-		pt.setDistancefromstartroute(0);
-		pt.setScheduled(true);
-		pt.setWaitpoint(true);
+		JourneyPattern.Builder jp = JourneyPattern.newBuilder();
+		jp.setJourneyPatternref("403");
+		jp.setDirectionType(2);
+		JourneyPatternPoint pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(0)
+				.setPointOrder(1)
+				.setOperatorPointRef("10006900")
+				.setPointRef(56858L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(true).build();
 		jp.add(pt);
-		pt = new JourneyPatternPoint();
-		pt.setPointorder(2);
-		pt.setOperatorpointref("10007110");
-		pt.setPointref(57796L);
-		pt.setDistancefromstartroute(153);
-		pt.setScheduled(true);
-		pt.setWaitpoint(false);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(153)
+				.setPointOrder(2)
+				.setOperatorPointRef("10007110")
+				.setPointRef(57796L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
 		jp.add(pt);
-		pt = new JourneyPatternPoint();
-		pt.setPointorder(3);
-		pt.setOperatorpointref("10006780");
-		pt.setPointref(58494L);
-		pt.setDistancefromstartroute(446);
-		pt.setScheduled(true);
-		pt.setWaitpoint(false);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(446)
+				.setPointOrder(3)
+				.setOperatorPointRef("10006780")
+				.setPointRef(58494L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
 		jp.add(pt);
-		pt = new JourneyPatternPoint();
-		pt.setPointorder(4);
-		pt.setOperatorpointref("10006450");
-		pt.setPointref(59619L);
-		pt.setDistancefromstartroute(861);
-		pt.setScheduled(true);
-		pt.setWaitpoint(false);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(861)
+				.setPointOrder(4)
+				.setOperatorPointRef("10006450")
+				.setPointRef(59619L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
 		jp.add(pt);
-		pt = new JourneyPatternPoint();
-		pt.setPointorder(5);
-		pt.setOperatorpointref("10006820");
-		pt.setPointref(58302L);
-		pt.setDistancefromstartroute(1087);
-		pt.setScheduled(true);
-		pt.setWaitpoint(false);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(1087)
+				.setPointOrder(5)
+				.setOperatorPointRef("10006820")
+				.setPointRef(59619L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
 		jp.add(pt);
-		pt = new JourneyPatternPoint();
-		pt.setPointorder(6);
-		pt.setOperatorpointref("10006450");
-		pt.setPointref(58636L);
-		pt.setDistancefromstartroute(1518);
-		pt.setScheduled(true);
-		pt.setWaitpoint(false);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(1087)
+				.setPointOrder(6)
+				.setOperatorPointRef("10006450")
+				.setPointRef(58636L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
 		jp.add(pt);
-		return jp;
+		return jp.build();
 	}
 	
 	public TimeDemandGroup testGroup(){
 		TimeDemandGroup.Builder td = TimeDemandGroup.newBuilder();
 		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(0).setStopWaitTime(0).setPointOrder(1).build());
 		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(60).setStopWaitTime(60).setPointOrder(2).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(120).setStopWaitTime(120).setPointOrder(3).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(180).setStopWaitTime(180).setPointOrder(4).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(240).setStopWaitTime(240).setPointOrder(5).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(300).setStopWaitTime(300).setPointOrder(6).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(120).setStopWaitTime(0).setPointOrder(3).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(180).setStopWaitTime(0).setPointOrder(4).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(240).setStopWaitTime(0).setPointOrder(5).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(300).setStopWaitTime(0).setPointOrder(6).build());
 		return td.build();
 	}
 
@@ -212,7 +211,6 @@ public class KV17Test {
 	}
 	@Test
 	public void shortenMidTrip() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
-		
 		Journey journey = getJourney();
 		JourneyProcessor j = new JourneyProcessor(journey);
 		j.update(testPosinfoArrival());

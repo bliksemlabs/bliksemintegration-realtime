@@ -30,73 +30,183 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 public class KV6Test {
 
 	public static JourneyPattern testPattern(){
-		JourneyPattern jp = new JourneyPattern();
-		jp.setJourneyPatternRef("403");
-		jp.setDirectiontype(2);
-		JourneyPatternPoint pt = new JourneyPatternPoint();
-		pt.setDistancefromstartroute(0);
-		pt.setPointorder(1);
-		pt.setOperatorpointref("10006900");
-		pt.setPointref(56858L);
-		pt.setDistancefromstartroute(0);
-		pt.setScheduled(true);
-		pt.setWaitpoint(true);
+		JourneyPattern.Builder jp = JourneyPattern.newBuilder();
+		jp.setJourneyPatternref("403");
+		jp.setDirectionType(2);
+		JourneyPatternPoint pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(0)
+				.setPointOrder(1)
+				.setOperatorPointRef("10006900")
+				.setPointRef(56858L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(true).build();
 		jp.add(pt);
-		pt = new JourneyPatternPoint();
-		pt.setPointorder(2);
-		pt.setOperatorpointref("10007110");
-		pt.setPointref(57796L);
-		pt.setDistancefromstartroute(153);
-		pt.setScheduled(true);
-		pt.setWaitpoint(false);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(153)
+				.setPointOrder(2)
+				.setOperatorPointRef("10007110")
+				.setPointRef(57796L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
 		jp.add(pt);
-		pt = new JourneyPatternPoint();
-		pt.setPointorder(3);
-		pt.setOperatorpointref("10006780");
-		pt.setPointref(58494L);
-		pt.setDistancefromstartroute(446);
-		pt.setScheduled(true);
-		pt.setWaitpoint(false);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(446)
+				.setPointOrder(3)
+				.setOperatorPointRef("10006780")
+				.setPointRef(58494L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
 		jp.add(pt);
-		pt = new JourneyPatternPoint();
-		pt.setPointorder(4);
-		pt.setOperatorpointref("10006450");
-		pt.setPointref(59619L);
-		pt.setDistancefromstartroute(861);
-		pt.setScheduled(true);
-		pt.setWaitpoint(false);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(861)
+				.setPointOrder(4)
+				.setOperatorPointRef("10006450")
+				.setPointRef(59619L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
 		jp.add(pt);
-		pt = new JourneyPatternPoint();
-		pt.setPointorder(5);
-		pt.setOperatorpointref("10006820");
-		pt.setPointref(58302L);
-		pt.setDistancefromstartroute(1087);
-		pt.setScheduled(true);
-		pt.setWaitpoint(false);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(1087)
+				.setPointOrder(5)
+				.setOperatorPointRef("10006820")
+				.setPointRef(59619L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
 		jp.add(pt);
-		pt = new JourneyPatternPoint();
-		pt.setPointorder(6);
-		pt.setOperatorpointref("10006450");
-		pt.setPointref(58636L);
-		pt.setDistancefromstartroute(1518);
-		pt.setScheduled(true);
-		pt.setWaitpoint(false);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(1087)
+				.setPointOrder(6)
+				.setOperatorPointRef("10006450")
+				.setPointRef(58636L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
 		jp.add(pt);
-		return jp;
+		return jp.build();
 	}
 	
+	public static JourneyPattern testPattern3(){
+		JourneyPattern.Builder jp = JourneyPattern.newBuilder();
+		jp.setJourneyPatternref("403");
+		jp.setDirectionType(2);
+		JourneyPatternPoint pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(0)
+				.setPointOrder(1)
+				.setOperatorPointRef("10006900")
+				.setPointRef(56858L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(true).build();
+		jp.add(pt);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(153)
+				.setPointOrder(2)
+				.setOperatorPointRef("10007110")
+				.setPointRef(57796L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
+		jp.add(pt);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(446)
+				.setPointOrder(3)
+				.setOperatorPointRef("10006780")
+				.setPointRef(58494L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(true).build();
+		jp.add(pt);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(861)
+				.setPointOrder(4)
+				.setOperatorPointRef("10006450")
+				.setPointRef(59619L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
+		jp.add(pt);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(1087)
+				.setPointOrder(5)
+				.setOperatorPointRef("10006820")
+				.setPointRef(59619L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
+		jp.add(pt);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(1087)
+				.setPointOrder(6)
+				.setOperatorPointRef("10006450")
+				.setPointRef(58636L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
+		jp.add(pt);
+		return jp.build();
+	}
+
+	public static JourneyPattern testPattern2(){
+		JourneyPattern.Builder jp = JourneyPattern.newBuilder();
+		jp.setJourneyPatternref("403");
+		jp.setDirectionType(2);
+		JourneyPatternPoint pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(0)
+				.setPointOrder(1)
+				.setOperatorPointRef("10006900")
+				.setPointRef(56858L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
+		jp.add(pt);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(153)
+				.setPointOrder(2)
+				.setOperatorPointRef("10007110")
+				.setPointRef(57796L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
+		jp.add(pt);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(446)
+				.setPointOrder(3)
+				.setOperatorPointRef("10006780")
+				.setPointRef(58494L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
+		jp.add(pt);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(861)
+				.setPointOrder(4)
+				.setOperatorPointRef("10006450")
+				.setPointRef(59619L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
+		jp.add(pt);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(1087)
+				.setPointOrder(5)
+				.setOperatorPointRef("10006820")
+				.setPointRef(59619L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
+		jp.add(pt);
+		pt = JourneyPatternPoint.newBuilder()
+				.setDistanceFromStartRoute(1087)
+				.setPointOrder(6)
+				.setOperatorPointRef("10006450")
+				.setPointRef(58636L)
+				.setIsScheduled(true)
+				.setIsWaitpoint(false).build();
+		jp.add(pt);
+		return jp.build();
+	}
+
+
 	public TimeDemandGroup testGroup(){
 		TimeDemandGroup.Builder td = TimeDemandGroup.newBuilder();
 		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(0).setStopWaitTime(0).setPointOrder(1).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(60).setStopWaitTime(60).setPointOrder(2).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(120).setStopWaitTime(120).setPointOrder(3).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(180).setStopWaitTime(180).setPointOrder(4).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(240).setStopWaitTime(240).setPointOrder(5).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(300).setStopWaitTime(300).setPointOrder(6).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(60).setStopWaitTime(0).setPointOrder(2).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(120).setStopWaitTime(60).setPointOrder(3).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(180).setStopWaitTime(0).setPointOrder(4).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(240).setStopWaitTime(0).setPointOrder(5).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(300).setStopWaitTime(0).setPointOrder(6).build());
 		return td.build();
 	}
-	
-	public Journey getJourney(){
+
+	public Journey getJourney(int journeypatternVersion){
 		Journey j = new Journey();
 		j.setAgencyId("QBUZZ");
 		Calendar c = Calendar.getInstance();
@@ -104,7 +214,13 @@ public class KV6Test {
 		j.setId(2552611L+"");
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		j.setOperatingDay(df.format(c.getTime()));
-		j.setJourneypattern(testPattern());
+		if (journeypatternVersion == 0){
+			j.setJourneypattern(testPattern());
+		}else if (journeypatternVersion == 1){
+			j.setJourneypattern(testPattern2());
+		}else if (journeypatternVersion == 2){
+			j.setJourneypattern(testPattern2());
+		}
 		j.setAvailabilityConditionRef(0L);
 		j.setTimedemandgroup(testGroup());
 		j.setPrivateCode("QBUZZ:g005:1045");
@@ -112,8 +228,8 @@ public class KV6Test {
 	}
 	@Test
 	public void testNegativeOnFirstStopAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
-		Journey journey = getJourney();
-		journey.setPrivateCode("QBUZZ:g005:432");
+		Journey journey = getJourney(0);
+		journey.setPrivateCode("QBUZZ:NEGFIRST:432");
 		JourneyProcessor j = new JourneyProcessor(journey);
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
@@ -136,12 +252,11 @@ public class KV6Test {
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getDelay(),0);
 
 	}
-	
+
 	@Test
 	public void testNegativeOnFirstStopNotAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
-		Journey journey = getJourney();
+		Journey journey = getJourney(1);
 		JourneyProcessor j = new JourneyProcessor(journey);
-		journey.getJourneypattern().getPoint(1).setWaitpoint(false);
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
 		posinfo.setLineplanningnumber("g005");
@@ -165,9 +280,8 @@ public class KV6Test {
 	}
 	@Test
 	public void testNegativeOnTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
-		Journey journey = getJourney();
+		Journey journey = getJourney(2);
 		JourneyProcessor j = new JourneyProcessor(journey);
-		journey.getJourneypattern().getPoint(3).setWaitpoint(true);
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
 		posinfo.setLineplanningnumber("g005");
@@ -187,10 +301,10 @@ public class KV6Test {
 		assertEquals(tripUpdate.getStopTimeUpdate(1).getArrival().getDelay(),-20);
 		assertEquals(tripUpdate.getStopTimeUpdate(1).getDeparture().getDelay(),0);
 	}
-	
+
 	@Test
 	public void testNegativeOnDepartureFirstStop() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
-		Journey journey = getJourney();
+		Journey journey = getJourney(0);
 		journey.setPrivateCode("CXX:TOOEARLYF:112");
 		JourneyProcessor j = new JourneyProcessor(journey);
 		KV6posinfo posinfo = new KV6posinfo();
@@ -209,10 +323,10 @@ public class KV6Test {
 		assertFalse(tripUpdate.getStopTimeUpdate(0).hasArrival());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getDeparture().getDelay(),0);
 	}
-	
+
 	@Test
 	public void testDelayOnDepartureFirstStop() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
-		Journey journey = getJourney();
+		Journey journey = getJourney(0);
 		journey.setPrivateCode("CXX:DELAYF:113");
 		JourneyProcessor j = new JourneyProcessor(journey);
 		KV6posinfo posinfo = new KV6posinfo();
@@ -227,9 +341,8 @@ public class KV6Test {
 		posinfo.setTimestamp(journey.getDepartureEpoch()+20);
 		posinfo.setPassagesequencenumber(0);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
-		System.out.println(tripUpdate.build());
 		assertEquals(5,tripUpdate.getStopTimeUpdateCount());
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
-		assertEquals(tripUpdate.getStopTimeUpdate(4).getDeparture().getDelay(),0);
+		assertEquals(56,tripUpdate.getStopTimeUpdate(4).getDeparture().getDelay());
 	}
 }

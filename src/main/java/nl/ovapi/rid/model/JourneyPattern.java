@@ -1,41 +1,29 @@
 package nl.ovapi.rid.model;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.ToString;
+
+import com.google.common.collect.ImmutableList;
 
 @ToString()
 @EqualsAndHashCode()
 public class JourneyPattern implements Cloneable{
-
-	public JourneyPattern (JourneyPattern toClone) {
-		this.directiontype = toClone.directiontype == null ? null : toClone.directiontype.intValue();
-		this.journeyPatternRef = toClone.journeyPatternRef;
-		this.points = new ArrayList<JourneyPatternPoint>(toClone.getPoints().size());
-		for (JourneyPatternPoint pt : toClone.getPoints()){
-			this.points.add(pt.clone());
-		}
-	}
-	
-	public JourneyPattern clone() {
-	    return new JourneyPattern(this);
-	}
 	
 	@Getter
-	@Setter
 	/**
 	 * DirectionType of JourneyPattern within Line. 1 or 2.
 	 */
-	public Integer directiontype;
+	public final Integer directiontype;
 	
 	@ToString()
 	public static class JourneyPatternPoint implements Cloneable{
 		
-		public  JourneyPatternPoint(JourneyPatternPoint toClone){
+		private JourneyPatternPoint(JourneyPatternPoint toClone){
 			this.added = toClone.added;
 			this.distancefromstartroute = toClone.distancefromstartroute == null ? null : toClone.distancefromstartroute.intValue();
 			this.operatorpointref = toClone.operatorpointref;
@@ -48,86 +36,219 @@ public class JourneyPattern implements Cloneable{
 			this.platformCode = toClone.platformCode;
 		}
 		
+		public Builder edit(){
+			return new Builder(new JourneyPatternPoint(this));
+		}
+		
+		private JourneyPatternPoint(Integer pointorder, Long pointref,
+				String operatorpointref, Integer distancefromstartroute,
+				boolean scheduled, boolean skipped, boolean waitpoint,
+				String destinationCode, String platformCode,boolean added) {
+			this.added = added;
+			this.distancefromstartroute = distancefromstartroute;
+			this.operatorpointref = operatorpointref;
+			this.pointorder = pointorder;
+			this.pointref = pointref;
+			this.scheduled = scheduled;
+			this.skipped = skipped;
+			this.waitpoint = waitpoint;
+			this.destinationCode = destinationCode;
+			this.platformCode = platformCode;
+		}
+
 		@Override
 		public JourneyPatternPoint clone(){
 			return new JourneyPatternPoint(this);
 		}
+				
+		public static class Builder{
+			private Integer pointorder;
+			private Builder(){}
+			private Builder(JourneyPatternPoint toClone) {
+				this.added = toClone.added;
+				this.distancefromstartroute = toClone.distancefromstartroute == null ? null : toClone.distancefromstartroute.intValue();
+				this.operatorpointref = toClone.operatorpointref;
+				this.pointorder = toClone.pointorder == null ? null : toClone.pointorder.intValue();
+				this.pointref = toClone.pointref == null ? null : toClone.pointref.longValue();
+				this.scheduled = toClone.scheduled;
+				this.skipped = toClone.skipped;
+				this.waitpoint = toClone.waitpoint;
+				this.destinationCode = toClone.destinationCode;
+				this.platformCode = toClone.platformCode;
+			}
+
+			/**
+			 * Set sequential order in JourneyPattern and TimeDemandGroup
+			 */
+			public Builder setPointOrder(@NonNull Integer pointorder){
+				this.pointorder = pointorder;
+				return this;
+			}
+
+			private Long pointref;
+			/**
+			 * Set reference to this point in RID database.
+			 */
+			public Builder setPointRef(@NonNull Long pointref){
+				this.pointref = pointref;
+				return this;
+			}
+			@NonNull
+
+			private String operatorpointref;
+			/**
+			 * Set DataOwnerCode:UserStopCode of StopPoint.
+			 */
+			public Builder setOperatorPointRef(@NonNull String operatorpointref){
+				this.operatorpointref = operatorpointref;
+				return this;
+			}
+			@NonNull
+			private boolean waitpoint = false;
+			/**
+			 * Set whether this point is a WaitPoint/TimingPoint, if true a vehicle is not expected to depart early from this stop
+			 */
+			public Builder setIsWaitpoint(@NonNull boolean waitpoint){
+				this.waitpoint = waitpoint;
+				return this;
+			}
+			
+			
+			@NonNull
+			private Integer distancefromstartroute;
+			/**
+			 * Set distance from start route
+			 */
+			public Builder setDistanceFromStartRoute(@NonNull Integer distancefromstartroute){
+				this.distancefromstartroute = distancefromstartroute;
+				return this;
+			}
+			
+			@Getter
+			@NonNull
+			private boolean scheduled = true;
+			/**
+			 * Set whether stop is scheduled (not a dummy stop such as a bridge)
+			 */
+			public Builder setIsScheduled(@NonNull boolean isScheduled){
+				this.scheduled = isScheduled;
+				return this;
+			}
+
+			@Getter
+			@NonNull
+			private boolean skipped =false;
+			/**
+			 * Set whether stop is skipped (canceled)
+			 */
+			public Builder setIsSkipped(@NonNull boolean isSkipped){
+				this.skipped = isSkipped;
+				return this;
+			}
+
+			@Getter
+			@NonNull
+			/**
+			 * Set whether this point is added on the planned schedule.
+			 */
+			private Boolean added = false;
+			public Builder setIsAdded(@NonNull boolean isAdded){
+				this.added = isAdded;
+				return this;
+			}
+			
+			@Getter
+			private String destinationCode;
+			/**
+			 * Set DestinationCode as set in Koppelvlak1;
+			 */
+			public Builder setDestinationCode(@NonNull String destinationCode){
+				this.destinationCode = destinationCode;
+				return this;
+			}
+			
+			@Getter
+			private String platformCode;
+			/**
+			 * Set PlatformCode / sideCode
+			 */
+			public Builder setPlatformCode(@NonNull String platformCode){
+				this.platformCode = platformCode;
+				return this;
+			}
+			
+			public JourneyPatternPoint build(){
+				return new JourneyPatternPoint(pointorder,pointref,operatorpointref,distancefromstartroute,scheduled,skipped,waitpoint,destinationCode,platformCode,added);
+			}
+		}
 		
-		public JourneyPatternPoint(){}
+		public static Builder newBuilder(){
+			return new Builder();
+		}
 		
 		@Getter
-		@Setter
 		@NonNull
 		/**
 		 * Sequential order in JourneyPattern and TimeDemandGroup
 		 */
-		private Integer pointorder;
+		private final Integer pointorder;
 		@Getter
-		@Setter
 		@NonNull
 		/**
 		 * Reference to this point in RID database.
 		 */
-		private Long pointref;
+		private final Long pointref;
 		@Getter
-		@Setter
 		@NonNull
 		/**
 		 * DataOwnerCode:UserStopCode of StopPoint.
 		 */
-		private String operatorpointref;
+		private final String operatorpointref;
 		@Getter
-		@Setter
 		@NonNull
 		/**
 		 * Whether this point is a WaitPoint/TimingPoint, if true a vehicle is not expected to depart early from this stop
 		 */
-		private boolean waitpoint;
+		private final boolean waitpoint;
 		@Getter
-		@Setter
 		@NonNull
 		/**
 		 * Distance in meters from start of route. NOTE: does not have to start at 0.
 		 */
-		private Integer distancefromstartroute;
+		private final Integer distancefromstartroute;
 		@Getter
-		@Setter
 		@NonNull
 		/**
 		 * If stoppoint is not Scheduled, its a dummy not meant for passengers such as bridges and KAR points.
 		 * Dummies are included in the case a KV6 messages arrives on a dummy.
 		 */
-		private boolean scheduled;
+		private final boolean scheduled;
 
 		@Getter
-		@Setter
 		@NonNull
 		/**
 		 * This point is skipped.
 		 */
-		private boolean skipped = false;
+		private final boolean skipped;
 
 		@Getter
-		@Setter
 		@NonNull
 		/**
 		 * This point is added on the planned schedule.
 		 */
-		private boolean added = false;
+		private final boolean added;
 		
 		@Getter
-		@Setter
 		/**
 		 * DestinationCode as set in Koppelvlak1;
 		 */
-		private String destinationCode;
+		private final String destinationCode;
 		
 		@Getter
-		@Setter
 		/**
 		 * PlatformCode / sideCode;
 		 */
-		private String platformCode;
+		private final String platformCode;
 	}
 	
 	/**
@@ -162,20 +283,82 @@ public class JourneyPattern implements Cloneable{
 	/**
 	 * List with StopPoints in JourneyPattern
 	 */
-	@Getter private ArrayList<JourneyPatternPoint> points;
+	@Getter private final ImmutableList<JourneyPatternPoint> points;
 	
-	@Getter @Setter private String journeyPatternRef;
+	@Getter private final String journeyPatternRef;
 	
-	/**
-	 * Add point to JourneyPattern
-	 * @param point
-	 */
-	public void add(JourneyPatternPoint point){
-		points.add(point);
+	private JourneyPattern(String journeyPatternRef,Integer directionType,@NonNull List<JourneyPatternPoint> points){
+		this.journeyPatternRef = journeyPatternRef;
+		this.directiontype = directionType;
+		ImmutableList.Builder<JourneyPatternPoint> builder = ImmutableList.builder();
+		builder.addAll(points);
+		this.points = builder.build();
 	}
 
-	public JourneyPattern() {
-		points = new ArrayList<JourneyPatternPoint>();
-	}
 
+	public static class Builder{
+		private ArrayList<JourneyPatternPoint> points;
+		
+		public Builder(){
+			points = new ArrayList<JourneyPatternPoint>();
+		}
+		
+		public Integer directiontype;
+
+		/**
+		 * Set directionType of JourneyPattern within Line. 1 or 2.
+		 */
+		public void setDirectionType(Integer directionType){
+			this.directiontype = directionType;
+		}
+
+		@Getter private String journeyPatternRef;
+
+		public void setJourneyPatternref(String journeyPatternRef){
+			this.journeyPatternRef = journeyPatternRef;
+		}
+
+
+		public Builder(JourneyPattern journeyPattern){
+			this();
+			this.directiontype = journeyPattern.getDirectiontype();
+			this.journeyPatternRef = journeyPattern.getJourneyPatternRef();
+			for (JourneyPatternPoint point : journeyPattern.getPoints()){
+				points.add(new JourneyPatternPoint(point));
+			}
+		}
+
+		/**
+		 * Add point to TimeDemandGroup
+		 * @param point
+		 */
+		public void add(JourneyPatternPoint point){
+			this.points.add(point);
+		}
+
+		/**
+		 * Inserts the specified TimeDemandGroupPoint point at the specified position in this list
+		 * @param index
+		 * @param point
+		 */
+		public void add(int index,JourneyPatternPoint point){
+			this.points.add(index,point);
+		}
+
+		public JourneyPattern build(){
+			return new JourneyPattern(journeyPatternRef,directiontype,this.points);
+		}
+	}
+	
+	public static Builder newBuilder(){
+		return new Builder();
+	}
+	
+	public Builder edit(){
+		return new Builder(this);
+	}
+	
+	public JourneyPattern clone() {
+	    return edit().build();
+	}
 }

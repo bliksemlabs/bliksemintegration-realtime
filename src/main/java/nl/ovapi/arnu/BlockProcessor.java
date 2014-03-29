@@ -91,30 +91,30 @@ public class BlockProcessor {
 			throw new IllegalArgumentException("No times for stop");
 		}
 		for (Journey journey : block.getSegments()){
-			journey.setJourneypattern(journey.getJourneypattern().clone());
-			journey.setTimedemandgroup(journey.getTimedemandgroup().clone());
 			for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
 				JourneyPatternPoint pt = journey.getJourneypattern().getPoints().get(i);
 				String stationCode = stationCode(pt);
 				_log.error("Adding station, checking {} ",stationCode);
 				if (stationCode.equals(afterStation)){
 					_log.error("Found match at {} adding stop ",stationCode);
-					JourneyPatternPoint newJpt = new JourneyPatternPoint();
-					newJpt.setAdded(true);
 					if (journey.getJourneypattern().getPoint(pt.getPointorder()+1) != null){
 						throw new IllegalArgumentException("Duplicate pointorder "+stop.getStopCode()+" "+stop.getStopServiceCode());
 					}
-					newJpt.setPointorder(pt.getPointorder()+1);
-					newJpt.setScheduled(true);
-					newJpt.setWaitpoint(true);
-					newJpt.setOperatorpointref(String.format("%s:0", stop.getStopCode().toLowerCase()));
+					JourneyPatternPoint.Builder newJpt = JourneyPatternPoint.newBuilder()
+							.setIsAdded(true)
+							.setPointOrder(pt.getPointorder()+1)
+							.setIsScheduled(true)
+							.setIsWaitpoint(true)
+							.setOperatorPointRef(String.format("%s:0", stop.getStopCode().toLowerCase()));
 					Long id = ridService.getRailStation(stop.getStopCode().toLowerCase());
+					JourneyPattern.Builder newPattern = journey.getJourneypattern().edit();
 					if (id == null){
 						_log.error("PointId for station {} not found",stop.getStopCode());
 					}else{
-						newJpt.setPointref(id);
-						journey.getJourneypattern().getPoints().add(i+1,newJpt);
+						newJpt.setPointRef(id);
+						newPattern.add(i+1,newJpt.build());
 					}
+					journey.setJourneypattern(newPattern.build());
 					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 					Date date = df.parse(journey.getOperatingDay());
 					XMLGregorianCalendar time = stop.getArrival() != null ? stop.getArrival() : stop.getDeparture();
@@ -190,29 +190,29 @@ public class BlockProcessor {
 	}	
 
 	private static JourneyPattern patternFromArnu(RIDservice ridService,ServiceInfoServiceType info){
-		JourneyPattern jp = new JourneyPattern();
+		JourneyPattern.Builder jp = JourneyPattern.newBuilder();
 		try{
-			jp.setDirectiontype(Integer.parseInt(info.getServiceCode())%2 == 0 ? 2 :1);
+			jp.setDirectionType(Integer.parseInt(info.getServiceCode())%2 == 0 ? 2 :1);
 		}catch (Exception e){}
 		for (int i = 0; i < info.getStopList().getStop().size(); i++){
 			ServiceInfoStopType s = info.getStopList().getStop().get(i);
 			if (s.getArrival() == null && s.getDeparture() == null){
 				continue; //Train does not stop at this station;
 			}
-			JourneyPattern.JourneyPatternPoint pt = new JourneyPattern.JourneyPatternPoint();
-			pt.setPointorder((i+1)*10);
-			pt.setScheduled(true);
-			pt.setWaitpoint(true);
-			pt.setOperatorpointref(String.format("%s:0", s.getStopCode().toLowerCase()));
+			JourneyPattern.JourneyPatternPoint.Builder pt = JourneyPatternPoint.newBuilder();
+			pt.setPointOrder((i+1)*10);
+			pt.setIsScheduled(true);
+			pt.setIsWaitpoint(true);
+			pt.setOperatorPointRef(String.format("%s:0", s.getStopCode().toLowerCase()));
 			Long id = ridService.getRailStation(s.getStopCode().toLowerCase());
 			if (id == null){
 				_log.error("PointId for station {} not found",s.getStopCode());
 			}else{
-				pt.setPointref(id);
-				jp.add(pt);
+				pt.setPointRef(id);
+				jp.add(pt.build());
 			}
 		}
-		return jp;
+		return jp.build();
 	}
 
 	public static int secondsSinceMidnight(Calendar c){

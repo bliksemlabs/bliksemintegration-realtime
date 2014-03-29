@@ -284,35 +284,36 @@ public class RIDservice {
 			st = conn.prepareStatement(Database.journeyPatternQuery);
 			rs = st.executeQuery();
 			String journeypatternRef = null;
-			JourneyPattern jp = null;
+			JourneyPattern.Builder jp = null;
 			while (rs.next()) {
 				String curRef = rs.getString(1).intern();
 				if (!curRef.equals(journeypatternRef)){
+					if (jp != null){
+						newJourneypatterns.put(journeypatternRef, jp.build());
+					}
 					jp = null;
-					journeypatternRef = curRef;
 					if (journeypatterns.containsKey(journeypatternRef)){ //Recycle
 						newJourneypatterns.put(journeypatternRef, journeypatterns.get(journeypatternRef));
 						continue;
 					}
-					jp = new JourneyPattern();
-					newJourneypatterns.put(journeypatternRef, jp);
-				}else if (jp == null){
-					continue;
+					jp = JourneyPattern.newBuilder();
 				}
-				JourneyPatternPoint point = new JourneyPattern.JourneyPatternPoint();
-				point.setPointorder(rs.getInt(2));
-				point.setPointref(rs.getLong(3));
-				point.setOperatorpointref(rs.getString(4));
-				point.setWaitpoint(rs.getBoolean(5));
-				point.setDistancefromstartroute(rs.getInt(6));
-				point.setScheduled(rs.getBoolean(7));
-				point.setDestinationCode(rs.getString(8));
-				point.setPlatformCode(rs.getString(9));
-				jp.setDirectiontype(rs.getInt(10));
-				jp.setJourneyPatternRef(journeypatternRef);
+				journeypatternRef = curRef;
+				JourneyPatternPoint point = JourneyPatternPoint.newBuilder()
+						.setPointOrder(rs.getInt("pointorder"))
+						.setPointRef(rs.getLong("pointref"))
+						.setOperatorPointRef(rs.getString("operatorpointref"))
+						.setIsWaitpoint(rs.getBoolean("iswaitpoint"))
+						.setDistanceFromStartRoute(rs.getInt("distancefromstartroute"))
+						.setIsScheduled(rs.getBoolean("isscheduled"))
+						.setDestinationCode(rs.getString("destinationcode"))
+						.setPlatformCode(rs.getString("destinationcode"))
+						.build();
 				jp.add(point);
+				jp.setDirectionType(rs.getInt("directiontype"));
+				jp.setJourneyPatternref(journeypatternRef);
 			}
-			newJourneypatterns.put(journeypatternRef, jp);
+			newJourneypatterns.put(journeypatternRef, jp.build());
 			st = conn.prepareStatement(Database.journeyQuery);
 			rs = st.executeQuery();
 			int newCount = 0;
