@@ -13,7 +13,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import nl.ovapi.bison.VehicleDatabase.VehicleType;
-import nl.ovapi.bison.model.AdviceType;
 import nl.ovapi.bison.model.DataOwnerCode;
 import nl.ovapi.bison.model.DatedPasstime;
 import nl.ovapi.bison.model.JourneyStopType;
@@ -21,9 +20,6 @@ import nl.ovapi.bison.model.KV17cvlinfo;
 import nl.ovapi.bison.model.KV17cvlinfo.Mutation;
 import nl.ovapi.bison.model.KV6posinfo;
 import nl.ovapi.bison.model.KV6posinfo.Type;
-import nl.ovapi.bison.model.ReasonType;
-import nl.ovapi.bison.model.SubAdviceType;
-import nl.ovapi.bison.model.SubReasonType;
 import nl.ovapi.bison.model.TripStopStatus;
 import nl.ovapi.bison.model.WheelChairAccessible;
 import nl.ovapi.exceptions.StopNotFoundException;
@@ -301,7 +297,7 @@ public class JourneyProcessor {
 	 * @param subReasonType
 	 * @param reasonContent
 	 */
-	private void setReasonForJourney(ReasonType reasonType, SubReasonType subReasonType, String reasonContent){
+	private void setReasonForJourney(String reasonType, String subReasonType, String reasonContent){
 		for (DatedPasstime dp : datedPasstimes){
 			dp.setReasonType(reasonType);
 			dp.setSubReasonType(subReasonType);
@@ -315,7 +311,7 @@ public class JourneyProcessor {
 	 * @param subAdviceType
 	 * @param adviceContent
 	 */
-	private void setAdviceForJourney(AdviceType adviceType, SubAdviceType subAdviceType, String adviceContent){
+	private void setAdviceForJourney(String adviceType, String subAdviceType, String adviceContent){
 		for (DatedPasstime dp : datedPasstimes){
 			dp.setAdviceType(adviceType);
 			dp.setSubAdviceType(subAdviceType);
@@ -332,8 +328,8 @@ public class JourneyProcessor {
 		switch (m.getMutationtype()) {
 		case CANCEL:
 			setTripStatusForJourney(TripStopStatus.CANCEL);
-			setReasonForJourney(ReasonType.parse(m.getReasontype()),SubReasonType.parse(m.getSubreasontype()),m.getReasoncontent());
-			setAdviceForJourney(AdviceType.parse(m.getAdvicetype()),SubAdviceType.parse(m.getAdvicetype()),m.getAdvicetype());
+			setReasonForJourney(m.getReasontype(),m.getSubreasontype(),m.getReasoncontent());
+			setAdviceForJourney(m.getAdvicetype(),m.getAdvicetype(),m.getAdvicetype());
 			break;
 		case RECOVER:
 			clearKV17mutations();
@@ -376,12 +372,12 @@ public class JourneyProcessor {
 			if (userStopMatches && passageSequence == m.getPassagesequencenumber()){ 
 				switch (m.getMutationtype()) {
 				case MUTATIONMESSAGE:
-					dp.setAdviceType(AdviceType.parse(m.getAdvicetype()));
-					dp.setSubAdviceType(SubAdviceType.parse(m.getSubadvicetype()));
+					dp.setAdviceType(m.getAdvicetype());
+					dp.setSubAdviceType(m.getSubadvicetype());
 					dp.setAdviceContent(m.getAdvicecontent());
 
-					dp.setReasonType(ReasonType.parse(m.getReasontype()));
-					dp.setSubReasonType(SubReasonType.parse(m.getSubreasontype()));
+					dp.setReasonType(m.getReasontype());
+					dp.setSubReasonType(m.getSubreasontype());
 					dp.setReasonContent(m.getReasoncontent());
 					break;
 				case CHANGEDESTINATION://Not supported by Koppelvlak78

@@ -42,12 +42,11 @@ public class DatedPasstime {
 	@Getter private Integer numberOfCoaches;
 	@Getter private WheelChairAccessible wheelChairAccessible;
 	@Getter private String operatorCode;
-	@Getter private ReasonType reasonType;
-
-	@Getter private SubReasonType subReasonType;
+	@Getter private String reasonType;
+	@Getter private String subReasonType;
 	@Getter private String reasonContent;
-	@Getter private AdviceType adviceType;
-	@Getter private SubAdviceType subAdviceType;
+	@Getter private String adviceType;
+	@Getter private String subAdviceType;
 	@Getter private String adviceContent;
 	@Getter private DataOwnerCode timingPointDataOwnerCode;
 	@Getter private String timingPointCode;
@@ -67,7 +66,7 @@ public class DatedPasstime {
 	 */
 	@Getter @Setter private Integer distanceDriven;
 		
-	public void setReasonType(ReasonType reasonType) {
+	public void setReasonType(String reasonType) {
 		if (!Objects.equal(reasonType, this.reasonType)){
 			this.setLastUpdateTimeStamp(System.currentTimeMillis());
 		}
@@ -225,7 +224,7 @@ public class DatedPasstime {
 		this.dataOwnerCode = dataOwnerCode;
 	}
 
-	public void setSubReasonType(SubReasonType subReasonType) {
+	public void setSubReasonType(String subReasonType) {
 		if (!Objects.equal(subReasonType, this.subReasonType)){
 			this.setLastUpdateTimeStamp(System.currentTimeMillis());
 		}
@@ -239,14 +238,14 @@ public class DatedPasstime {
 		this.reasonContent = reasonContent;
 	}
 
-	public void setAdviceType(AdviceType adviceType){
+	public void setAdviceType(String adviceType){
 		if (!Objects.equal(adviceType, this.adviceType)){
 			this.setLastUpdateTimeStamp(System.currentTimeMillis());
 		}
 		this.adviceType = adviceType;
 	}	
 
-	public void setSubAdviceType(SubAdviceType subAdviceType){
+	public void setSubAdviceType(String subAdviceType){
 		if (!Objects.equal(subAdviceType, this.subAdviceType)){
 			this.setLastUpdateTimeStamp(System.currentTimeMillis());
 		}
@@ -357,12 +356,12 @@ public class DatedPasstime {
 		sb.append(wheelChairAccessible == null ? WheelChairAccessible.UNKNOWN : wheelChairAccessible).append('|');
 		sb.append(operatorCode == null ? "\\0" : operatorCode).append('|');
 		
-		sb.append(reasonType == null ? "\\0" : reasonType.name()).append('|');
-		sb.append(subReasonType == null ? "\\0" : subReasonType.name()).append('|');
+		sb.append(reasonType == null ? "\\0" : reasonType).append('|');
+		sb.append(subReasonType == null ? "\\0" : subReasonType).append('|');
 		sb.append(reasonContent == null ? "\\0" : reasonContent).append('|');
 		
-		sb.append(adviceType == null ? "\\0" : adviceType.name()).append('|');
-		sb.append(subAdviceType == null ? "\\0" : subAdviceType.name()).append('|');
+		sb.append(adviceType == null ? "\\0" : adviceType).append('|');
+		sb.append(subAdviceType == null ? "\\0" : subAdviceType).append('|');
 		sb.append(adviceContent == null ? "\\0" : adviceContent).append('|');
 
 		sb.append(timingPointDataOwnerCode == null ? "\\0" : timingPointDataOwnerCode.name()).append('|');
@@ -413,15 +412,15 @@ public class DatedPasstime {
 		res.setWheelChairAccessible(WheelChairAccessible.valueOf(v[20]));
 		res.setOperatorCode(v[21]);
 		if (v[22] != null)
-			res.setReasonType(ReasonType.parse(v[22]));
+			res.setReasonType(v[22]);
 		if (v[23] != null)
-			res.setSubReasonType(SubReasonType.parse(v[23]));
+			res.setSubReasonType(v[23]);
 		res.setReasonContent(v[24]);
 		if (v[25] != null){
-			res.setAdviceType(AdviceType.parse(v[25]));
+			res.setAdviceType(v[25]);
 		}
 		if (v[26] != null)
-			res.setSubAdviceType(SubAdviceType.parse(v[26]));
+			res.setSubAdviceType(v[26]);
 		res.setAdviceContent(v[27]);
 		res.setTimingPointDataOwnerCode(DataOwnerCode.valueOf(v[28]));
 		res.setTimingPointCode(v[29]);
