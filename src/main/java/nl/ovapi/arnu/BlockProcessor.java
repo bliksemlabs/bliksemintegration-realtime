@@ -181,8 +181,9 @@ public class BlockProcessor {
 					s.getArrival().toGregorianCalendar();
 				//SEconds since midnight
 				int time = secondsSinceMidnight(c);
-				TimeDemandGroup.TimeDemandGroupPoint.Builder pt = TimeDemandGroupPoint.newBuilder();
-				pt.setTotalDriveTime(time-departuretime);
+				TimeDemandGroup.TimeDemandGroupPoint.Builder pt = TimeDemandGroupPoint.newBuilder()
+															.setTotalDriveTime(time-departuretime)
+															 .setPointOrder(i);
 				if (s.getDeparture() != null){
 					c = s.getDeparture().toGregorianCalendar();
 					int depTime = secondsSinceMidnight(c);
