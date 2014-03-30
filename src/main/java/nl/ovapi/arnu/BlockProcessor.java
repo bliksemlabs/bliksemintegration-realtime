@@ -234,7 +234,7 @@ public class BlockProcessor {
 					.setPrivateCode(String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
 					.setId(String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
 					.setJourneyPattern(patternFromArnu(ridService,info));
-			timePatternFromArnu(j,info);
+			j.setTimeDemandGroup(timePatternFromArnu(j,info));
 			j.setId(j.getPrivateCode());
 			if (j.getJourneypattern().getPoints().size() != j.getTimedemandgroup().getPoints().size()){
 				throw new IllegalArgumentException("Size of timedemandgroup and journeypattern do not match");
