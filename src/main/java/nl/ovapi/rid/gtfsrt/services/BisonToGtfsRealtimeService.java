@@ -7,8 +7,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TimeZone;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -48,7 +49,6 @@ import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripU
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.VehiclePositions;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeIncrementalUpdate;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeSink;
-import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
@@ -81,19 +81,7 @@ public class BisonToGtfsRealtimeService {
 	private final static int POSINFO_MAX_AGE_SECONDS = 120;
 	private final static int TRIPUPDATE_EXPIRATION_HOURS = 1;
 
-	private GtfsRealtimeSource _tripUpdatesSource;
-	private GtfsRealtimeSource _vehiclePositionsSource;
-	private Map<String, JourneyProcessor> journeyProcessors;
-
-	@Inject
-	public void setTripUpdatesSource(@TripUpdates GtfsRealtimeSource tripUpdatesSource) {
-		_tripUpdatesSource = tripUpdatesSource;
-	}
-
-	@Inject
-	public void setVehiclePositionsSource(@VehiclePositions	GtfsRealtimeSource vehiclePositionsSource) {
-		_vehiclePositionsSource = vehiclePositionsSource;
-	}
+	private ConcurrentMap<String, JourneyProcessor> journeyProcessors;
 
 	@Inject
 	public void setTripUpdatesSink(@TripUpdates	GtfsRealtimeSink tripUpdatesSink) {
@@ -177,10 +165,9 @@ public class BisonToGtfsRealtimeService {
 	@PostConstruct
 	public void start() {
 		TimeZone.setDefault(TimeZone.getTimeZone("Europe/Amsterdam"));
-		journeyProcessors = Maps.newHashMap();
+		journeyProcessors = Maps.newConcurrentMap();
 		_executor = Executors.newCachedThreadPool();
 		_scheduler = Executors.newScheduledThreadPool(5);
-		_scheduler.scheduleAtFixedRate(new GarbageCollectorTask(), 60, GARBAGE_COLLECTOR_INTERVAL_SECONDS, TimeUnit.SECONDS);
 		_task = _executor.submit(new ProcessTask());
 		_task = _executor.submit(new ReceiveTask());
 		try {
@@ -188,6 +175,7 @@ public class BisonToGtfsRealtimeService {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		_scheduler.scheduleAtFixedRate(new GarbageCollectorTask(), GARBAGE_COLLECTOR_INTERVAL_SECONDS, GARBAGE_COLLECTOR_INTERVAL_SECONDS, TimeUnit.SECONDS);
 	}
 
 	@PreDestroy
@@ -230,48 +218,36 @@ public class BisonToGtfsRealtimeService {
 			long threshold = Utils.currentTimeSecs() - POSINFO_MAX_AGE_SECONDS;
 			int vehiclesCleaned = 0;
 			int tripsCleaned = 0;
-			for (FeedEntity f : _vehiclePositionsSource.getFeed().getEntityList()){		
+
+			for (Entry<String, JourneyProcessor> entry : journeyProcessors.entrySet()){
+				JourneyProcessor jp = entry.getValue();
 				try{
-					String[] idParts = f.getId().split(":");
-					String id = f.getId();
-					if (idParts.length == 5){
-						id = String.format("%s:%s:%s:%s", idParts[0],idParts[1],idParts[2],idParts[3]);
+					if (jp.getPosinfo() != null && jp.getPosinfo().getTimestamp() < threshold){
+						vehicleUpdates.addDeletedEntity(getId(jp.getPosinfo()));
+						vehiclesCleaned += 1;
 					}
-					JourneyProcessor j = getOrCreateProcessorForId(id);
-					if (!f.hasVehicle() || f.getVehicle().getTimestamp() < threshold){
-						if (j != null && idParts.length == 4){
-							j.clearKV6();
-						}else if (j != null && idParts.length == 5){
-							Integer reinforcementNumber = Integer.valueOf(idParts[4]);
-							j.getReinforcements().remove(reinforcementNumber);
-						}
-						vehicleUpdates.addDeletedEntity(f.getId());
-						_log.trace("Garbage cleaned {}",f.getId());
-						vehiclesCleaned++;
-					}
-				}catch (Exception e){
-					_log.error("Garbage Collection tripUpdates",e);
-				}
-			}
-			for (FeedEntity f : _tripUpdatesSource.getFeed().getEntityList()){
-				try{
-					if (!f.hasTripUpdate() ||( f.getTripUpdate().hasTimestamp() && f.getTripUpdate().getTimestamp() < threshold)){
-						Journey j = _ridService.getJourney(f.getId());
-						if (j == null){
-							tripUpdates.addDeletedEntity(f.getId());
-							_log.trace("Garbage cleaned -> Journey Null {}",f.getId());
-							tripsCleaned++;
-						}else if (j.getEndEpoch() < (Utils.currentTimeSecs()-TRIPUPDATE_EXPIRATION_HOURS*60*60)){ //
-							tripUpdates.addDeletedEntity(f.getId());
-							_log.trace("Garbage cleaned {}",f.getId());
-							tripsCleaned++;
+					for (Entry<Integer, KV6posinfo> reinforcement : jp.getReinforcements().entrySet()){
+						if (jp.getPosinfo() != null && reinforcement.getValue().getTimestamp() < threshold){
+							vehicleUpdates.addDeletedEntity(String.format("%s:%s",getId(reinforcement.getValue()),reinforcement.getKey()));
+							vehiclesCleaned += 1;
 						}
 					}
 				}catch (Exception e){
+					_log.error("Garbage Collection vehiclepositions",e);
+				}
+				try{
+					if (jp.getEndEpoch() < (Utils.currentTimeSecs()-TRIPUPDATE_EXPIRATION_HOURS*60*60)){ //
+						tripUpdates.addDeletedEntity(entry.getKey());
+						journeyProcessors.remove(entry.getKey());
+						tripsCleaned++;
+						_log.trace("Garbage cleaned {}",entry.getKey());
+					}
+				}catch (Exception e){
+					e.printStackTrace();
 					_log.error("Garbage Collection tripUpdates",e);
 				}
 			}
-			_log.info("GarbageCollector: {} vehicles cleaned, {} trips cleaned",vehiclesCleaned,tripsCleaned);
+			_log.error("GarbageCollector: {} vehicles cleaned, {} trips cleaned",vehiclesCleaned,tripsCleaned);
 			if (vehicleUpdates.getDeletedEntities().size() > 0 || vehicleUpdates.getUpdatedEntities().size() > 0)
 				_vehiclePositionsSink.handleIncrementalUpdate(vehicleUpdates);
 			if (tripUpdates.getDeletedEntities().size() > 0 || tripUpdates.getUpdatedEntities().size() > 0)
@@ -287,6 +263,7 @@ public class BisonToGtfsRealtimeService {
 				posinfo.getJourneynumber());
 		return id;
 	}
+
 	private class ProcessKV6Task implements Runnable{
 		private ArrayList<KV6posinfo> posinfos;
 		public ProcessKV6Task(ArrayList<KV6posinfo> posinfos){
