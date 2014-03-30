@@ -110,7 +110,7 @@ public class TrainProcessor {
 
 	public void setRouteId(@NonNull Long routeId){
 		for (BlockProcessor jp : _processors){
-			jp.getBlock().getSegments().get(0).setRouteId(routeId);
+			jp.setRouteId(routeId);
 		}
 	}
 

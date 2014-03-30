@@ -325,29 +325,26 @@ public class RIDservice {
 					continue;
 				}
 				newCount++;
-				Journey journey = new Journey();
-				journey.setId(rs.getLong(2)+"");
-				journey.setJourneypattern(newJourneypatterns.get(rs.getString(3).intern()));
-				if (journey.getJourneypattern() == null)
-					_log.error("JourneyPattern == null {} {}",rs.getString(1),rs.getString(3));
-				journey.setTimedemandgroup(newTimedemandgroups.get(rs.getString(4).intern()));
-				if (journey.getTimedemandgroup() == null)
-					_log.error("TimeDemandGroup == null {} {}",rs.getString(1),rs.getString(4));
-				journey.setDeparturetime(rs.getInt(5));
-				if (rs.getString(6) == null){
-					journey.setWheelchairaccessible(null);
-				}else{
-					journey.setWheelchairaccessible(rs.getBoolean(6));
-				}
-				journey.setAgencyId(rs.getString(7));
-				journey.setOperatingDay(rs.getString(8));
+				Journey journey = Journey.newBuilder()
+						.setId(rs.getString("id"))
+						.setJourneyPattern(newJourneypatterns.get(rs.getString("journeypatternref")))
+						.setTimeDemandGroup(newTimedemandgroups.get(rs.getString("timedemandgroupref")))
+						.setAgencyId(rs.getString("operatorcode"))
+						.setDeparturetime(rs.getInt("departuretime"))
+						.setOperatingDay(rs.getString("validdate"))
+						.setPrivateCode(rs.getString("privatecode"))
+						.setRouteId(rs.getLong("lineref"))
+						.setAvailabilityConditionRef(rs.getLong("availabilityconditionref"))
+						.setWheelchairaccessible(rs.getString("wheelchairaccessible") == null ? 
+								null : rs.getBoolean("wheelchairaccessible")).build();
 				long date = new SimpleDateFormat("yyyy-MM-dd").parse(rs.getString(8)).getTime();
 				if (fromDate == 0 || date < fromDate){
 					fromDate = date;
-				}
-				journey.setPrivateCode(rs.getString(9));
-				journey.setRouteId(rs.getLong(10));
-				journey.setAvailabilityConditionRef(rs.getLong(11));
+				}				
+				if (journey.getJourneypattern() == null)
+					_log.error("JourneyPattern == null {} {}",rs.getString(1),rs.getString(3));
+				if (journey.getTimedemandgroup() == null)
+					_log.error("TimeDemandGroup == null {} {}",rs.getString(1),rs.getString(4));
 				if (newJourneys.containsKey(key)){ //Trains can have multiple journeys under same trainnumer
 					_log.info("Duplicate privatecodes ignoring one of {}",rs.getString(1));
 				}else{
@@ -361,29 +358,26 @@ public class RIDservice {
 			Block block = null;
 			while (rs.next()) {
 				String key = hf.hashString(rs.getString(1)).toString();
-				Journey journey = new Journey();
-				journey.setId(rs.getLong(2)+"");
-				journey.setJourneypattern(newJourneypatterns.get(rs.getString(3).intern()));
-				if (journey.getJourneypattern() == null)
-					_log.error("JourneyPattern == null {} {}",rs.getString(1),rs.getString(3));
-				journey.setTimedemandgroup(newTimedemandgroups.get(rs.getString(4).intern()));
-				if (journey.getTimedemandgroup() == null)
-					_log.error("TimeDemandGroup == null {} {}",rs.getString(1),rs.getString(4));
-				journey.setDeparturetime(rs.getInt(5));
-				if (rs.getString(6) == null){
-					journey.setWheelchairaccessible(null);
-				}else{
-					journey.setWheelchairaccessible(rs.getBoolean(6));
-				}
-				journey.setAgencyId(rs.getString(7));
-				journey.setOperatingDay(rs.getString(8));
+				Journey journey = Journey.newBuilder()
+						.setId(rs.getString("id"))
+						.setJourneyPattern(newJourneypatterns.get(rs.getString("journeypatternref")))
+						.setTimeDemandGroup(newTimedemandgroups.get(rs.getString("timedemandgroupref")))
+						.setAgencyId(rs.getString("operatorcode"))
+						.setDeparturetime(rs.getInt("departuretime"))
+						.setOperatingDay(rs.getString("validdate"))
+						.setPrivateCode(rs.getString("privatecode"))
+						.setRouteId(rs.getLong("lineref"))
+						.setBlockRef(rs.getString("blockref"))
+						.setWheelchairaccessible(rs.getString("wheelchairaccessible") == null ? 
+								null : rs.getBoolean("wheelchairaccessible")).build();
 				long date = new SimpleDateFormat("yyyy-MM-dd").parse(rs.getString(8)).getTime();
 				if (fromDate == 0 || date < fromDate){
 					fromDate = date;
 				}
-				journey.setPrivateCode(rs.getString(9));
-				journey.setRouteId(rs.getLong(10));
-				journey.setBlockRef(rs.getString(11));
+				if (journey.getJourneypattern() == null)
+					_log.error("JourneyPattern == null {} {}",rs.getString(1),rs.getString(3));
+				if (journey.getTimedemandgroup() == null)
+					_log.error("TimeDemandGroup == null {} {}",rs.getString(1),rs.getString(4));
 				if (block != null && block.getBlockRef().equals(journey.getBlockRef())){
 					block.addJourney(journey);
 				}else{

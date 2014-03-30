@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
+import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeEvent;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
@@ -90,12 +91,15 @@ public class BlockProcessor {
 		if (stop.getArrival() == null && stop.getDeparture() == null){
 			throw new IllegalArgumentException("No times for stop");
 		}
-		for (Journey journey : block.getSegments()){
+		for (int j = 0; j < block.getSegments().size(); j++){
+			Journey journey = block.getSegments().get(j);
+			Journey.Builder builder = null;
 			for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
 				JourneyPatternPoint pt = journey.getJourneypattern().getPoints().get(i);
 				String stationCode = stationCode(pt);
 				_log.error("Adding station, checking {} ",stationCode);
 				if (stationCode.equals(afterStation)){
+					builder = journey.edit();
 					_log.error("Found match at {} adding stop ",stationCode);
 					if (journey.getJourneypattern().getPoint(pt.getPointorder()+1) != null){
 						throw new IllegalArgumentException("Duplicate pointorder "+stop.getStopCode()+" "+stop.getStopServiceCode());
@@ -114,7 +118,7 @@ public class BlockProcessor {
 						newJpt.setPointRef(id);
 						newPattern.add(i+1,newJpt.build());
 					}
-					journey.setJourneypattern(newPattern.build());
+					builder.setJourneyPattern(newPattern.build());
 					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 					Date date = df.parse(journey.getOperatingDay());
 					XMLGregorianCalendar time = stop.getArrival() != null ? stop.getArrival() : stop.getDeparture();
@@ -130,7 +134,7 @@ public class BlockProcessor {
 							.setStopWaitTime(stopwaittime)
 							.setTotalDriveTime(totaldrivetime).build();
 					td.add(i+1, tpt);
-					journey.setTimedemandgroup(td.build());
+					builder.setTimeDemandGroup(td.build());
 					_log.error("Stop added ",stationCode);
 					_log.error("JourneyPattern {}",journey.getJourneypattern());
 					_log.error("TimeGroup {}",journey.getTimedemandgroup());
@@ -138,6 +142,9 @@ public class BlockProcessor {
 						throw new IllegalArgumentException("Adding point failed: Size of timedemandgroup and journeypattern do not match "+journey);
 					}				
 					_log.error("Service {} Stop {} added sucessfully for ",stop.getStopServiceCode(),stop.getStopCode());
+					if (builder != null){
+						block.getSegments().set(j, builder.build());
+					}
 					return;
 				}
 			}
@@ -149,7 +156,7 @@ public class BlockProcessor {
 		return point.getOperatorpointref().split(":")[0];
 	}
 
-	private static TimeDemandGroup timePatternFromArnu(Journey j,ServiceInfoServiceType info){
+	private static TimeDemandGroup timePatternFromArnu(Journey.Builder j,ServiceInfoServiceType info){
 		TimeDemandGroup.Builder tp = TimeDemandGroup.newBuilder();
 		int departuretime = -1;
 		for (int i = 0; i < info.getStopList().getStop().size(); i++){
@@ -221,18 +228,19 @@ public class BlockProcessor {
 
 	public static BlockProcessor fromArnu(@NonNull RIDservice ridService,@NonNull ServiceInfoServiceType info){
 		try{
-			Journey j = new Journey();
-			j.setAdded(true);
 			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-			j.setPrivateCode(String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode()));
+			Journey.Builder j = Journey.newBuilder()
+					.setIsAdded(true)
+					.setPrivateCode(String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
+					.setId(String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
+					.setJourneyPattern(patternFromArnu(ridService,info));
+			timePatternFromArnu(j,info);
 			j.setId(j.getPrivateCode());
-			j.setJourneypattern(patternFromArnu(ridService,info));
-			j.setTimedemandgroup(timePatternFromArnu(j,info));
 			if (j.getJourneypattern().getPoints().size() != j.getTimedemandgroup().getPoints().size()){
 				throw new IllegalArgumentException("Size of timedemandgroup and journeypattern do not match");
 			}
 			Block b = new Block(null);
-			b.addJourney(j);
+			b.addJourney(j.build());
 			return new BlockProcessor(b);
 		}catch (Exception e){
 			_log.error("Exception during Journey adding {}",info,e);
@@ -249,8 +257,8 @@ public class BlockProcessor {
 	 */
 
 	public void setRouteId(@NonNull Long routeId){
-		for (Journey j : block.getSegments()){
-			j.setRouteId(routeId);
+		for (int i = 0; i < block.getSegments().size();i++){
+			block.getSegments().set(i, block.getSegments().get(i).edit().setRouteId(routeId).build());
 		}
 	}
 
@@ -361,14 +369,13 @@ public class BlockProcessor {
 				}
 				trip.addStopTimeUpdate(stop);
 			}
+			TripDescriptor.Builder tripDesc = journey.tripDescriptor();
 			if (stopsCanceled > journey.getJourneypattern().getPoints().size()-2){
 				//Journey now exists of a single stop or less
 				trip.clearStopTimeUpdate();
-				journey.setCanceled(true);
-			}else{
-				journey.setCanceled(false);
+				tripDesc.setScheduleRelationship(TripDescriptor.ScheduleRelationship.CANCELED);
 			}
-			trip.setTrip(journey.tripDescriptor());
+			trip.setTrip(tripDesc);
 			updates.add(trip);
 		}
 		return updates;

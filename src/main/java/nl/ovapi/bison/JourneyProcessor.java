@@ -942,12 +942,12 @@ public class JourneyProcessor {
 			setTripStatus(posinfo);
 			setPunctuality(posinfo);
 			this.posinfo = posinfo;
-			StringBuilder sb = new StringBuilder();
+			/*StringBuilder sb = new StringBuilder();
 			for (DatedPasstime dp : datedPasstimes){
 				sb.append(dp.toCtxLine());
 				sb.append("\n");
 			}
-			System.out.println(sb);
+			System.out.println(sb);*/
 		}
 		return filter(tripUpdateFromKV8());
 	}		

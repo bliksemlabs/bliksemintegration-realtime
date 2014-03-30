@@ -6,13 +6,9 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
@@ -20,87 +16,259 @@ import com.google.transit.realtime.GtfsRealtimeOVapi;
 import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripDescriptor;
 @ToString()
 public class Journey {
+	
+	public static class Builder{
+		@Getter
+		private String id;
+		
+		/**
+		 * Set trip_id of this journey
+		 */
+		public Builder setId(String id){
+			this.id = id;
+			return this;
+		}
+		
+		@Getter
+		private String privateCode;
+		
+		/**
+		 * Set DataOwnerCode:LinePlanningNumber:Journeynumber of trip, matches with KV6/17
+		 */
+		public Builder setPrivateCode(String privateCode){
+			this.privateCode = privateCode;
+			return this;
+		}
+		
+		@Getter
+		private JourneyPattern journeypattern;
+		/**
+		 * Set JourneyPattern of the Journey
+		 */
+		public Builder setJourneyPattern(JourneyPattern journeypattern){
+			this.journeypattern = journeypattern;
+			return this;
+		}
+		
+		
+		@Getter
+		private TimeDemandGroup timedemandgroup;
+		
+		/**
+		 * Set TimeDemandGroup of the Journey
+		 */
+		public Builder setTimeDemandGroup(TimeDemandGroup timedemandgroup){
+			this.timedemandgroup = timedemandgroup;
+			return this;
+		}
+		
+
+		@Getter
+		/**
+		 * Departuretime of the Journey, in seconds since midnight of operatingday (00:00:00).
+		 */
+		private Integer departuretime;
+		
+		/**
+		 * Set TimeDemandGroup of the Journey
+		 */
+		public Builder setDeparturetime(Integer departuretime){
+			this.departuretime = departuretime;
+			return this;
+		}
+		
+		@Getter
+		private Boolean wheelchairaccessible;
+		/**
+		 * Set whether Journey is accessible to Journey
+		 */
+		public Builder setWheelchairaccessible(Boolean wheelchairaccessible){
+			this.wheelchairaccessible = wheelchairaccessible;
+			return this;
+		}
+		
+		@Getter
+		private String agencyId;
+		/**
+		 * Set agency_id of journey eg. (HTMBUZZ, BRENG, CXX).
+		 * Is not equal to DataOwnerCode!.
+		 */
+		public Builder setAgencyId(String agencyId){
+			this.agencyId = agencyId;
+			return this;
+		}
+		
+		@Getter
+		private String operatingDay;
+		/**
+		 * Set ISO-8601 formatted (YYYY-MM-DD) OperatingDay.
+		 */
+		public Builder setOperatingDay(String operatingDay){
+			this.operatingDay = operatingDay;
+			return this;
+		}
+		
+		
+		@Getter
+		private Long routeId;
+		/**
+		 * Set route_id of this journey.
+		 */
+		public Builder setRouteId(Long routeId){
+			this.routeId = routeId;
+			return this;
+		}
+
+		@Getter
+		private Long availabilityConditionRef;
+		/**
+		 * Set service_id / availabilityconditionref of this journey.
+		 */
+		public Builder setAvailabilityConditionRef(Long availabilityConditionRef){
+			this.availabilityConditionRef = availabilityConditionRef;
+			return this;
+		}
+
+		@Getter
+		private boolean isAdded = false;
+		/**
+		 * Set whether journey is added on top on scheduled.
+		 */
+		public Builder setIsAdded(boolean isAdded){
+			this.isAdded = isAdded;
+			return this;
+		}
+		
+		@Getter
+		private boolean isCanceled = false;
+		/**
+		 * Set whether journey is added on top on scheduled.
+		 */
+		public Builder setIsCanceled(boolean isCanceled){
+			this.isCanceled = isCanceled;
+			return this;
+		}
+		
+		@Getter
+		private String blockRef;
+		/**
+		 * Set block_id / blockRef of journey.
+		 */
+		public Builder setBlockRef(String blockRef){
+			this.blockRef = blockRef;
+			return this;
+		}
+		
+		public Builder(){}
+		
+		public Builder(Journey journey){
+			this.id = journey.id;
+			this.privateCode = journey.privateCode;
+			this.journeypattern = journey.journeypattern;
+			this.timedemandgroup = journey.timedemandgroup;
+			this.departuretime = journey.departuretime;
+			this.wheelchairaccessible = journey.wheelchairaccessible;
+			this.agencyId = journey.agencyId;
+			this.operatingDay = journey.operatingDay;
+			this.routeId = journey.routeId;
+			this.availabilityConditionRef= journey.availabilityConditionRef;
+			this.isAdded = journey.isAdded;
+			this.isCanceled = journey.isCanceled;
+			this.blockRef = journey.blockRef;
+		}
+		
+		public Journey build(){
+			return new Journey(id,privateCode,journeypattern,timedemandgroup,departuretime,
+					wheelchairaccessible,agencyId,operatingDay,routeId,availabilityConditionRef,
+					isAdded,isCanceled,blockRef);
+		}
+		
+	}
+	
 	@Getter
-	@Setter
 	/**
 	 * Trip_id of this journey
 	 */
-	private String id;
+	private final String id;
 	@Getter
-	@Setter
 	/**
 	 * DataOwnerCode:LinePlanningNumber:Journeynumber of trip, matches with KV6/17
 	 */
-	private String privateCode;
+	private final String privateCode;
 	@Getter
-	@Setter
 	/**
 	 * JourneyPattern of the Journey
 	 */
-	private JourneyPattern journeypattern;
+	private final JourneyPattern journeypattern;
 	@Getter
-	@Setter
 	/**
 	 * TimeDemandGroup of the Journey
 	 */
-	private TimeDemandGroup timedemandgroup;
+	private final TimeDemandGroup timedemandgroup;
 
 	@Getter
-	@Setter
 	/**
 	 * Departuretime of the Journey, in seconds since midnight of operatingday (00:00:00).
 	 */
-	private Integer departuretime;
+	private final Integer departuretime;
 	@Getter
-	@Setter
 	/**
 	 * Indicates whether Journey is accessible to Journey
 	 */
-	private Boolean wheelchairaccessible;
+	private final Boolean wheelchairaccessible;
 	@Getter
-	@Setter
 	/**
 	 * agency_id of journey eg. (HTMBUZZ, BRENG, CXX).
 	 * Is not equal to DataOwnerCode!.
 	 */
-	private String agencyId;
+	private final String agencyId;
 	@Getter
-	@Setter
 	/**
 	 * ISO-8601 formatted (YYYY-MM-DD) OperatingDay.
 	 */
-	private String operatingDay;
+	private final String operatingDay;
 	
 	@Getter
-	@Setter
 	/**
 	 * ID of route.
 	 */
-	private Long routeId;
+	private final Long routeId;
 
 	@Getter
-	@Setter
 	/**
 	 * Availabilitycondition.
 	 */
-	private Long availabilityConditionRef;
+	private final Long availabilityConditionRef;
 	
 	@Getter
-	@Setter
-	/**
-	 * Indicates whether the trip is canceled
-	 */
-	private boolean isCanceled;
-
-	@Getter
-	@Setter
-	private boolean isAdded;
+	private final boolean isAdded;
 	
 	@Getter
-	@Setter
-	private String blockRef;
+	private final boolean isCanceled;
+	
+	@Getter
+	private final String blockRef;
 
-	private static final Logger _log = LoggerFactory.getLogger(Journey.class);
+	public Journey(String id, String privateCode,
+			JourneyPattern journeypattern, TimeDemandGroup timedemandgroup,
+			Integer departuretime, Boolean wheelchairaccessible,
+			String agencyId, String operatingDay, Long routeId,
+			Long availabilityConditionRef, boolean isAdded,
+			boolean isCanceled, String blockRef) {
+		this.id = id;
+		this.privateCode = privateCode;
+		this.journeypattern = journeypattern;
+		this.timedemandgroup = timedemandgroup;
+		this.departuretime = departuretime;
+		this.wheelchairaccessible = wheelchairaccessible;
+		this.agencyId = agencyId;
+		this.operatingDay = operatingDay;
+		this.routeId = routeId;
+		this.availabilityConditionRef= availabilityConditionRef;
+		this.isAdded = isAdded;
+		this.isCanceled = isCanceled;
+		this.blockRef = blockRef;
+	}
 
 	/**
 	 * @return GTFS-Realtime TripDescriptor for this Journey
@@ -153,11 +321,12 @@ public class Journey {
 		try {
 			Calendar c = Calendar.getInstance(TimeZone.getDefault());
 			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(getOperatingDay()));
-			c.set(Calendar.HOUR, 0);
+			//The 4 hour trick here is to get correct DST time for the operatingday
+			c.set(Calendar.HOUR, 4);
 			c.set(Calendar.MINUTE, 0);
 			c.set(Calendar.SECOND, 0);
 			c.set(Calendar.MILLISECOND, 0);
-			c.add(Calendar.SECOND, getDeparturetime());
+			c.add(Calendar.SECOND, getDeparturetime()-4*60*60);
 			return c.getTimeInMillis()/1000;
 		} catch (ParseException e) {
 			return -1;
@@ -195,6 +364,14 @@ public class Journey {
 			}
 		}
 		return null;
+	}
+	
+	public static Builder newBuilder(){
+		return new Builder();
+	}
+	
+	public Builder edit(){
+		return new Builder(this);
 	}
 }
 

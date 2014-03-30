@@ -206,30 +206,30 @@ public class KV6Test {
 		return td.build();
 	}
 
+	
 	public Journey getJourney(int journeypatternVersion){
-		Journey j = new Journey();
-		j.setAgencyId("QBUZZ");
-		Calendar c = Calendar.getInstance();
-		j.setDeparturetime(c.get(Calendar.HOUR_OF_DAY)*60*60+c.get(Calendar.MINUTE)*60+c.get(Calendar.SECOND));
-		j.setId(2552611L+"");
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-		j.setOperatingDay(df.format(c.getTime()));
+		Calendar c = Calendar.getInstance();
+		Journey.Builder j = Journey.newBuilder()
+			.setAgencyId("QBUZZ")
+			.setDeparturetime(c.get(Calendar.HOUR_OF_DAY)*60*60+c.get(Calendar.MINUTE)*60+c.get(Calendar.SECOND))
+			.setId("2552611")
+			.setOperatingDay(df.format(c.getTime()))
+			.setPrivateCode("QBUZZ:g005:1045")
+			.setAvailabilityConditionRef(0L)
+			.setTimeDemandGroup(testGroup());
 		if (journeypatternVersion == 0){
-			j.setJourneypattern(testPattern());
+			j.setJourneyPattern(testPattern());
 		}else if (journeypatternVersion == 1){
-			j.setJourneypattern(testPattern2());
+			j.setJourneyPattern(testPattern2());
 		}else if (journeypatternVersion == 2){
-			j.setJourneypattern(testPattern2());
+			j.setJourneyPattern(testPattern2());
 		}
-		j.setAvailabilityConditionRef(0L);
-		j.setTimedemandgroup(testGroup());
-		j.setPrivateCode("QBUZZ:g005:1045");
-		return j;
+		return j.build();
 	}
 	@Test
 	public void testNegativeOnFirstStopAsTimingPoint() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
 		Journey journey = getJourney(0);
-		journey.setPrivateCode("QBUZZ:NEGFIRST:432");
 		JourneyProcessor j = new JourneyProcessor(journey);
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
@@ -243,6 +243,7 @@ public class KV6Test {
 		posinfo.setTimestamp(journey.getDepartureEpoch()-60);
 		posinfo.setPassagesequencenumber(0);
 		TripUpdate.Builder tripUpdate = j.update(posinfo);
+		System.out.println(tripUpdate.build());
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),journey.getDepartureEpoch()-60);
@@ -305,7 +306,6 @@ public class KV6Test {
 	@Test
 	public void testNegativeOnDepartureFirstStop() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
 		Journey journey = getJourney(0);
-		journey.setPrivateCode("CXX:TOOEARLYF:112");
 		JourneyProcessor j = new JourneyProcessor(journey);
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);
@@ -327,7 +327,6 @@ public class KV6Test {
 	@Test
 	public void testDelayOnDepartureFirstStop() throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
 		Journey journey = getJourney(0);
-		journey.setPrivateCode("CXX:DELAYF:113");
 		JourneyProcessor j = new JourneyProcessor(journey);
 		KV6posinfo posinfo = new KV6posinfo();
 		posinfo.setDataownercode(DataOwnerCode.QBUZZ);

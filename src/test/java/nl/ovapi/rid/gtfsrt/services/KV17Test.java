@@ -115,17 +115,17 @@ public class KV17Test {
 	}
 
 	public Journey getJourney(){
-		Journey j = new Journey();
-		j.setAgencyId("QBUZZ");
-		Calendar c = Calendar.getInstance();
-		j.setDeparturetime(c.get(Calendar.HOUR_OF_DAY)*60*60+c.get(Calendar.MINUTE)*60+c.get(Calendar.SECOND));
-		j.setId(2552611L+"");
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-		j.setOperatingDay(df.format(c.getTime()));
-		j.setJourneypattern(testPattern());
-		j.setAvailabilityConditionRef(0L);
-		j.setPrivateCode("QBUZZ:g005:1045");
-		j.setTimedemandgroup(testGroup());
+		Calendar c = Calendar.getInstance();
+		Journey j = Journey.newBuilder()
+			.setAgencyId("QBUZZ")
+			.setDeparturetime(c.get(Calendar.HOUR_OF_DAY)*60*60+c.get(Calendar.MINUTE)*60+c.get(Calendar.SECOND))
+			.setId("2552611")
+			.setOperatingDay(df.format(c.getTime()))
+			.setPrivateCode("QBUZZ:g005:1045")
+			.setAvailabilityConditionRef(0L)
+			.setJourneyPattern(testPattern())
+			.setTimeDemandGroup(testGroup()).build();
 		return j;
 	}
 	
@@ -155,7 +155,7 @@ public class KV17Test {
 		for (String id : map.keySet()){
 			cvlinfos = map.get(id);
 			TripUpdate.Builder tripUpdate = j.update(cvlinfos);
-			assertTrue(journey.isCanceled());
+			System.out.println(tripUpdate.build());
 			assertTrue(tripUpdate.getTrip().getScheduleRelationship() == ScheduleRelationship.CANCELED);
 		}
 	}
