@@ -5,10 +5,12 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -24,6 +26,7 @@ import javax.xml.transform.stream.StreamSource;
 import lombok.NonNull;
 import nl.ovapi.ZeroMQUtils;
 import nl.ovapi.arnu.TrainProcessor;
+import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.Block;
 import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
@@ -31,6 +34,7 @@ import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
 
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripUpdates;
+import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeIncrementalUpdate;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,12 +49,15 @@ import com.google.common.collect.Maps;
 public class ARNUritInfoToGtfsRealTimeServices {
 
 	private ExecutorService _executor;
+	private ScheduledExecutorService _scheduler;
 	private Future<?> _task;
 	private static final Logger _log = LoggerFactory.getLogger(ARNUritInfoToGtfsRealTimeServices.class);
 	private final static String pubAddress = "tcp://post.ndovloket.nl:7662";
+	private final static int GARBAGE_COLLECTOR_INTERVAL_SECONDS = 60;
+	private final static int TRIPUPDATE_EXPIRATION_HOURS = 1;
 	private GtfsRealtimeSink _tripUpdatesSink;
 	private RIDservice _ridService;
-	private Map<String, TrainProcessor> journeyProcessors;
+	private ConcurrentMap<String, TrainProcessor> journeyProcessors;
 
 
 	@Inject
@@ -66,10 +73,44 @@ public class ARNUritInfoToGtfsRealTimeServices {
 	@PostConstruct
 	public void start() {
 		_executor = Executors.newCachedThreadPool();
-		journeyProcessors = Maps.newHashMap();
+		_scheduler = Executors.newScheduledThreadPool(5);
+		journeyProcessors = Maps.newConcurrentMap();
 		_task = _executor.submit(new ProcessTask());
 		_task = _executor.submit(new ReceiveTask());
+		_scheduler.scheduleAtFixedRate(new GarbageCollectorTask(), GARBAGE_COLLECTOR_INTERVAL_SECONDS, GARBAGE_COLLECTOR_INTERVAL_SECONDS, TimeUnit.SECONDS);
+
 	}
+	
+
+
+	private class GarbageCollectorTask implements Runnable{
+		@Override
+		public void run() {
+			//Delete vehicle updates that haven't received KV6 in 2 minutes.
+			GtfsRealtimeIncrementalUpdate vehicleUpdates = new GtfsRealtimeIncrementalUpdate();
+			GtfsRealtimeIncrementalUpdate tripUpdates = new GtfsRealtimeIncrementalUpdate();
+			int tripsCleaned = 0;
+
+			for (Entry<String, TrainProcessor> entry : journeyProcessors.entrySet()){
+				TrainProcessor jp = entry.getValue();
+				try{
+					if (jp.getEndEpoch() < (Utils.currentTimeSecs()-TRIPUPDATE_EXPIRATION_HOURS*60*60)){ //
+						tripUpdates.addDeletedEntity(entry.getKey());
+						journeyProcessors.remove(entry.getKey());
+						tripsCleaned++;
+						_log.trace("Garbage cleaned {}",entry.getKey());
+					}
+				}catch (Exception e){
+					e.printStackTrace();
+					_log.error("Garbage Collection tripUpdates",e);
+				}
+			}
+			_log.error("GarbageCollector: {} trips cleaned",tripsCleaned);
+			if (tripUpdates.getDeletedEntities().size() > 0 || tripUpdates.getUpdatedEntities().size() > 0)
+				_tripUpdatesSink.handleIncrementalUpdate(tripUpdates);
+		}
+	}
+
 
 	@PreDestroy
 	public void stop() {

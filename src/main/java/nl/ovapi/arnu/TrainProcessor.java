@@ -179,4 +179,16 @@ public class TrainProcessor {
 		}
 		return null;
 	}
+
+	public long getEndEpoch() {
+		long endTime = 0;
+		for (BlockProcessor bp : _processors){
+			for (Journey j : bp.getBlock().getSegments()){
+				if (j.getEndEpoch() > endTime){
+					endTime = j.getEndEpoch();
+				}
+			}
+		}
+		return endTime;
+	}
 }
