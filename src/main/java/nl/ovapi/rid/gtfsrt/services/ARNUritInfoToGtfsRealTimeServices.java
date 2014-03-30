@@ -182,12 +182,12 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			pull.disconnect(PULL_ADDRESS);
 		}
 	}
-	
+
 	private String getDate(ServiceInfoServiceType info){
 		if (info.getStopList() == null || info.getStopList().getStop() == null || info.getStopList().getStop().size() == 0){
 			return null;
 		}
-		
+
 		Calendar operatingDate = null;
 		for (ServiceInfoStopType s : info.getStopList().getStop()){
 			if (s.getDeparture() != null){
@@ -198,8 +198,9 @@ public class ARNUritInfoToGtfsRealTimeServices {
 		if (operatingDate.get(Calendar.HOUR_OF_DAY) < 4){
 			operatingDate.add(Calendar.DAY_OF_MONTH, -1);
 		}
-		operatingDate.set(Calendar.HOUR_OF_DAY, 0);
 		operatingDate.set(Calendar.MINUTE, 0);
+		//Set at 4 because we DST of operatingday not at midnight
+		operatingDate.set(Calendar.HOUR_OF_DAY, 4); 
 		operatingDate.set(Calendar.SECOND, 0);
 		operatingDate.set(Calendar.MILLISECOND, 0);
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
