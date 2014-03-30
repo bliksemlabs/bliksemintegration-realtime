@@ -28,7 +28,9 @@ import lombok.Setter;
 import nl.ovapi.ZeroMQUtils;
 import nl.ovapi.bison.BisonToGtfsUtils;
 import nl.ovapi.bison.JourneyProcessor;
+import nl.ovapi.bison.JourneyProcessor.Update;
 import nl.ovapi.bison.model.DataOwnerCode;
+import nl.ovapi.bison.model.DatedPasstime;
 import nl.ovapi.bison.model.KV15message;
 import nl.ovapi.bison.model.KV17cvlinfo;
 import nl.ovapi.bison.model.KV6posinfo;
@@ -62,7 +64,6 @@ import com.google.common.collect.Maps;
 import com.google.transit.realtime.GtfsRealtime.Alert.Builder;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
-import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 
 @Singleton
 public class BisonToGtfsRealtimeService {
@@ -325,22 +326,19 @@ public class BisonToGtfsRealtimeService {
 					}
 					if (posinfo.getReinforcementnumber() == 0){ //Primary vehicle, BISON can currently not yet support schedules for reinforcments
 						try{
-							TripUpdate.Builder tripUpdate = jp.update(posinfo);
-							if (tripUpdate != null){
-								FeedEntity.Builder tripEntity = FeedEntity.newBuilder();
-								tripEntity.setId(id);
-								tripEntity.setTripUpdate(tripUpdate); //Get update created from KV6
-								tripUpdates.addUpdatedEntity(tripEntity.build());
-								boolean valid = true;
-								int pointorder = -1;
-								for (StopTimeUpdate stoptimeUpdate : tripUpdate.getStopTimeUpdateList()){
-									if (stoptimeUpdate.getStopSequence() < pointorder){
-										valid = false;
-									}
-									pointorder = stoptimeUpdate.getStopSequence();
+							Update update = jp.update(posinfo);
+							if (update != null){
+								StringBuilder sb = new StringBuilder();
+								for (DatedPasstime dp : update.getChangedPasstimes()){
+									sb.append(dp.toCtxLine()).append("\n");
 								}
-								if (!valid){
-									_log.error("Invalid sequence of pointorders {}",tripUpdate.build());
+								System.out.println(sb);
+								if (update.getGtfsRealtimeTrip() != null){
+									TripUpdate.Builder tripUpdate = update.getGtfsRealtimeTrip();
+									FeedEntity.Builder tripEntity = FeedEntity.newBuilder();
+									tripEntity.setId(id);
+									tripEntity.setTripUpdate(tripUpdate); //Get update created from KV6
+									tripUpdates.addUpdatedEntity(tripEntity.build());
 								}
 							}
 						}catch (TooOldException e){
@@ -385,12 +383,20 @@ public class BisonToGtfsRealtimeService {
 				for (String id : map.keySet()){
 					ArrayList<KV17cvlinfo> cvlinfos = map.get(id);
 					JourneyProcessor jp = getOrCreateProcessorForId(id);
-					TripUpdate.Builder tripUpdate = jp.update(cvlinfos);
-					if (tripUpdate != null){
-						FeedEntity.Builder entity = FeedEntity.newBuilder();
-						entity.setTripUpdate(tripUpdate);
-						entity.setId(id);
-						tripUpdates.addUpdatedEntity(entity.build());
+					Update update = jp.update(cvlinfos);
+					if (update != null){
+						StringBuilder sb = new StringBuilder();
+						for (DatedPasstime dp : update.getChangedPasstimes()){
+							sb.append(dp.toCtxLine()).append("\n");
+						}
+						System.out.println(sb);
+						if (update.getGtfsRealtimeTrip() != null){
+							TripUpdate.Builder tripUpdate = update.getGtfsRealtimeTrip();
+							FeedEntity.Builder entity = FeedEntity.newBuilder();
+							entity.setTripUpdate(tripUpdate);
+							entity.setId(id);
+							tripUpdates.addUpdatedEntity(entity.build());
+						}
 					}
 				}
 			}catch (Exception e){

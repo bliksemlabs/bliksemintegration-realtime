@@ -12,6 +12,7 @@ import java.util.TimeZone;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.Synchronized;
 import nl.ovapi.bison.VehicleDatabase.VehicleType;
 import nl.ovapi.bison.model.DataOwnerCode;
 import nl.ovapi.bison.model.DatedPasstime;
@@ -105,6 +106,8 @@ public class JourneyProcessor {
 	private static final int MIN_STOPWAITTIME = 300; //Seconds
 
 	private final static int POSINFO_MAX_AGE = 120;
+
+	private final Object writeLock = new Object();
 
 	/**
 	 * @return POSIX time when journey end in seconds since January 1st 1970 00:00:00 UTC
@@ -493,9 +496,10 @@ public class JourneyProcessor {
 			}
 		}
 		return null;
-	}	
+	}
 
-	public TripUpdate.Builder update(ArrayList<KV17cvlinfo> cvlinfos) throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
+	@Synchronized("writeLock")
+	public Update update(ArrayList<KV17cvlinfo> cvlinfos) throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
 		long timestamp = 0;
 		if (cvlinfos.size() == 0){
 			return null;
@@ -528,7 +532,7 @@ public class JourneyProcessor {
 			timestamp = Utils.currentTimeSecs();
 		if (posinfo != null && posinfoAge < POSINFO_MAX_AGE){
 			setPunctuality(posinfo);
-			return update(posinfo);
+			return update(posinfo,true);
 		}else{
 			KV6posinfo posinfo = new KV6posinfo();
 			posinfo.setMessagetype(Type.DELAY); //Fake KV6posinfo to get things moving
@@ -537,10 +541,10 @@ public class JourneyProcessor {
 			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 			posinfo.setOperatingday(format.format(new Date()));
 			setPunctuality(posinfo);
-			return update(posinfo);
+			return update(posinfo,true);
 		}
 	}
-	
+
 	/**
 	 * Set recorded arrival/departure time using timestamp of departure /arrival trigger
 	 *
@@ -620,7 +624,7 @@ public class JourneyProcessor {
 			}
 		}
 	}
-	
+
 	private boolean isJourneyCanceled(){
 		for (DatedPasstime dp : datedPasstimes){
 			if (dp.getJourneyStopType() == JourneyStopType.INFOPOINT){
@@ -638,7 +642,7 @@ public class JourneyProcessor {
 				continue;
 			default:
 				break;
-			
+
 			}
 		}
 		return datedPasstimes.get(datedPasstimes.size()-1).getTripStopStatus() == TripStopStatus.CANCEL;
@@ -911,8 +915,48 @@ public class JourneyProcessor {
 		return (int) (c.getTimeInMillis()/1000)+secondsSinceMidnight;
 	}
 
-	
-	public TripUpdate.Builder update(KV6posinfo posinfo) throws StopNotFoundException,UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
+	public static class Update{
+		@Getter private TripUpdate.Builder gtfsRealtimeTrip;
+		@Getter private List<DatedPasstime> changedPasstimes;
+		//ARNU RITinfo next ;)
+	}
+
+	/**
+	 * Process KV6posinfo object
+	 * @param posinfo KV6posinfo object
+	 * @return Update object, with GTFSrealtime and KV8 objects
+	 * @throws StopNotFoundException UserstopCode of Posinfo not in journey
+	 * @throws UnknownKV6PosinfoType Unknown MessageType in KV6
+	 * @throws TooEarlyException KV6posinfo arrives too sucipiosuly eraly
+	 * @throws TooOldException KV6posinfo is too old
+	 * @throws ParseException
+	 */
+	public Update update(KV6posinfo posinfo) throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
+		return update(posinfo,false);
+	}
+
+	/**
+	 * Process KV6posinfo object
+	 * @param posinfo KV6posinfo object
+	 * @param ignoreState ignore previous state, always create GTFSrealtime update.
+	 * @return Update object, with GTFSrealtime and KV8 objects
+	 * @throws StopNotFoundException UserstopCode of Posinfo not in journey
+	 * @throws UnknownKV6PosinfoType Unknown MessageType in KV6
+	 * @throws TooEarlyException KV6posinfo arrives too sucipiosuly eraly
+	 * @throws TooOldException KV6posinfo is too old
+	 * @throws ParseException
+	 */
+	@Synchronized("writeLock")
+	public Update update(KV6posinfo posinfo,boolean ignoreState) throws StopNotFoundException,UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
+		int[] arriveDelays = new int[datedPasstimes.size()];
+		int[] departureDelays = new int[datedPasstimes.size()];
+		long lastUpdate = 0;
+		for (int i = 0; i < datedPasstimes.size(); i++){
+			DatedPasstime dp = datedPasstimes.get(i);
+			arriveDelays[i] = dp.getExpectedArrivalTime()-dp.getTargetArrivalTime();
+			departureDelays[i] = dp.getExpectedDepartureTime()-dp.getExpectedDepartureTime();
+			lastUpdate = Math.max(dp.getLastUpdateTimeStamp(), lastUpdate);
+		}
 		long currentTime = Utils.currentTimeSecs();
 		if (posinfo.getTimestamp()<currentTime-POSINFO_MAX_AGE){
 			throw new TooOldException(posinfo.toString());
@@ -938,13 +982,30 @@ public class JourneyProcessor {
 			setTripStatus(posinfo);
 			setPunctuality(posinfo);
 			this.posinfo = posinfo;
-			/*StringBuilder sb = new StringBuilder();
-			for (DatedPasstime dp : datedPasstimes){
-				sb.append(dp.toCtxLine());
-				sb.append("\n");
-			}
-			System.out.println(sb);*/
 		}
-		return filter(tripUpdateFromKV8());
+		Update update = new Update();
+		update.changedPasstimes = new ArrayList<DatedPasstime>();
+		if (ignoreState){
+			update.changedPasstimes.addAll(datedPasstimes);
+			update.gtfsRealtimeTrip = filter(tripUpdateFromKV8());;
+		}else {
+			for (int i = 0; i < datedPasstimes.size(); i++){
+				DatedPasstime dp = datedPasstimes.get(i);
+				if (dp.getLastUpdateTimeStamp() > lastUpdate){
+					update.changedPasstimes.add(dp);
+				}
+				if (dp.getJourneyStopType() == JourneyStopType.INFOPOINT){
+					continue; //Dummy's don't warrant a new tripupdate
+				}
+				if (update.gtfsRealtimeTrip == null){
+					if (arriveDelays[i] != dp.getExpectedArrivalTime()-dp.getTargetArrivalTime()){
+						update.gtfsRealtimeTrip = filter(tripUpdateFromKV8());;
+					}else if (departureDelays[i] != dp.getExpectedDepartureTime()-dp.getExpectedDepartureTime()){
+						update.gtfsRealtimeTrip = filter(tripUpdateFromKV8());;
+					}
+				}
+			}
+		}
+		return update;
 	}		
 }

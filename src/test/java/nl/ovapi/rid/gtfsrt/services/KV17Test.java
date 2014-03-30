@@ -154,7 +154,7 @@ public class KV17Test {
 		assertTrue(map.keySet().size() == 1);
 		for (String id : map.keySet()){
 			cvlinfos = map.get(id);
-			TripUpdate.Builder tripUpdate = j.update(cvlinfos);
+			TripUpdate.Builder tripUpdate = j.update(cvlinfos).getGtfsRealtimeTrip();
 			System.out.println(tripUpdate.build());
 			assertTrue(tripUpdate.getTrip().getScheduleRelationship() == ScheduleRelationship.CANCELED);
 		}
@@ -185,7 +185,7 @@ public class KV17Test {
 		assertTrue(map.keySet().size() == 1);
 		for (String id : map.keySet()){
 			cvlinfos = map.get(id);
-			TripUpdate.Builder tripUpdate = j.update(cvlinfos);
+			TripUpdate.Builder tripUpdate = j.update(cvlinfos).getGtfsRealtimeTrip();
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(0).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SCHEDULED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(2).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(3).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
@@ -235,7 +235,7 @@ public class KV17Test {
 		assertTrue(map.keySet().size() == 1);
 		for (String id : map.keySet()){
 			cvlinfos = map.get(id);
-			TripUpdate.Builder tripUpdate = j.update(cvlinfos);
+			TripUpdate.Builder tripUpdate = j.update(cvlinfos).getGtfsRealtimeTrip();
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(2).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(3).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
 			assertTrue(tripUpdate.getStopTimeUpdateBuilder(4).getScheduleRelationship() == StopTimeUpdate.ScheduleRelationship.SKIPPED);
