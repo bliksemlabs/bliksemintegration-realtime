@@ -901,20 +901,6 @@ public class JourneyProcessor {
 		return trip;
 	}
 
-	public int secondsSince1970(String operatingDate, int secondsSinceMidnight){
-		Calendar c = Calendar.getInstance(TimeZone.getDefault());
-		try{
-			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(_journey.getOperatingDay()));
-		}catch (Exception e){
-			_log.error("Parse operatingday fail {}",_journey.getOperatingDay());
-		}
-		c.set(Calendar.HOUR, 0);
-		c.set(Calendar.MINUTE, 0);
-		c.set(Calendar.SECOND, 0);
-		c.set(Calendar.MILLISECOND, 0);
-		return (int) (c.getTimeInMillis()/1000)+secondsSinceMidnight;
-	}
-
 	public static class Update{
 		@Getter private TripUpdate.Builder gtfsRealtimeTrip;
 		@Getter private List<DatedPasstime> changedPasstimes;
