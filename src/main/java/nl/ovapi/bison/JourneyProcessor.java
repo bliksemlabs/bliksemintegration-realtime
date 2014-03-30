@@ -334,7 +334,6 @@ public class JourneyProcessor {
 			setTripStatusForJourney(TripStopStatus.CANCEL);
 			setReasonForJourney(ReasonType.parse(m.getReasontype()),SubReasonType.parse(m.getSubreasontype()),m.getReasoncontent());
 			setAdviceForJourney(AdviceType.parse(m.getAdvicetype()),SubAdviceType.parse(m.getAdvicetype()),m.getAdvicetype());
-			_journey.setCanceled(true);
 			break;
 		case RECOVER:
 			clearKV17mutations();
@@ -342,7 +341,6 @@ public class JourneyProcessor {
 			//Set PLANNED if before
 			setTripStatusForJourney(System.currentTimeMillis() > _journey.getDepartureEpoch() ? 
 					TripStopStatus.UNKNOWN : TripStopStatus.PLANNED);
-			_journey.setCanceled(false);
 			break;
 		default:
 			break;
@@ -507,7 +505,6 @@ public class JourneyProcessor {
 			return null;
 		}
 		mutations.clear();
-		_journey.setCanceled(false);
 
 		//KV17 mutations are not differential, remove possible previous modifications.
 		clearKV17mutations();
@@ -547,7 +544,7 @@ public class JourneyProcessor {
 			return update(posinfo);
 		}
 	}
-
+	
 	/**
 	 * Set recorded arrival/departure time using timestamp of departure /arrival trigger
 	 *
@@ -565,19 +562,21 @@ public class JourneyProcessor {
 		default:
 			return;
 		}
+		int departureTime = datedPasstimes.get(0).getTargetArrivalTime();
 		try{
 			for (DatedPasstime dp : datedPasstimes){
 				if (dp.getUserStopCode().equals(posinfo.getUserstopcode())){
-					SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-					Date operatingDate = format.parse(dp.getOperationDate());
-					int recordedTime = (int) ((posinfo.getTimestamp()-operatingDate.getTime()/1000)); //Seconds since Midnight
+					long time = _journey.getDepartureEpoch();
 					if (posinfo.getMessagetype() == Type.ARRIVAL){
-						dp.setRecordedArrivalTime(recordedTime);
+						time += dp.getTargetArrivalTime()-departureTime;
+						int delay = (int) (posinfo.getTimestamp()-time);
+						dp.setRecordedArrivalTime(dp.getTargetArrivalTime()+delay);
 					}else if (posinfo.getMessagetype() == Type.DEPARTURE){
 						/*if the current stop is a timingpoint, filter out significant negative punctualities
 						  This is done to filter false departure signals, where a vehicle falsely claims to have departed.
 						 */
-						int delay = dp.getTargetDepartureTime()-recordedTime;
+						time += dp.getTargetDepartureTime()-departureTime;
+						int delay = (int) (posinfo.getTimestamp()-time);
 						if (dp.isTimingStop() || dp.getJourneyStopType() == JourneyStopType.FIRST){
 							if (delay < MIN_PROGNOSIS_FROM_TIMINGPOINT){
 								break;//Ignore trigger
@@ -585,7 +584,7 @@ public class JourneyProcessor {
 						}else if (delay < MIN_PUNCTUALITY){
 							break;//Ignore trigger
 						}else{
-							dp.setRecordedDepartureTime(recordedTime);
+							dp.setRecordedArrivalTime(dp.getTargetDepartureTime()+delay);
 						}
 					}
 					break;
@@ -624,6 +623,29 @@ public class JourneyProcessor {
 				pt.setNumberOfCoaches(posinfo.getNumberofcoaches());
 			}
 		}
+	}
+	
+	private boolean isJourneyCanceled(){
+		for (DatedPasstime dp : datedPasstimes){
+			if (dp.getJourneyStopType() == JourneyStopType.INFOPOINT){
+				continue;
+			}
+			switch (dp.getTripStopStatus()){
+			case PASSED:
+			case UNKNOWN:
+			case ARRIVED:
+			case DRIVING:
+			case OFFROUTE:
+			case PLANNED:
+				return false;
+			case CANCEL:
+				continue;
+			default:
+				break;
+			
+			}
+		}
+		return datedPasstimes.get(datedPasstimes.size()-1).getTripStopStatus() == TripStopStatus.CANCEL;
 	}
 
 	/**
@@ -828,7 +850,11 @@ public class JourneyProcessor {
 	 */
 	public TripUpdate.Builder tripUpdateFromKV8(){
 		TripUpdate.Builder trip = TripUpdate.newBuilder();
-		trip.setTrip(_journey.tripDescriptor());
+		TripDescriptor.Builder tripDesc = _journey.tripDescriptor();
+		if (isJourneyCanceled())
+			tripDesc.setScheduleRelationship(ScheduleRelationship.CANCELED);
+		trip.setTrip(tripDesc);
+		long departureTime = _journey.getDepartureEpoch()-datedPasstimes.get(0).getTargetDepartureTime();
 		for (DatedPasstime dp : datedPasstimes){
 			if (dp.getJourneyStopType() == JourneyStopType.INFOPOINT){
 				continue;
@@ -854,20 +880,20 @@ public class JourneyProcessor {
 			}
 			StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
 			if (dp.getRecordedArrivalTime() != null){
-				arrival.setTime(secondsSince1970(dp.getOperationDate(),dp.getRecordedArrivalTime()));
+				arrival.setTime(departureTime+dp.getRecordedArrivalTime());
 				arrival.setDelay((dp.getRecordedArrivalTime()-dp.getTargetArrivalTime()));
 			}else{
-				arrival.setTime(secondsSince1970(dp.getOperationDate(),dp.getExpectedArrivalTime()));
+				arrival.setTime(departureTime+dp.getExpectedArrivalTime());
 				arrival.setDelay((dp.getExpectedArrivalTime()-dp.getTargetArrivalTime()));
 			}
 			stop.setArrival(arrival);
 			StopTimeEvent.Builder departure = StopTimeEvent.newBuilder();
 			if (dp.getRecordedDepartureTime() != null){
 				departure.setDelay((dp.getRecordedDepartureTime()-dp.getTargetDepartureTime()));
-				departure.setTime(secondsSince1970(dp.getOperationDate(),dp.getRecordedDepartureTime()));
+				departure.setTime(departureTime+dp.getRecordedDepartureTime());
 			}else{
 				departure.setDelay((dp.getExpectedDepartureTime()-dp.getTargetDepartureTime()));
-				departure.setTime(secondsSince1970(dp.getOperationDate(),dp.getExpectedDepartureTime()));
+				departure.setTime(departureTime+dp.getExpectedDepartureTime());
 			}
 			stop.setDeparture(departure);
 			trip.addStopTimeUpdate(stop);
@@ -889,11 +915,8 @@ public class JourneyProcessor {
 		return (int) (c.getTimeInMillis()/1000)+secondsSinceMidnight;
 	}
 
+	
 	public TripUpdate.Builder update(KV6posinfo posinfo) throws StopNotFoundException,UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
-		return update(posinfo,false);
-	}
-
-	public TripUpdate.Builder update(KV6posinfo posinfo,boolean printKV8) throws StopNotFoundException,UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
 		long currentTime = Utils.currentTimeSecs();
 		if (posinfo.getTimestamp()<currentTime-POSINFO_MAX_AGE){
 			throw new TooOldException(posinfo.toString());
@@ -919,12 +942,12 @@ public class JourneyProcessor {
 			setTripStatus(posinfo);
 			setPunctuality(posinfo);
 			this.posinfo = posinfo;
-			/*StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new StringBuilder();
 			for (DatedPasstime dp : datedPasstimes){
 				sb.append(dp.toCtxLine());
 				sb.append("\n");
 			}
-			System.out.println(sb.toString());*/
+			System.out.println(sb);
 		}
 		return filter(tripUpdateFromKV8());
 	}		

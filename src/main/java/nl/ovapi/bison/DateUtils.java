@@ -25,4 +25,14 @@ public class DateUtils {
 		}
 	}
 
+	public static String to32Time(Integer secondsSinceMidnight) {
+		if (secondsSinceMidnight == null){
+			return null;
+		}
+		int hours = secondsSinceMidnight/3600;
+		int seconds = secondsSinceMidnight % 3600;
+		int minutes = seconds / 60;
+		seconds = seconds % 60;
+		return String.format("%02d:%02d:%02d",hours,minutes,seconds);
+	}
 }

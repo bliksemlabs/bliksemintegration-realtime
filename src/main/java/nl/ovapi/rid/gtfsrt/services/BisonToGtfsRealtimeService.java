@@ -166,7 +166,7 @@ public class BisonToGtfsRealtimeService {
 		}
 		Journey journey = _ridService.getJourney(privateCode);
 		if (journey == null){
-			_log.info("Journey {} not found",privateCode);
+			//_log.info("Journey {} not found",privateCode);
 			return null; //Journey not found
 		}
 		jp = new JourneyProcessor(journey);
