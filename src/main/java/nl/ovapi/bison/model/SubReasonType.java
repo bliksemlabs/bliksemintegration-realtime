@@ -9,11 +9,6 @@ public enum SubReasonType{
 	Stroomstoring,Overwegstoring,Sein_en_wisselstoring,Storing_in_verkeersleidingssysteem,Gladde_sporen,Uitloop_werkzaamheden,Herstel_werkzaamheden,Uitloop_herstel_werkzaamheden,
 	Gladheid,IJsgang,Sneeuw,Wateroverlast,Storm,IJzel,Blikseminslag,NULL;
 
-	@Override
-	public String toString(){
-		return super.toString().replace("_", " ");
-	}
-
 	public static SubReasonType parse(String value){
 		if (value == null)
 			return null;
