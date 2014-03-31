@@ -893,6 +893,9 @@ public class JourneyProcessor {
 			if (dp.getRecordedArrivalTime() != null){
 				arrival.setTime(departureTime+dp.getRecordedArrivalTime());
 				arrival.setDelay((dp.getRecordedArrivalTime()-dp.getTargetArrivalTime()));
+			}else if (dp.getRecordedDepartureTime() != null && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
+				arrival.setDelay((dp.getRecordedDepartureTime()-dp.getTargetDepartureTime()));
+				arrival.setTime(departureTime+dp.getRecordedDepartureTime());
 			}else{
 				arrival.setTime(departureTime+dp.getExpectedArrivalTime());
 				arrival.setDelay((dp.getExpectedArrivalTime()-dp.getTargetArrivalTime()));
@@ -902,6 +905,9 @@ public class JourneyProcessor {
 			if (dp.getRecordedDepartureTime() != null){
 				departure.setDelay((dp.getRecordedDepartureTime()-dp.getTargetDepartureTime()));
 				departure.setTime(departureTime+dp.getRecordedDepartureTime());
+			}else if (dp.getRecordedArrivalTime() != null && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
+				departure.setDelay((dp.getRecordedArrivalTime()-dp.getTargetDepartureTime()));
+				departure.setTime(departureTime+dp.getRecordedArrivalTime());
 			}else{
 				departure.setDelay((dp.getExpectedDepartureTime()-dp.getTargetDepartureTime()));
 				departure.setTime(departureTime+dp.getExpectedDepartureTime());
