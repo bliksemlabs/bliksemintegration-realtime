@@ -1047,7 +1047,8 @@ public class JourneyProcessor {
 		update.changedPasstimes = new ArrayList<DatedPasstime>();
 		if (ignoreState){
 			update.changedPasstimes.addAll(datedPasstimes);
-			update.gtfsRealtimeTrip = filter(tripUpdateFromKV8());;
+			update.gtfsRealtimeTrip = filter(tripUpdateFromKV8());
+			update.serviceInfo = serviceInfoFromKV8();
 		}else {
 			for (int i = 0; i < datedPasstimes.size(); i++){
 				DatedPasstime dp = datedPasstimes.get(i);
