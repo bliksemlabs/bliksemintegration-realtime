@@ -398,6 +398,10 @@ public class BisonToGtfsRealtimeService {
 				for (String id : map.keySet()){
 					ArrayList<KV17cvlinfo> cvlinfos = map.get(id);
 					JourneyProcessor jp = getOrCreateProcessorForId(id);
+					if (jp == null){ //Double check for the CXX workaround
+						_log.info("Journey {} not found",id);
+						continue; //Trip not in database
+					}
 					Update update = jp.update(cvlinfos);
 					if (update != null){
 						/*StringBuilder sb = new StringBuilder();
