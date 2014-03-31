@@ -25,6 +25,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import lombok.NonNull;
 import nl.ovapi.ZeroMQUtils;
+import nl.ovapi.arnu.ARNUexporter;
 import nl.ovapi.arnu.TrainProcessor;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.Block;
@@ -58,8 +59,13 @@ public class ARNUritInfoToGtfsRealTimeServices {
 	private GtfsRealtimeSink _tripUpdatesSink;
 	private RIDservice _ridService;
 	private ConcurrentMap<String, TrainProcessor> journeyProcessors;
-
-
+	private ARNUexporter _arnuExporter;
+	
+	@Inject
+	public void setARnuExporter(ARNUexporter arnuExporter) {
+		_arnuExporter = arnuExporter;
+	}
+	
 	@Inject
 	public void setRIDService(RIDservice ridService) {
 		_ridService = ridService;
@@ -80,7 +86,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 		_scheduler.scheduleAtFixedRate(new GarbageCollectorTask(), GARBAGE_COLLECTOR_INTERVAL_SECONDS, GARBAGE_COLLECTOR_INTERVAL_SECONDS, TimeUnit.SECONDS);
 
 	}
-	
+
 
 
 	private class GarbageCollectorTask implements Runnable{

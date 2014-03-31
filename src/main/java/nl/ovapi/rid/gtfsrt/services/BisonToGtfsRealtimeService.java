@@ -20,20 +20,17 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import lombok.NonNull;
 import lombok.Setter;
 import nl.ovapi.ZeroMQUtils;
+import nl.ovapi.arnu.ARNUexporter;
 import nl.ovapi.bison.BisonToGtfsUtils;
 import nl.ovapi.bison.JourneyProcessor;
 import nl.ovapi.bison.JourneyProcessor.Update;
 import nl.ovapi.bison.model.DataOwnerCode;
-import nl.ovapi.bison.model.DatedPasstime;
 import nl.ovapi.bison.model.KV15message;
 import nl.ovapi.bison.model.KV17cvlinfo;
 import nl.ovapi.bison.model.KV6posinfo;
@@ -48,7 +45,6 @@ import nl.ovapi.exceptions.TooOldException;
 import nl.ovapi.exceptions.UnknownKV6PosinfoType;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.Journey;
-import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
 
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.Alerts;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripUpdates;
@@ -87,7 +83,13 @@ public class BisonToGtfsRealtimeService {
 	private final static int TRIPUPDATE_EXPIRATION_HOURS = 1;
 
 	private ConcurrentMap<String, JourneyProcessor> journeyProcessors;
-
+	private ARNUexporter _arnuExporter;
+	
+	@Inject
+	public void setARnuExporter(ARNUexporter arnuExporter) {
+		_arnuExporter = arnuExporter;
+	}
+	
 	@Inject
 	public void setTripUpdatesSink(@TripUpdates	GtfsRealtimeSink tripUpdatesSink) {
 		_tripUpdatesSink = tripUpdatesSink;
@@ -337,17 +339,9 @@ public class BisonToGtfsRealtimeService {
 									sb.append(dp.toCtxLine()).append("\n");
 								}
 								System.out.println(sb);*/
-								/*JAXBContext jc = null;
-								Marshaller marshaller = null;
-								try {
-									jc = JAXBContext.newInstance(PutServiceInfoIn.class);
-									marshaller = jc.createMarshaller();
-									marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-								} catch (JAXBException e1) {
-									_log.error("Error with JAXB",e1);
-									e1.printStackTrace();
+								if (update.getServiceInfo() != null){
+									_arnuExporter.export(update.getServiceInfo());
 								}
-								marshaller.marshal(update.getServiceInfo(), System.out);*/
 								if (update.getGtfsRealtimeTrip() != null){
 									TripUpdate.Builder tripUpdate = update.getGtfsRealtimeTrip();
 									FeedEntity.Builder tripEntity = FeedEntity.newBuilder();
@@ -409,17 +403,9 @@ public class BisonToGtfsRealtimeService {
 							sb.append(dp.toCtxLine()).append("\n");
 						}
 						System.out.println(sb);*/
-						/*JAXBContext jc = null;
-						Marshaller marshaller = null;
-						try {
-							jc = JAXBContext.newInstance(PutServiceInfoIn.class);
-							marshaller = jc.createMarshaller();
-							marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-						} catch (JAXBException e1) {
-							_log.error("Error with JAXB",e1);
-							e1.printStackTrace();
+						if (update.getServiceInfo() != null){
+							_arnuExporter.export(update.getServiceInfo());
 						}
-						marshaller.marshal(update.getServiceInfo(), System.out);*/
 						if (update.getGtfsRealtimeTrip() != null){
 							TripUpdate.Builder tripUpdate = update.getGtfsRealtimeTrip();
 							FeedEntity.Builder entity = FeedEntity.newBuilder();
