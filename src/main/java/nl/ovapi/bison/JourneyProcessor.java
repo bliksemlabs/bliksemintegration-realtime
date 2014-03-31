@@ -934,6 +934,9 @@ public class JourneyProcessor {
 			serviceInfo.setServiceType(ServiceInfoKind.NORMAL_SERVICE);
 			long dayEpoch = _journey.getDepartureEpoch()-datedPasstimes.get(0).getTargetArrivalTime();
 			for (DatedPasstime dp : datedPasstimes){
+				if (dp.getJourneyStopType() == JourneyStopType.INFOPOINT){
+					continue; // Skip dummies
+				}
 				ServiceInfoStopType stop = new ServiceInfoStopType();
 				stop.setStopCode(dp.getTimingPointCode());
 				stop.setStopServiceCode(_journey.getPrivateCode());
