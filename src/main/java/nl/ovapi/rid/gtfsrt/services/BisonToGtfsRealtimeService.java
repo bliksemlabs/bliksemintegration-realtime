@@ -30,6 +30,7 @@ import nl.ovapi.arnu.ARNUexporter;
 import nl.ovapi.bison.BisonToGtfsUtils;
 import nl.ovapi.bison.JourneyProcessor;
 import nl.ovapi.bison.JourneyProcessor.Update;
+import nl.ovapi.bison.KV78TurboExporter;
 import nl.ovapi.bison.model.DataOwnerCode;
 import nl.ovapi.bison.model.KV15message;
 import nl.ovapi.bison.model.KV17cvlinfo;
@@ -84,9 +85,15 @@ public class BisonToGtfsRealtimeService {
 
 	private ConcurrentMap<String, JourneyProcessor> journeyProcessors;
 	private ARNUexporter _arnuExporter;
+	private KV78TurboExporter _kv78TurboExporter;
+
+	@Inject
+	public void setKV78TurboExporter(KV78TurboExporter kv78TurboExporter) {
+		_kv78TurboExporter = kv78TurboExporter;
+	}
 	
 	@Inject
-	public void setARnuExporter(ARNUexporter arnuExporter) {
+	public void setARNUexporter(ARNUexporter arnuExporter) {
 		_arnuExporter = arnuExporter;
 	}
 	
@@ -334,11 +341,9 @@ public class BisonToGtfsRealtimeService {
 						try{
 							Update update = jp.update(posinfo);
 							if (update != null){
-								/*StringBuilder sb = new StringBuilder();
-								for (DatedPasstime dp : update.getChangedPasstimes()){
-									sb.append(dp.toCtxLine()).append("\n");
+								if (update.getChangedPasstimes() != null){
+									_kv78TurboExporter.export(update.getChangedPasstimes());
 								}
-								System.out.println(sb);*/
 								if (update.getServiceInfo() != null){
 									_arnuExporter.export(update.getServiceInfo());
 								}
@@ -398,11 +403,9 @@ public class BisonToGtfsRealtimeService {
 					}
 					Update update = jp.update(cvlinfos);
 					if (update != null){
-						/*StringBuilder sb = new StringBuilder();
-						for (DatedPasstime dp : update.getChangedPasstimes()){
-							sb.append(dp.toCtxLine()).append("\n");
+						if (update.getChangedPasstimes() != null){
+							_kv78TurboExporter.export(update.getChangedPasstimes());
 						}
-						System.out.println(sb);*/
 						if (update.getServiceInfo() != null){
 							_arnuExporter.export(update.getServiceInfo());
 						}

@@ -5,6 +5,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import nl.ovapi.arnu.ARNUexporter;
+import nl.ovapi.bison.KV78TurboExporter;
 import nl.ovapi.rid.gtfsrt.services.ARNUritInfoToGtfsRealTimeServices;
 import nl.ovapi.rid.gtfsrt.services.BisonToGtfsRealtimeService;
 import nl.ovapi.rid.gtfsrt.services.GeometryService;
@@ -27,6 +28,7 @@ public class BisonToGtfsRealtimeModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(ARNUexporter.class);
+		bind(KV78TurboExporter.class);
 		bind(KV78TurboToPseudoKV6Service.class);
 		bind(BisonToGtfsRealtimeService.class);
 		bind(ARNUritInfoToGtfsRealTimeServices.class);
