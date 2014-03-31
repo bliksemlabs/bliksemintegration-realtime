@@ -34,6 +34,8 @@ public class JourneyPattern implements Cloneable{
 			this.waitpoint = toClone.waitpoint;
 			this.destinationCode = toClone.destinationCode;
 			this.platformCode = toClone.platformCode;
+			this.forBoarding = toClone.forBoarding;
+			this.forAlighting = toClone.forAlighting;
 		}
 		
 		public Builder edit(){
@@ -43,7 +45,7 @@ public class JourneyPattern implements Cloneable{
 		private JourneyPatternPoint(Integer pointorder, Long pointref,
 				String operatorpointref, Integer distancefromstartroute,
 				boolean scheduled, boolean skipped, boolean waitpoint,
-				String destinationCode, String platformCode,boolean added) {
+				String destinationCode, String platformCode,boolean added,boolean forBoarding, boolean forAlighting) {
 			this.added = added;
 			this.distancefromstartroute = distancefromstartroute;
 			this.operatorpointref = operatorpointref;
@@ -54,6 +56,8 @@ public class JourneyPattern implements Cloneable{
 			this.waitpoint = waitpoint;
 			this.destinationCode = destinationCode;
 			this.platformCode = platformCode;
+			this.forBoarding = forBoarding;
+			this.forAlighting = forAlighting;
 		}
 
 		@Override
@@ -75,6 +79,8 @@ public class JourneyPattern implements Cloneable{
 				this.waitpoint = toClone.waitpoint;
 				this.destinationCode = toClone.destinationCode;
 				this.platformCode = toClone.platformCode;
+				this.forBoarding = toClone.forBoarding;
+				this.forAlighting = toClone.forAlighting;
 			}
 
 			/**
@@ -177,8 +183,29 @@ public class JourneyPattern implements Cloneable{
 				return this;
 			}
 			
+			@Getter
+			private boolean forBoarding = true;
+			/**
+			 * Set PlatformCode / sideCode
+			 */
+			public Builder setForBoarding(boolean forBoarding){
+				this.forBoarding = forBoarding;
+				return this;
+			}
+			
+			@Getter
+			private boolean forAlighting = true;
+			/**
+			 * Set PlatformCode / sideCode
+			 */
+			public Builder setForAlighting(boolean forAlighting){
+				this.forAlighting = forAlighting;
+				return this;
+			}
+			
+			
 			public JourneyPatternPoint build(){
-				return new JourneyPatternPoint(pointorder,pointref,operatorpointref,distancefromstartroute,scheduled,skipped,waitpoint,destinationCode,platformCode,added);
+				return new JourneyPatternPoint(pointorder,pointref,operatorpointref,distancefromstartroute,scheduled,skipped,waitpoint,destinationCode,platformCode,added,forBoarding,forAlighting);
 			}
 		}
 		
@@ -249,6 +276,19 @@ public class JourneyPattern implements Cloneable{
 		 * PlatformCode / sideCode;
 		 */
 		private final String platformCode;
+		
+		@Getter
+		/**
+		 * is boarding allowed at stop;
+		 */
+		private final boolean forBoarding;
+
+		@Getter
+		/**
+		 * is alighting allowed at stop;
+		 */
+		private final boolean forAlighting;
+
 	}
 	
 	/**

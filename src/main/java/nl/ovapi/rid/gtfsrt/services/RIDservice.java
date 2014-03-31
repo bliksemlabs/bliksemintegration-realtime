@@ -308,6 +308,8 @@ public class RIDservice {
 						.setIsScheduled(rs.getBoolean("isscheduled"))
 						.setDestinationCode(rs.getString("destinationcode"))
 						.setPlatformCode(rs.getString("destinationcode"))
+						.setForBoarding(rs.getBoolean("forboarding"))
+						.setForAlighting(rs.getBoolean("foralighting"))
 						.build();
 				jp.add(point);
 				jp.setDirectionType(rs.getInt("directiontype"));
