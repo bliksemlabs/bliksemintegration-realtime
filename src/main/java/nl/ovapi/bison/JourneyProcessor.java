@@ -38,9 +38,7 @@ import nl.ovapi.rid.model.Journey;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.StopPoint;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
-import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
-import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceList;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType.StopList;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopKind;
@@ -917,20 +915,17 @@ public class JourneyProcessor {
 	public static class Update{
 		@Getter private TripUpdate.Builder gtfsRealtimeTrip;
 		@Getter private List<DatedPasstime> changedPasstimes;
-		@Getter private PutServiceInfoIn serviceInfo;
+		@Getter private ServiceInfoServiceType serviceInfo;
 	}
 
-	private PutServiceInfoIn serviceInfoFromKV8(){
-		PutServiceInfoIn putServiceinfo = new PutServiceInfoIn();
+	private ServiceInfoServiceType serviceInfoFromKV8(){
 		try {
-			ServiceInfoServiceList serviceInfoList = new ServiceInfoServiceList();
-			putServiceinfo.setServiceInfoList(serviceInfoList);
 			ServiceInfoServiceType serviceInfo = new ServiceInfoServiceType();
-			serviceInfoList.getServiceInfo().add(serviceInfo);
 			serviceInfo.setCompanyCode(_journey.getAgencyId());
 			serviceInfo.setTransportModeCode(_journey.getRouteId()+"");
 			serviceInfo.setServiceCode(_journey.getPrivateCode());
 			serviceInfo.setStopList(new StopList());
+			serviceInfo.setServiceType(ServiceInfoKind.NORMAL_SERVICE);
 			long dayEpoch = _journey.getDepartureEpoch()-datedPasstimes.get(0).getTargetArrivalTime();
 			for (DatedPasstime dp : datedPasstimes){
 				ServiceInfoStopType stop = new ServiceInfoStopType();
@@ -967,11 +962,12 @@ public class JourneyProcessor {
 					stop.setDeparture(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 				}
 				serviceInfo.getStopList().getStop().add(stop);
+				return serviceInfo;
 			}
 		} catch (DatatypeConfigurationException e) {
 			return null;
 		}
-		return putServiceinfo;
+		return null;
 	}
 
 	/**
