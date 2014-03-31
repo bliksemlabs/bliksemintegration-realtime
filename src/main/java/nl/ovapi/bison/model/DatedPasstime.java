@@ -55,6 +55,8 @@ public class DatedPasstime {
 	@Getter private Integer targetDepartureTime;
 	@Getter private Integer recordedArrivalTime;
 	@Getter private Integer recordedDepartureTime;
+	@Getter private boolean forBoarding;
+	@Getter private boolean forAlighting;
 
 	/**
 	 * KV17 lag in seconds
@@ -66,6 +68,20 @@ public class DatedPasstime {
 	 */
 	@Getter @Setter private Integer distanceDriven;
 		
+	public void setForBoarding(boolean forBoarding) {
+		if (!Objects.equal(forBoarding, this.forBoarding)){
+			this.setLastUpdateTimeStamp(System.currentTimeMillis());
+		}
+		this.forBoarding = forBoarding;
+	}
+	
+	public void setForAlighting(boolean forAlighting) {
+		if (!Objects.equal(forAlighting, this.forAlighting)){
+			this.setLastUpdateTimeStamp(System.currentTimeMillis());
+		}
+		this.forAlighting = forAlighting;
+	}
+	
 	public void setReasonType(String reasonType) {
 		if (!Objects.equal(reasonType, this.reasonType)){
 			this.setLastUpdateTimeStamp(System.currentTimeMillis());

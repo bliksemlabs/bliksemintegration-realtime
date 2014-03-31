@@ -5,9 +5,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -34,6 +38,13 @@ import nl.ovapi.rid.model.Journey;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.StopPoint;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
+import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceList;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType.StopList;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopKind;
+import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -270,6 +281,8 @@ public class JourneyProcessor {
 			dp.setTimingStop(jpt.isWaitpoint());
 			dp.setJourneyPatternCode(Integer.valueOf(journey.getJourneypattern().getJourneyPatternRef())); //TODO very large overflow risk here
 			dp.setSideCode(jpt.getPlatformCode());
+			dp.setForAlighting(jpt.isForAlighting());
+			dp.setForBoarding(jpt.isForBoarding());
 			dp.setLastUpdateTimeStamp(time);
 			datedPasstimes.add(dp);
 		}
@@ -904,7 +917,61 @@ public class JourneyProcessor {
 	public static class Update{
 		@Getter private TripUpdate.Builder gtfsRealtimeTrip;
 		@Getter private List<DatedPasstime> changedPasstimes;
-		//ARNU RITinfo next ;)
+		@Getter private PutServiceInfoIn serviceInfo;
+	}
+
+	private PutServiceInfoIn serviceInfoFromKV8(){
+		PutServiceInfoIn putServiceinfo = new PutServiceInfoIn();
+		try {
+			ServiceInfoServiceList serviceInfoList = new ServiceInfoServiceList();
+			putServiceinfo.setServiceInfoList(serviceInfoList);
+			ServiceInfoServiceType serviceInfo = new ServiceInfoServiceType();
+			serviceInfoList.getServiceInfo().add(serviceInfo);
+			serviceInfo.setCompanyCode(_journey.getAgencyId());
+			serviceInfo.setTransportModeCode(_journey.getRouteId()+"");
+			serviceInfo.setServiceCode(_journey.getPrivateCode());
+			serviceInfo.setStopList(new StopList());
+			long dayEpoch = _journey.getDepartureEpoch()-datedPasstimes.get(0).getTargetArrivalTime();
+			for (DatedPasstime dp : datedPasstimes){
+				ServiceInfoStopType stop = new ServiceInfoStopType();
+				stop.setStopCode(dp.getTimingPointCode());
+				stop.setStopServiceCode(_journey.getPrivateCode());
+				if (dp.getTripStopStatus() == TripStopStatus.CANCEL){
+					serviceInfo.setServiceType(ServiceInfoKind.CANCELLED_SERVICE);
+					stop.setStopType(ServiceInfoStopKind.CANCELLED_STOP);
+				}
+				if (dp.isForBoarding()){
+					GregorianCalendar cal = new GregorianCalendar();
+					if (dp.getRecordedArrivalTime() != null){
+						int delay = dp.getRecordedArrivalTime()-dp.getTargetArrivalTime();
+						stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
+						cal.setTimeInMillis((dayEpoch+dp.getRecordedArrivalTime())*1000);
+					}else{
+						int delay = dp.getExpectedArrivalTime()-dp.getTargetArrivalTime();
+						stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
+						cal.setTimeInMillis((dayEpoch+dp.getExpectedArrivalTime())*1000);
+					}
+					stop.setArrival(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
+				}
+				if (dp.isForAlighting()){
+					GregorianCalendar cal = new GregorianCalendar();
+					if (dp.getRecordedDepartureTime() != null){
+						int delay = dp.getRecordedDepartureTime()-dp.getTargetArrivalTime();
+						stop.setDepartureTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
+						cal.setTimeInMillis((dayEpoch+dp.getRecordedDepartureTime())*1000);
+					}else{
+						int delay = dp.getExpectedDepartureTime()-dp.getTargetArrivalTime();
+						stop.setDepartureTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
+						cal.setTimeInMillis((dayEpoch+dp.getExpectedArrivalTime())*1000);
+					}
+					stop.setDeparture(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
+				}
+				serviceInfo.getStopList().getStop().add(stop);
+			}
+		} catch (DatatypeConfigurationException e) {
+			return null;
+		}
+		return putServiceinfo;
 	}
 
 	/**
@@ -988,6 +1055,13 @@ public class JourneyProcessor {
 						update.gtfsRealtimeTrip = filter(tripUpdateFromKV8());;
 					}else if (departureDelays[i] != dp.getExpectedDepartureTime()-dp.getExpectedDepartureTime()){
 						update.gtfsRealtimeTrip = filter(tripUpdateFromKV8());;
+					}
+				}
+				if (update.serviceInfo == null){
+					if (Math.abs(arriveDelays[i] - dp.getExpectedArrivalTime()-dp.getTargetArrivalTime()) > 30){
+						update.serviceInfo = serviceInfoFromKV8();
+					}else if (Math.abs(departureDelays[i] - dp.getExpectedDepartureTime()-dp.getExpectedDepartureTime()) > 30){
+						update.serviceInfo = serviceInfoFromKV8();
 					}
 				}
 			}

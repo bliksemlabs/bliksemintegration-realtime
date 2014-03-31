@@ -20,6 +20,9 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
@@ -45,6 +48,7 @@ import nl.ovapi.exceptions.TooOldException;
 import nl.ovapi.exceptions.UnknownKV6PosinfoType;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.Journey;
+import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
 
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.Alerts;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripUpdates;
@@ -328,11 +332,22 @@ public class BisonToGtfsRealtimeService {
 						try{
 							Update update = jp.update(posinfo);
 							if (update != null){
-								StringBuilder sb = new StringBuilder();
+								/*StringBuilder sb = new StringBuilder();
 								for (DatedPasstime dp : update.getChangedPasstimes()){
 									sb.append(dp.toCtxLine()).append("\n");
 								}
-								System.out.println(sb);
+								System.out.println(sb);*/
+								/*JAXBContext jc = null;
+								Marshaller marshaller = null;
+								try {
+									jc = JAXBContext.newInstance(PutServiceInfoIn.class);
+									marshaller = jc.createMarshaller();
+									marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+								} catch (JAXBException e1) {
+									_log.error("Error with JAXB",e1);
+									e1.printStackTrace();
+								}
+								marshaller.marshal(update.getServiceInfo(), System.out);*/
 								if (update.getGtfsRealtimeTrip() != null){
 									TripUpdate.Builder tripUpdate = update.getGtfsRealtimeTrip();
 									FeedEntity.Builder tripEntity = FeedEntity.newBuilder();
@@ -385,11 +400,22 @@ public class BisonToGtfsRealtimeService {
 					JourneyProcessor jp = getOrCreateProcessorForId(id);
 					Update update = jp.update(cvlinfos);
 					if (update != null){
-						StringBuilder sb = new StringBuilder();
+						/*StringBuilder sb = new StringBuilder();
 						for (DatedPasstime dp : update.getChangedPasstimes()){
 							sb.append(dp.toCtxLine()).append("\n");
 						}
-						System.out.println(sb);
+						System.out.println(sb);*/
+						/*JAXBContext jc = null;
+						Marshaller marshaller = null;
+						try {
+							jc = JAXBContext.newInstance(PutServiceInfoIn.class);
+							marshaller = jc.createMarshaller();
+							marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+						} catch (JAXBException e1) {
+							_log.error("Error with JAXB",e1);
+							e1.printStackTrace();
+						}
+						marshaller.marshal(update.getServiceInfo(), System.out);*/
 						if (update.getGtfsRealtimeTrip() != null){
 							TripUpdate.Builder tripUpdate = update.getGtfsRealtimeTrip();
 							FeedEntity.Builder entity = FeedEntity.newBuilder();
