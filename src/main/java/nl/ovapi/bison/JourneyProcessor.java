@@ -952,9 +952,11 @@ public class JourneyProcessor {
 					}
 					cal.set(Calendar.SECOND, 0);
 					int delay = 0; // in Seconds
-					if (dp.getRecordedArrivalTime() != null){
+					if (dp.getRecordedArrivalTime() != null && (dp.getRecordedDepartureTime() == null || dp.getRecordedDepartureTime() <= dp.getRecordedArrivalTime())){
+					     //No recorded arrivaltime and either no or >= recorded departuretime
 						delay = dp.getRecordedArrivalTime()-dp.getTargetArrivalTime();
 					}else if (dp.getRecordedArrivalTime() != null && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
+						//No recorded arrivaltime fall back to recorded departure time if possible
 						delay = dp.getRecordedDepartureTime()-dp.getTargetArrivalTime();
 					}else{
 						delay = dp.getExpectedArrivalTime()-dp.getTargetArrivalTime();
