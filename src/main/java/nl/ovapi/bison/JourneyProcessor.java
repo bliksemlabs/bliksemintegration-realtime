@@ -935,39 +935,44 @@ public class JourneyProcessor {
 					serviceInfo.setServiceType(ServiceInfoKind.CANCELLED_SERVICE);
 					stop.setStopType(ServiceInfoStopKind.CANCELLED_STOP);
 				}
-				if (dp.isForBoarding()){
+				if (dp.isForBoarding() && dp.getJourneyStopType() != JourneyStopType.FIRST){
 					GregorianCalendar cal = new GregorianCalendar();
+					int delay = 0; // in Seconds
 					if (dp.getRecordedArrivalTime() != null){
-						int delay = dp.getRecordedArrivalTime()-dp.getTargetArrivalTime();
-						stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
+						delay = dp.getRecordedArrivalTime()-dp.getTargetArrivalTime();
 						cal.setTimeInMillis((dayEpoch+dp.getRecordedArrivalTime())*1000);
+					}else if (dp.getRecordedArrivalTime() != null && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
+						delay = dp.getRecordedDepartureTime()-dp.getTargetArrivalTime();
+						cal.setTimeInMillis((dayEpoch+dp.getExpectedArrivalTime())*1000);
 					}else{
-						int delay = dp.getExpectedArrivalTime()-dp.getTargetArrivalTime();
-						stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
+						delay = dp.getExpectedArrivalTime()-dp.getTargetArrivalTime();
 						cal.setTimeInMillis((dayEpoch+dp.getExpectedArrivalTime())*1000);
 					}
+					stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
 					stop.setArrival(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 				}
-				if (dp.isForAlighting()){
+				if (dp.isForAlighting() && dp.getJourneyStopType() != JourneyStopType.LAST){
 					GregorianCalendar cal = new GregorianCalendar();
+					int delay = 0; // in Seconds
 					if (dp.getRecordedDepartureTime() != null){
-						int delay = dp.getRecordedDepartureTime()-dp.getTargetArrivalTime();
-						stop.setDepartureTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
+						delay = dp.getRecordedDepartureTime()-dp.getTargetArrivalTime();
 						cal.setTimeInMillis((dayEpoch+dp.getRecordedDepartureTime())*1000);
-					}else{
-						int delay = dp.getExpectedDepartureTime()-dp.getTargetArrivalTime();
-						stop.setDepartureTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
+					}else if (dp.getRecordedArrivalTime() != null && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
+						delay = dp.getRecordedArrivalTime()-dp.getTargetArrivalTime();
 						cal.setTimeInMillis((dayEpoch+dp.getExpectedArrivalTime())*1000);
+					}else{
+						delay = dp.getExpectedDepartureTime()-dp.getTargetArrivalTime();
+						cal.setTimeInMillis((dayEpoch+dp.getExpectedDepartureTime())*1000);
 					}
+					stop.setDepartureTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
 					stop.setDeparture(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 				}
 				serviceInfo.getStopList().getStop().add(stop);
-				return serviceInfo;
 			}
+			return serviceInfo;
 		} catch (DatatypeConfigurationException e) {
 			return null;
 		}
-		return null;
 	}
 
 	/**
