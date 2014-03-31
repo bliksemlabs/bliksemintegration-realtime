@@ -959,7 +959,9 @@ public class JourneyProcessor {
 					}else{
 						delay = dp.getExpectedArrivalTime()-dp.getTargetArrivalTime();
 					}
-					stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(roundSecondsToMinute(delay)*60*1000));
+					int delayMin = roundSecondsToMinute(delay);
+					if (delayMin != 0)
+						stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(delayMin*60*1000));
 					stop.setArrival(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 				}
 				if (dp.isForBoarding() && dp.getJourneyStopType() != JourneyStopType.LAST){
@@ -977,7 +979,9 @@ public class JourneyProcessor {
 					}else{
 						delay = dp.getExpectedDepartureTime()-dp.getTargetArrivalTime();
 					}
-					stop.setDepartureTimeDelay(DatatypeFactory.newInstance().newDuration(roundSecondsToMinute(delay)*60*1000));
+					int delayMin = roundSecondsToMinute(delay);
+					if (delayMin != 0)
+						stop.setDepartureTimeDelay(DatatypeFactory.newInstance().newDuration(delayMin*60*1000));
 					stop.setDeparture(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 				}
 				serviceInfo.getStopList().getStop().add(stop);
@@ -987,7 +991,7 @@ public class JourneyProcessor {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * @param seconds
 	 * @return rounded minute 
