@@ -1017,7 +1017,7 @@ public class JourneyProcessor {
 		for (int i = 0; i < datedPasstimes.size(); i++){
 			DatedPasstime dp = datedPasstimes.get(i);
 			arriveDelays[i] = dp.getExpectedArrivalTime()-dp.getTargetArrivalTime();
-			departureDelays[i] = dp.getExpectedDepartureTime()-dp.getExpectedDepartureTime();
+			departureDelays[i] = dp.getExpectedDepartureTime()-dp.getTargetDepartureTime();
 			lastUpdate = Math.max(dp.getLastUpdateTimeStamp(), lastUpdate);
 		}
 		long currentTime = Utils.currentTimeSecs();
@@ -1064,14 +1064,14 @@ public class JourneyProcessor {
 				if (update.gtfsRealtimeTrip == null){
 					if (arriveDelays[i] != dp.getExpectedArrivalTime()-dp.getTargetArrivalTime()){
 						update.gtfsRealtimeTrip = filter(tripUpdateFromKV8());;
-					}else if (departureDelays[i] != dp.getExpectedDepartureTime()-dp.getExpectedDepartureTime()){
+					}else if (departureDelays[i] != dp.getExpectedDepartureTime()-dp.getTargetDepartureTime()){
 						update.gtfsRealtimeTrip = filter(tripUpdateFromKV8());;
 					}
 				}
 				if (update.serviceInfo == null){
-					if (Math.abs(arriveDelays[i] - dp.getExpectedArrivalTime()-dp.getTargetArrivalTime()) > 30){
+					if (Math.abs(arriveDelays[i] - (dp.getExpectedArrivalTime()-dp.getTargetArrivalTime())) > 30){
 						update.serviceInfo = serviceInfoFromKV8();
-					}else if (Math.abs(departureDelays[i] - dp.getExpectedDepartureTime()-dp.getExpectedDepartureTime()) > 30){
+					}else if (Math.abs(departureDelays[i] - (dp.getExpectedDepartureTime()-dp.getTargetDepartureTime())) > 30){
 						update.serviceInfo = serviceInfoFromKV8();
 					}
 				}
