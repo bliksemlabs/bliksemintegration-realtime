@@ -947,6 +947,10 @@ public class JourneyProcessor {
 				if (dp.isForAlighting() && dp.getJourneyStopType() != JourneyStopType.FIRST){
 					GregorianCalendar cal = new GregorianCalendar();
 					cal.setTimeInMillis((dayEpoch+dp.getTargetArrivalTime())*1000);
+					if (cal.get(Calendar.SECOND) >= 30){
+						cal.add(Calendar.MINUTE, 1);
+					}
+					cal.set(Calendar.SECOND, 0);
 					int delay = 0; // in Seconds
 					if (dp.getRecordedArrivalTime() != null){
 						delay = dp.getRecordedArrivalTime()-dp.getTargetArrivalTime();
@@ -955,12 +959,16 @@ public class JourneyProcessor {
 					}else{
 						delay = dp.getExpectedArrivalTime()-dp.getTargetArrivalTime();
 					}
-					stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
+					stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(roundSecondsToMinute(delay)*60*1000));
 					stop.setArrival(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 				}
 				if (dp.isForBoarding() && dp.getJourneyStopType() != JourneyStopType.LAST){
 					GregorianCalendar cal = new GregorianCalendar();
 					cal.setTimeInMillis((dayEpoch+dp.getTargetDepartureTime())*1000);
+					if (cal.get(Calendar.SECOND) >= 30){
+						cal.add(Calendar.MINUTE, 1);
+					}
+					cal.set(Calendar.SECOND, 0);
 					int delay = 0; // in Seconds
 					if (dp.getRecordedDepartureTime() != null){
 						delay = dp.getRecordedDepartureTime()-dp.getTargetArrivalTime();
@@ -969,7 +977,7 @@ public class JourneyProcessor {
 					}else{
 						delay = dp.getExpectedDepartureTime()-dp.getTargetArrivalTime();
 					}
-					stop.setDepartureTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
+					stop.setDepartureTimeDelay(DatatypeFactory.newInstance().newDuration(roundSecondsToMinute(delay)*60*1000));
 					stop.setDeparture(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 				}
 				serviceInfo.getStopList().getStop().add(stop);
@@ -978,6 +986,17 @@ public class JourneyProcessor {
 		} catch (DatatypeConfigurationException e) {
 			return null;
 		}
+	}
+	
+	/**
+	 * @param seconds
+	 * @return rounded minute 
+	 */
+	private static int roundSecondsToMinute(int seconds){
+		int minutes = seconds / 60;
+		if (seconds%60 >= 30)
+			minutes++;
+		return minutes;
 	}
 
 	/**
@@ -1065,9 +1084,9 @@ public class JourneyProcessor {
 					}
 				}
 				if (update.serviceInfo == null){
-					if (dp.isForAlighting() && Math.abs(arriveDelays[i] - (dp.getExpectedArrivalTime()-dp.getTargetArrivalTime())) > ARNU_EXPORT_THRESHOLD){
+					if (dp.isForAlighting() && roundSecondsToMinute(arriveDelays[i]) != roundSecondsToMinute(dp.getExpectedArrivalTime()-dp.getTargetArrivalTime())){
 						update.serviceInfo = serviceInfoFromKV8();
-					}else if (dp.isForBoarding() && Math.abs(departureDelays[i] - (dp.getExpectedDepartureTime()-dp.getTargetDepartureTime())) > ARNU_EXPORT_THRESHOLD){
+					}else if (dp.isForBoarding() && roundSecondsToMinute(departureDelays[i]) !=  roundSecondsToMinute((dp.getExpectedDepartureTime()-dp.getTargetDepartureTime()))){
 						update.serviceInfo = serviceInfoFromKV8();
 					}
 				}
@@ -1075,6 +1094,4 @@ public class JourneyProcessor {
 		}
 		return update;
 	}		
-	
-	private final static int ARNU_EXPORT_THRESHOLD = 60;
 }
