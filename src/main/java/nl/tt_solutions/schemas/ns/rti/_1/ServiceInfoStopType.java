@@ -69,7 +69,7 @@ public class ServiceInfoStopType {
     @XmlJavaTypeAdapter(DateAdapter.class)
     @XmlSchemaType(name = "dateTime")
     protected XMLGregorianCalendar arrival;
-    @XmlElement(name = "ArrivalTimeDelay", nillable = true)
+    @XmlElement(name = "ArrivalTimeDelay")
     @XmlJavaTypeAdapter(DelayAdapter.class)
     protected Duration arrivalTimeDelay;
     @XmlElement(name = "Departure")
@@ -77,7 +77,7 @@ public class ServiceInfoStopType {
     @XmlJavaTypeAdapter(DateAdapter.class)
     protected XMLGregorianCalendar departure;
     @XmlJavaTypeAdapter(DelayAdapter.class)
-    @XmlElement(name = "DepartureTimeDelay", nillable = true)
+    @XmlElement(name = "DepartureTimeDelay")
     protected Duration departureTimeDelay;
     @XmlElement(name = "ArrivalPlatform")
     protected String arrivalPlatform;
