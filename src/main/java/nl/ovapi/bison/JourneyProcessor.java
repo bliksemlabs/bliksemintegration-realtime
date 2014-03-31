@@ -941,7 +941,7 @@ public class JourneyProcessor {
 					serviceInfo.setServiceType(ServiceInfoKind.CANCELLED_SERVICE);
 					stop.setStopType(ServiceInfoStopKind.CANCELLED_STOP);
 				}
-				if (dp.isForBoarding() && dp.getJourneyStopType() != JourneyStopType.FIRST){
+				if (dp.isForAlighting() && dp.getJourneyStopType() != JourneyStopType.FIRST){
 					GregorianCalendar cal = new GregorianCalendar();
 					int delay = 0; // in Seconds
 					if (dp.getRecordedArrivalTime() != null){
@@ -957,7 +957,7 @@ public class JourneyProcessor {
 					stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(delay*1000));
 					stop.setArrival(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 				}
-				if (dp.isForAlighting() && dp.getJourneyStopType() != JourneyStopType.LAST){
+				if (dp.isForBoarding() && dp.getJourneyStopType() != JourneyStopType.LAST){
 					GregorianCalendar cal = new GregorianCalendar();
 					int delay = 0; // in Seconds
 					if (dp.getRecordedDepartureTime() != null){
