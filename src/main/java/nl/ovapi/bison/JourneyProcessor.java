@@ -595,7 +595,7 @@ public class JourneyProcessor {
 						}else if (delay < MIN_PUNCTUALITY){
 							break;//Ignore trigger
 						}else{
-							dp.setRecordedArrivalTime(dp.getTargetDepartureTime()+delay);
+							dp.setRecordedDepartureTime(dp.getTargetDepartureTime()+delay);
 						}
 					}
 					break;
