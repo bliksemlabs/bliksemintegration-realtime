@@ -91,12 +91,12 @@ public class BisonToGtfsRealtimeService {
 	public void setKV78TurboExporter(KV78TurboExporter kv78TurboExporter) {
 		_kv78TurboExporter = kv78TurboExporter;
 	}
-	
+
 	@Inject
 	public void setARNUexporter(ARNUexporter arnuExporter) {
 		_arnuExporter = arnuExporter;
 	}
-	
+
 	@Inject
 	public void setTripUpdatesSink(@TripUpdates	GtfsRealtimeSink tripUpdatesSink) {
 		_tripUpdatesSink = tripUpdatesSink;
@@ -232,7 +232,28 @@ public class BisonToGtfsRealtimeService {
 			long threshold = Utils.currentTimeSecs() - POSINFO_MAX_AGE_SECONDS;
 			int vehiclesCleaned = 0;
 			int tripsCleaned = 0;
-
+			try{
+				//Scan for currently driving journey's with no or expired realtime information
+				long current_time = Utils.currentTimeSecs();
+				for (Journey j : _ridService.getAllJourneys()){
+					if (j.getDepartureEpoch() < current_time && j.getEndEpoch() > current_time){
+						Update update = null;
+						String id = j.getOperatingDay()+":"+j.getPrivateCode();
+						JourneyProcessor jp = getOrCreateProcessorForId(id);
+						if (jp != null && (jp.getPosinfo() == null || jp.getPosinfo().getTimestamp() < threshold)){
+							update = jp.setAsUnknown();
+							if (update != null
+									&& update.getChangedPasstimes() != null
+									&& update.getChangedPasstimes().size() > 0){
+								_kv78TurboExporter.export(update.getChangedPasstimes());
+							}
+						}
+					}
+				}
+			}catch (Exception e){
+				e.printStackTrace();
+				_log.error("Scanning for UNKNOWN's",e);
+			}
 			for (Entry<String, JourneyProcessor> entry : journeyProcessors.entrySet()){
 				JourneyProcessor jp = entry.getValue();
 				try{

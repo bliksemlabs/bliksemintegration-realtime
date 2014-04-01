@@ -8,7 +8,10 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -78,6 +81,10 @@ public class RIDservice {
 	public Journey getJourney(String id){
 		String key = hf.hashString(id).toString();
 		return journeys.get(key);
+	}
+	
+	public Collection<Journey> getAllJourneys(){
+		 return journeys.values();
 	}
 
 	/**

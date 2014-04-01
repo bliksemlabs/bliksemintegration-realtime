@@ -703,6 +703,31 @@ public class JourneyProcessor {
 		}
 	}
 
+	@Synchronized("writeLock")
+	public Update setAsUnknown(){
+		Update update = new Update();
+		for (DatedPasstime dp : datedPasstimes){
+			switch (dp.getTripStopStatus()){
+			case ARRIVED:
+			case CANCEL:
+			case PASSED:
+			case UNKNOWN:
+				continue;
+			case OFFROUTE:
+			case DRIVING:
+			case PLANNED:
+				dp.setTripStopStatus(TripStopStatus.UNKNOWN);
+				if (update.changedPasstimes == null)
+					update.changedPasstimes = new ArrayList<DatedPasstime>();
+
+				update.changedPasstimes.add(dp);
+				if (update.gtfsRealtimeTrip == null)
+					update.gtfsRealtimeTrip = filter(tripUpdateFromKV8());
+			}
+		}
+		return update;
+	}
+
 	/**
 	 * Set estimated times using the punctuality in posinfo for stop and make prognoses for subsequent stops
 	 * @param posinfo KV6posinfo object
@@ -953,7 +978,7 @@ public class JourneyProcessor {
 					cal.set(Calendar.SECOND, 0);
 					int delay = 0; // in Seconds
 					if (dp.getRecordedArrivalTime() != null && (dp.getRecordedDepartureTime() == null || dp.getRecordedDepartureTime() <= dp.getRecordedArrivalTime())){
-					     //No recorded arrivaltime and either no or >= recorded departuretime
+						//No recorded arrivaltime and either no or >= recorded departuretime
 						delay = dp.getRecordedArrivalTime()-dp.getTargetArrivalTime();
 					}else if (dp.getRecordedArrivalTime() != null && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
 						//No recorded arrivaltime fall back to recorded departure time if possible
