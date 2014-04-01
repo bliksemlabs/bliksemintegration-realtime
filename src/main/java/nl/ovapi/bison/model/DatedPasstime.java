@@ -62,26 +62,26 @@ public class DatedPasstime {
 	 * KV17 lag in seconds
 	 */
 	@Getter @Setter private Integer lag;
-	
+
 	/**
 	 * Distance since start trip in meters
 	 */
 	@Getter @Setter private Integer distanceDriven;
-		
+
 	public void setForBoarding(boolean forBoarding) {
 		if (!Objects.equal(forBoarding, this.forBoarding)){
 			this.setLastUpdateTimeStamp(System.currentTimeMillis());
 		}
 		this.forBoarding = forBoarding;
 	}
-	
+
 	public void setForAlighting(boolean forAlighting) {
 		if (!Objects.equal(forAlighting, this.forAlighting)){
 			this.setLastUpdateTimeStamp(System.currentTimeMillis());
 		}
 		this.forAlighting = forAlighting;
 	}
-	
+
 	public void setReasonType(String reasonType) {
 		if (!Objects.equal(reasonType, this.reasonType)){
 			this.setLastUpdateTimeStamp(System.currentTimeMillis());
@@ -331,7 +331,7 @@ public class DatedPasstime {
 		int seconds = Integer.parseInt(time[2]);
 		return (hours * 60 + minutes) * 60 + seconds;
 	}
-	
+
 	private static String to32Time(Integer secondsSinceMidnight) {
 		if (secondsSinceMidnight == null){
 			return null;
@@ -342,7 +342,7 @@ public class DatedPasstime {
 		seconds = seconds % 60;
 		return String.format("%02d:%02d:%02d",hours,minutes,seconds);
 	}
-	
+
 
 	public String toCtxLine(){
 		StringBuilder sb = new StringBuilder();
@@ -371,11 +371,11 @@ public class DatedPasstime {
 		sb.append(numberOfCoaches == null ? "\\0" : numberOfCoaches).append('|');
 		sb.append(wheelChairAccessible == null ? WheelChairAccessible.UNKNOWN : wheelChairAccessible).append('|');
 		sb.append(operatorCode == null ? "\\0" : operatorCode).append('|');
-		
+
 		sb.append(reasonType == null ? "\\0" : reasonType).append('|');
 		sb.append(subReasonType == null ? "\\0" : subReasonType).append('|');
 		sb.append(reasonContent == null ? "\\0" : reasonContent).append('|');
-		
+
 		sb.append(adviceType == null ? "\\0" : adviceType).append('|');
 		sb.append(subAdviceType == null ? "\\0" : subAdviceType).append('|');
 		sb.append(adviceContent == null ? "\\0" : adviceContent).append('|');
@@ -383,7 +383,7 @@ public class DatedPasstime {
 		sb.append(timingPointDataOwnerCode == null ? "\\0" : timingPointDataOwnerCode.name()).append('|');
 		sb.append(timingPointCode == null ? "\\0" : timingPointCode).append('|');
 		sb.append(journeyStopType == null ? "\\0" : journeyStopType.name()).append('|');
-		
+
 		String tta = to32Time(targetArrivalTime);
 		sb.append(tta == null ? "\\0" : tta).append('|');
 		String ttd = to32Time(targetDepartureTime);
@@ -391,7 +391,7 @@ public class DatedPasstime {
 		String rta = to32Time(recordedArrivalTime);
 		sb.append(rta == null ? "\\0" : rta).append('|');
 		String rtd = to32Time(recordedDepartureTime);
-		sb.append(rtd == null ? "\\0" : rtd).append('|');
+		sb.append(rtd == null ? "\\0" : rtd);
 		return sb.toString();
 	}
 
@@ -457,5 +457,14 @@ public class DatedPasstime {
 			result.add(fromCtxLine(line));
 		}
 		return result;
+	}
+
+	private final static String HEADER = "\\GKV8turbo_passtimes|KV8turbo_passtimes|%s|||UTF-8|0.1|%s|\r\n"
+			+ "\\TDATEDPASSTIME|DATEDPASSTIME|start object\r\n"
+			+ "\\LDataOwnerCode|OperationDate|LinePlanningNumber|JourneyNumber|FortifyOrderNumber|UserStopOrderNumber|UserStopCode|LocalServiceLevelCode|JourneyPatternCode|LineDirection|LastUpdateTimeStamp|DestinationCode|IsTimingStop|ExpectedArrivalTime|ExpectedDepartureTime|TripStopStatus|MessageContent|MessageType|SideCode|NumberOfCoaches|WheelChairAccessible|OperatorCode|ReasonType|SubReasonType|ReasonContent|AdviceType|SubAdviceType|AdviceContent|TimingPointDataOwnerCode|TimingPointCode|JourneyStopType|TargetArrivalTime|TargetDepartureTime|RecordedArrivalTime|RecordedDepartureTime\r\n";
+
+	public static String header(String subscription){
+		SimpleDateFormat iso8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+		return String.format(HEADER,subscription,iso8601.format(new Date()));
 	}
 }
