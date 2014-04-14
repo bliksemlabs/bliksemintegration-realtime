@@ -21,6 +21,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stream.StreamSource;
 
 import lombok.NonNull;
@@ -154,6 +156,10 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			pull.setRcvHWM(500000);
 			JAXBContext jc = null;
 			Unmarshaller unmarshaller = null;
+	        XMLInputFactory xif = XMLInputFactory.newFactory();
+	        xif.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+	        xif.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+
 			try {
 				jc = JAXBContext.newInstance(PutServiceInfoIn.class);
 				unmarshaller = jc.createUnmarshaller();
@@ -171,7 +177,8 @@ public class ARNUritInfoToGtfsRealTimeServices {
 				try {
 					String[] m = ZeroMQUtils.gunzipMultifameZMsg(ZMsg.recvMsg(pull));
 					InputStream stream = new ByteArrayInputStream(m[1].getBytes("UTF-8"));
-					JAXBElement<PutServiceInfoIn> feed = unmarshaller.unmarshal(new StreamSource(stream), PutServiceInfoIn.class);
+			        XMLStreamReader xsr = xif.createXMLStreamReader(new StreamSource(stream));
+					JAXBElement<PutServiceInfoIn> feed = unmarshaller.unmarshal(xsr, PutServiceInfoIn.class);
 					if (feed == null || feed.getValue() == null || feed.getValue().getServiceInfoList() == null){
 						continue;
 					}
