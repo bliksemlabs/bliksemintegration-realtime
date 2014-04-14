@@ -54,7 +54,7 @@ public class ARNUexporter {
 				if (infoList.getServiceInfo().size() == 0){
 					return;
 				}
-				Marshaller marshaller = null;
+				/*Marshaller marshaller = null;
 				try {
 					jc = JAXBContext.newInstance(PutServiceInfoIn.class);
 					marshaller = jc.createMarshaller();
@@ -63,7 +63,7 @@ public class ARNUexporter {
 					_log.error("Error with JAXB",e1);
 					e1.printStackTrace();
 				}
-				marshaller.marshal(putService, System.out);
+				marshaller.marshal(putService, System.out);*/
 			} catch (Exception e) {
 				e.printStackTrace();
 			}	
