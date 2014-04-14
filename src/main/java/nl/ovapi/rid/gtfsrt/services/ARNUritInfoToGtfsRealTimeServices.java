@@ -178,7 +178,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 					}
 					System.out.println(m[0]);
 					for (ServiceInfoServiceType info : feed.getValue().getServiceInfoList().getServiceInfo()){
-						switch(info.getServiceType()){
+						switch(info.getServiceType()){ //TODO REMOVE THIS DEBUG SWITCH
 						case CANCELLED_SERVICE:
 						case NORMAL_SERVICE:
 						case NEW_SERVICE:
@@ -194,8 +194,8 @@ public class ARNUritInfoToGtfsRealTimeServices {
 						String id = String.format("%s:IFF:%s:%s",getDate(info),info.getTransportModeCode(),info.getServiceCode());
 						TrainProcessor jp = getOrCreateProcessorForId(id);
 						if (jp == null && info.getServiceType() != ServiceInfoKind.NORMAL_SERVICE){
-							jp = createFromARNU(info);
-							if (jp != null)
+							jp = createFromARNU(info); //No static counterpart and ServiceInfoKind not normal
+							if (jp != null)            //Create from ARNU XML
 								journeyProcessors.put(id, jp);
 						}
 						if (jp != null){
@@ -205,7 +205,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 								case SPLIT_SERVICE:
 								case CANCELLED_SERVICE:
 									break;
-								case NEW_SERVICE:
+								case NEW_SERVICE: //Check and if necessary modify the scheduled journey to include the changes from ARNU
 								case DIVERTED_SERVICE:
 								case EXTENDED_SERVICE:
 								case SCHEDULE_CHANGED_SERVICE:
