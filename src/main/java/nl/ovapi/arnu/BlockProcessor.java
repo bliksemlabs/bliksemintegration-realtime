@@ -38,6 +38,8 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeEvent;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate.ScheduleRelationship;
+import com.google.transit.realtime.GtfsRealtimeNYCT;
+import com.google.transit.realtime.GtfsRealtimeNYCT.NyctStopTimeUpdate;
 
 /**
  * Logical unit that translates ARNU updates into GTFS-RT updates
@@ -53,7 +55,7 @@ public class BlockProcessor {
 	private static class Patch {
 		Long eta,etd;
 		Integer arrivalDelay,departureDelay;
-		String serviceCode;
+		String serviceCode,departurePlatform,actualDeparturePlatform,arrivalPlatform,actualArrivalPlatform;
 		boolean canceled; 
 	}
 
@@ -140,7 +142,7 @@ public class BlockProcessor {
 		long newEpoch = newOrigin.getDeparture().toGregorianCalendar().getTimeInMillis()/1000;
 		int newDepartureTime = editor.getDeparturetime()-(int)(toEdit.getDepartureEpoch()-newEpoch);
 		editor.setDeparturetime(newDepartureTime);
-		
+
 		//TODO This is a shortcut, it should also be possible to manually add points.
 		//But that will come with a lot of nasty unknown sideeffects..
 		editor.setJourneyPattern(patternFromArnu(ridService,info));
@@ -155,6 +157,31 @@ public class BlockProcessor {
 			return null;
 		}
 		return ids[ids.length-1];
+	}
+
+	private static Long getStationId(RIDservice ridService,ServiceInfoStopType stop){
+		Long id = null;
+		if (stop.getActualDeparturePlatform() != null){
+			id = ridService.getRailStation(stop.getStopCode().toLowerCase(),stop.getActualDeparturePlatform());
+		}
+		if (id == null || stop.getDeparturePlatform() != null){
+			id = ridService.getRailStation(stop.getStopCode().toLowerCase(),stop.getDeparturePlatform());
+		}
+		if (id != null){
+			return id;
+		}else{
+			return ridService.getRailStation(stop.getStopCode().toLowerCase(),"0");
+		}
+	}
+
+	private static String operatorPointRef(ServiceInfoStopType stop){
+		if (stop.getActualDeparturePlatform() != null){
+			return String.format("%s:%s", stop.getStopCode().toLowerCase(),stop.getActualDeparturePlatform());
+		}
+		if (stop.getDeparturePlatform() != null){
+			return String.format("%s:%s", stop.getStopCode().toLowerCase(),stop.getDeparturePlatform());
+		}
+		return String.format("%s:0", stop.getStopCode().toLowerCase());
 	}
 
 	@Synchronized("writeLock")
@@ -180,8 +207,8 @@ public class BlockProcessor {
 							.setPointOrder(pt.getPointorder()+1)
 							.setIsScheduled(true)
 							.setIsWaitpoint(true)
-							.setOperatorPointRef(String.format("%s:0", stop.getStopCode().toLowerCase()));
-					Long id = ridService.getRailStation(stop.getStopCode().toLowerCase());
+							.setOperatorPointRef(operatorPointRef(stop));
+					Long id = getStationId(ridService,stop);
 					JourneyPattern.Builder newPattern = journey.getJourneypattern().edit();
 					if (id == null){
 						_log.error("PointId for station {} not found",stop.getStopCode());
@@ -278,12 +305,12 @@ public class BlockProcessor {
 			if (s.getArrival() == null && s.getDeparture() == null){
 				continue; //Train does not stop at this station;
 			}
-			JourneyPattern.JourneyPatternPoint.Builder pt = JourneyPatternPoint.newBuilder();
-			pt.setPointOrder((i+1)*10);
-			pt.setIsScheduled(true);
-			pt.setIsWaitpoint(true);
-			pt.setOperatorPointRef(String.format("%s:0", s.getStopCode().toLowerCase()));
-			Long id = ridService.getRailStation(s.getStopCode().toLowerCase());
+			JourneyPattern.JourneyPatternPoint.Builder pt = JourneyPatternPoint.newBuilder()
+					.setPointOrder((i+1)*10)
+					.setIsScheduled(true)
+					.setIsWaitpoint(true)
+					.setOperatorPointRef(operatorPointRef(s));
+			Long id = getStationId(ridService,s);
 			if (id == null){
 				_log.error("PointId for station {} not found",s.getStopCode());
 			}else{
@@ -346,6 +373,10 @@ public class BlockProcessor {
 			String stationCode = station.getStopCode().toLowerCase();
 			Patch p = new Patch();
 			p.serviceCode = station.getStopServiceCode();
+			p.actualArrivalPlatform = station.getActualArrivalPlatform();
+			p.arrivalPlatform = station.getArrivalPlatform();
+			p.actualDeparturePlatform = station.getActualDeparturePlatform();
+			p.departurePlatform = station.getDeparturePlatform();
 			if (station.getStopType() != null){
 				switch (station.getStopType()){
 				case CANCELLED_STOP:
@@ -444,6 +475,14 @@ public class BlockProcessor {
 						departure.setDelay(p.departureDelay == null ? 0 : p.departureDelay);
 						departure.setTime(p.etd); //In seconds since 1970 
 						stop.setDeparture(departure);
+					}
+					if (p.departurePlatform != null || p.actualDeparturePlatform != null){
+						NyctStopTimeUpdate.Builder extension = NyctStopTimeUpdate.newBuilder();
+						if (p.departurePlatform != null)
+							extension.setScheduledTrack(p.departurePlatform);
+						if (p.actualDeparturePlatform != null)
+							extension.setActualTrack(p.actualDeparturePlatform);
+						stop.setExtension(GtfsRealtimeNYCT.nyctStopTimeUpdate, extension.build());
 					}
 				}else{
 					stop.setScheduleRelationship(ScheduleRelationship.SKIPPED);

@@ -143,14 +143,18 @@ public class RIDservice {
 	 * @param station NS stationcode 
 	 * @return Long of identifier of stoppoint with undefined platform for that station
 	 */
-	public Long getRailStation(String station){
-		String id = String.format("IFF:%s:0", station);
+	public Long getRailStation(String station, String platformCode){
+		if (platformCode == null){
+			platformCode = "0";
+		}
+		String id = String.format("IFF:%s:%s", station,platformCode);
 		ArrayList<Long> results = userstops.get(id);
 		if (results == null || results.size() == 0){
 			return null;
 		}
 		return results.get(0);
 	}
+
 
 	/**
 	 * @param id of stoppoint in database.
