@@ -12,6 +12,7 @@ import lombok.NonNull;
 import nl.ovapi.rid.gtfsrt.services.RIDservice;
 import nl.ovapi.rid.model.Block;
 import nl.ovapi.rid.model.Journey;
+import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
@@ -20,6 +21,8 @@ import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeIncrementalUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 
@@ -117,30 +120,59 @@ public class TrainProcessor {
 	}
 
 	public void changeService(@NonNull RIDservice ridService,ServiceInfoServiceType info) throws ParseException{
-		HashSet<String> plannedPath = new HashSet<String>();
+		Multimap<String,String> plannedPath = ArrayListMultimap.create();
 		for (BlockProcessor p : _processors){
-			plannedPath.addAll(p.getStations());
+			for (Journey j : p.getBlock().getSegments()){
+				String[] ids = j.getPrivateCode().split(":");
+				String serviceCode = ids[ids.length-1];
+				for (JourneyPatternPoint point : j.getJourneypattern().getPoints()){
+					plannedPath.put(serviceCode, BlockProcessor.stationCode(point));
+				}
+			}
 		}
-		String lastStation =null;
+		if (_processors.size() > 1){
+			_log.error("We currently do not support service modifications for 'vleugeltreinen'"); //TODO
+			return;
+		}
+		ServiceInfoStopType prev = null;
 		for (int i = 0; i < info.getStopList().getStop().size(); i++){
-			ServiceInfoStopType s = info.getStopList().getStop().get(i);
-			if ((s.getArrival() == null && s.getDeparture() == null ||
-					s.getStopType() == ServiceInfoStopKind.CANCELLED_STOP || 
-					s.getStopType() == ServiceInfoStopKind.DIVERTED_STOP)){
+			ServiceInfoStopType cur = info.getStopList().getStop().get(i);
+			if ((cur.getArrival() == null && cur.getDeparture() == null ||
+					cur.getStopType() == ServiceInfoStopKind.CANCELLED_STOP || 
+					cur.getStopType() == ServiceInfoStopKind.DIVERTED_STOP)){
 				continue;
 			}
-			if (!plannedPath.contains(s.getStopCode().toLowerCase())){
-				_log.error("Add station {} ",s.getStopCode()+" after "+lastStation);
+			if (!plannedPath.containsEntry(cur.getStopServiceCode().toLowerCase(),cur.getStopCode().toLowerCase())){
+				String prevStation = prev == null ? null : prev.getStopCode();
+				ServiceInfoStopType next = nextStop(info.getStopList().getStop(),i);
+				String nextStation = next == null ? null : next.getStopCode();
+				_log.error("Add station {} ",cur.getStopCode()+" after "+prevStation+" before "+nextStation);
+				
 				for (BlockProcessor jp : _processors){
+					boolean startOfJourney = (prev == null || prev.getStopServiceCode().equals(cur.getStopServiceCode()));
 					try{
-						jp.addStoppoint(ridService,s, lastStation);
+						if (startOfJourney){
+							jp.changeOrigin(ridService,info,cur,prev,next);
+						}else{
+							jp.addStoppoint(ridService,cur, prevStation);		
+						}
 					}catch (Exception e){
-						_log.error("Add station "+s.getStopCode()+" failed",e);
+						_log.error("Add station "+cur.getStopCode()+" failed",e);
 					}
 				}
 			}
-			lastStation = s.getStopCode().toLowerCase();
+			prev = cur;
 		}
+	}
+	
+	private static ServiceInfoStopType nextStop(List<ServiceInfoStopType> stop, int i) {
+		for (;i < stop.size();i++){
+			ServiceInfoStopType next = stop.get(i);
+			if (next.getArrival() != null || next.getDeparture() != null){
+				return next;
+			}
+		}
+		return null;
 	}
 
 	public static TrainProcessor fromArnu(@NonNull RIDservice ridService,@NonNull ServiceInfoServiceType info){

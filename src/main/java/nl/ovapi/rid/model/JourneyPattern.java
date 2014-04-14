@@ -384,7 +384,7 @@ public class JourneyPattern implements Cloneable{
 		public void add(int index,JourneyPatternPoint point){
 			this.points.add(index,point);
 		}
-
+	
 		public JourneyPattern build(){
 			return new JourneyPattern(journeyPatternRef,directiontype,this.points);
 		}

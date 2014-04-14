@@ -9,11 +9,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Synchronized;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.gtfsrt.services.ARNUritInfoToGtfsRealTimeServices;
 import nl.ovapi.rid.gtfsrt.services.RIDservice;
@@ -46,10 +48,12 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate.Schedu
 public class BlockProcessor {
 	@Getter private Block block;
 	private Map<String,Patch> patches;
+	private final Object writeLock = new Object();
 	private static final Logger _log = LoggerFactory.getLogger(ARNUritInfoToGtfsRealTimeServices.class);
 	private static class Patch {
 		Long eta,etd;
 		Integer arrivalDelay,departureDelay;
+		String serviceCode;
 		boolean canceled; 
 	}
 
@@ -61,12 +65,22 @@ public class BlockProcessor {
 	/**
 	 * 
 	 * @param stationCode NS stationcode such as lls, asd,asdz etc.
+	 * @param serviceCode of train passing by
 	 * @return whether this journey contains station of stationCode
 	 */
 
-	public boolean containsStation(String stationCode){
-		for (Journey journey : block.getSegments()){
-			for (JourneyPatternPoint pt : journey.getJourneypattern().getPoints()){
+	public boolean containsStation(String stationCode, String serviceCode){
+		for (int i = 0; i < block.getSegments().size();i++){
+			Journey journey = block.getSegments().get(i);
+			for (int j = 0; j < journey.getJourneypattern().getPoints().size(); j++){
+				boolean lastStop = (j == journey.getJourneypattern().getPoints().size()-1);
+				String serviceCodeOfJourney = serviceCode(journey);
+				//Either no privatecode (realtime added) or serviceCode matches
+				boolean serviceCodeMatches = serviceCodeOfJourney == null ? true : (serviceCodeOfJourney.equals(serviceCode));
+				if (!(lastStop || serviceCodeMatches)){
+					continue; //Journeypattern point is not part of serviceCode nor at end of a segment
+				}
+				JourneyPatternPoint pt = journey.getJourneypattern().getPoints().get(j);
 				if (stationCode.equals(stationCode(pt))){
 					return true;
 				}
@@ -87,7 +101,64 @@ public class BlockProcessor {
 		return stations;
 	}
 
-	public synchronized void addStoppoint(RIDservice ridService,ServiceInfoStopType stop, @NonNull String afterStation) throws ParseException{
+	@Synchronized("writeLock")
+	public void changeOrigin(RIDservice ridService,ServiceInfoServiceType info, ServiceInfoStopType newOrigin, ServiceInfoStopType prev, ServiceInfoStopType next) throws ParseException{
+		if (block.getSegments().size() > 1){
+			_log.error("This is not easy {}",info); //TODO think about all the known unknown's
+			return;
+		}
+		int segmentIndex = -1;
+		Journey toEdit = null;
+		Journey.Builder editor = null;
+		for (Journey j : block.getSegments()){
+			segmentIndex++;
+			if (newOrigin.getStopServiceCode().equals(serviceCode(j))){
+				toEdit = j;
+				editor = j.edit();
+				break;
+			}
+		}
+		if (editor == null){
+			_log.error("Block serviceCode does not match {}",info);
+			return;
+		}
+		boolean isDisjunct = true;
+		for (int i = 0; i < info.getStopList().getStop().size(); i++){
+			ServiceInfoStopType stop = info.getStopList().getStop().get(i);
+			if (!stop.getStopServiceCode().equals(newOrigin.getStopServiceCode())){
+				continue;
+			}
+			if (containsStation(stop.getStopCode(), stop.getStopServiceCode())){
+				isDisjunct = false;
+				break;
+			}
+		}
+		if (isDisjunct){
+			_log.error("No matching stops {}",info); //TODO
+			return;
+		}
+		long newEpoch = newOrigin.getDeparture().toGregorianCalendar().getTimeInMillis()/1000;
+		int newDepartureTime = editor.getDeparturetime()-(int)(toEdit.getDepartureEpoch()-newEpoch);
+		editor.setDeparturetime(newDepartureTime);
+		
+		//TODO This is a shortcut, it should also be possible to manually add points.
+		//But that will come with a lot of nasty unknown sideeffects..
+		editor.setJourneyPattern(patternFromArnu(ridService,info));
+		editor.setTimeDemandGroup(timePatternFromArnu(editor,info));
+		getBlock().getSegments().set(segmentIndex, editor.build());
+	}
+
+	public static String serviceCode(Journey j){
+		String[] ids = j.getPrivateCode().split(":");
+		//Either no privatecode (realtime added) or serviceCode matches
+		if (ids.length == 0){
+			return null;
+		}
+		return ids[ids.length-1];
+	}
+
+	@Synchronized("writeLock")
+	public void addStoppoint(RIDservice ridService,ServiceInfoStopType stop, @NonNull String afterStation) throws ParseException{
 		if (stop.getArrival() == null && stop.getDeparture() == null){
 			throw new IllegalArgumentException("No times for stop");
 		}
@@ -182,8 +253,8 @@ public class BlockProcessor {
 				//SEconds since midnight
 				int time = secondsSinceMidnight(c);
 				TimeDemandGroup.TimeDemandGroupPoint.Builder pt = TimeDemandGroupPoint.newBuilder()
-															.setTotalDriveTime(time-departuretime)
-															 .setPointOrder(i);
+						.setTotalDriveTime(time-departuretime)
+						.setPointOrder(i);
 				if (s.getDeparture() != null){
 					c = s.getDeparture().toGregorianCalendar();
 					int depTime = secondsSinceMidnight(c);
@@ -227,13 +298,17 @@ public class BlockProcessor {
 		return c.get(Calendar.HOUR_OF_DAY)*60*60+c.get(Calendar.MINUTE)*60+c.get(Calendar.SECOND);
 	}
 
+	private final static SimpleDateFormat ISO_DATE = new SimpleDateFormat("yyyy-MM-dd");
+	static {
+		ISO_DATE.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));
+	}
+
 	public static BlockProcessor fromArnu(@NonNull RIDservice ridService,@NonNull ServiceInfoServiceType info){
 		try{
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 			Journey.Builder j = Journey.newBuilder()
 					.setIsAdded(true)
-					.setPrivateCode(String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
-					.setId(String.format("%s:IFF:%s:%s",df.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
+					.setPrivateCode(String.format("%s:IFF:%s:%s",ISO_DATE.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
+					.setId(String.format("%s:IFF:%s:%s",ISO_DATE.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
 					.setJourneyPattern(patternFromArnu(ridService,info));
 			j.setTimeDemandGroup(timePatternFromArnu(j,info));
 			j.setId(j.getPrivateCode());
@@ -267,10 +342,10 @@ public class BlockProcessor {
 		if (info.getStopList() == null || info.getStopList().getStop() == null){
 			return;
 		}
-
 		for (ServiceInfoStopType station : info.getStopList().getStop()){
 			String stationCode = station.getStopCode().toLowerCase();
 			Patch p = new Patch();
+			p.serviceCode = station.getStopServiceCode();
 			if (station.getStopType() != null){
 				switch (station.getStopType()){
 				case CANCELLED_STOP:
@@ -309,6 +384,7 @@ public class BlockProcessor {
 		}
 	}
 
+	@Synchronized("writeLock")
 	public List<TripUpdate.Builder> process(@NonNull ServiceInfoServiceType info){
 		patches.clear(); //TODO Figure out whether ARNU updates are replacing each other.
 		updatePatches(info);
@@ -343,7 +419,12 @@ public class BlockProcessor {
 				stop.setStopSequence(jp.getPointorder());
 				String stationCode = jp.getOperatorpointref().split(":")[0].toLowerCase();
 				Patch p = patches.get(stationCode);
-				if (p != null){
+				boolean lastStop = (i == journey.getJourneypattern().getPoints().size()-1);
+				String serviceCode = serviceCode(journey);
+				System.out.println("P" + journey.getPrivateCode() + " "+serviceCode + " " + p.serviceCode);
+				//Either no privatecode (realtime added) or serviceCode matches
+				boolean serviceCodeMatches = serviceCode == null ? true : (serviceCode.equals(p.serviceCode));
+				if (p != null && (lastStop || serviceCodeMatches )){ //Either servicecode matches or last stop (which can involve a switch of servicecode)
 					if (p.canceled || jp.isSkipped()){
 						stop.setScheduleRelationship(ScheduleRelationship.SKIPPED);
 						stopsCanceled++; //Signal that there was a cancellation along the journey

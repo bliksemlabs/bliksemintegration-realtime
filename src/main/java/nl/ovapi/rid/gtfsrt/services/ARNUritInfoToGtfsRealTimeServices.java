@@ -93,7 +93,6 @@ public class ARNUritInfoToGtfsRealTimeServices {
 		@Override
 		public void run() {
 			//Delete vehicle updates that haven't received KV6 in 2 minutes.
-			GtfsRealtimeIncrementalUpdate vehicleUpdates = new GtfsRealtimeIncrementalUpdate();
 			GtfsRealtimeIncrementalUpdate tripUpdates = new GtfsRealtimeIncrementalUpdate();
 			int tripsCleaned = 0;
 
