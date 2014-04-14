@@ -19,7 +19,7 @@ public class Block {
 	}
 	
 	public long getEndEpoch(){
-		return segments.get(segments.size()).getEndEpoch();
+		return segments.get(segments.size()-1).getEndEpoch();
 	}
 		
 	public void addJourney(Journey journey){
