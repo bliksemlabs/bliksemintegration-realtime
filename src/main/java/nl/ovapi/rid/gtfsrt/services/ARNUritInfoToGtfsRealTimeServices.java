@@ -34,7 +34,7 @@ import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
 
-import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripUpdates;
+import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TrainUpdates;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeIncrementalUpdate;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeSink;
 import org.slf4j.Logger;
@@ -72,7 +72,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 	}
 
 	@Inject
-	public void setTripUpdatesSink(@TripUpdates GtfsRealtimeSink tripUpdates) {
+	public void setTripUpdatesSink(@TrainUpdates GtfsRealtimeSink tripUpdates) {
 		_tripUpdatesSink = tripUpdates;
 	}
 
