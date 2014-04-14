@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,6 @@ import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeEvent;
@@ -49,7 +49,6 @@ import com.google.transit.realtime.GtfsRealtimeNYCT.NyctStopTimeUpdate;
 
 public class BlockProcessor {
 	@Getter private Block block;
-	private Map<String,Patch> patches;
 	private final Object writeLock = new Object();
 	private static final Logger _log = LoggerFactory.getLogger(ARNUritInfoToGtfsRealTimeServices.class);
 	private static class Patch {
@@ -61,7 +60,6 @@ public class BlockProcessor {
 
 	public BlockProcessor(@NonNull Block b){
 		block = b;
-		patches = Maps.newHashMap();
 	}
 
 	/**
@@ -365,9 +363,10 @@ public class BlockProcessor {
 		}
 	}
 
-	private void updatePatches(ServiceInfoServiceType info){
+	private Map<String, Patch> getPatches(ServiceInfoServiceType info){
+		Map<String,Patch> patches = new HashMap<String, Patch>();
 		if (info.getStopList() == null || info.getStopList().getStop() == null){
-			return;
+			return null;
 		}
 		for (ServiceInfoStopType station : info.getStopList().getStop()){
 			String stationCode = station.getStopCode().toLowerCase();
@@ -413,12 +412,12 @@ public class BlockProcessor {
 			}
 			patches.put(stationCode, p);
 		}
+		return patches;
 	}
 
 	@Synchronized("writeLock")
 	public List<TripUpdate.Builder> process(@NonNull ServiceInfoServiceType info){
-		patches.clear(); //TODO Figure out whether ARNU updates are replacing each other.
-		updatePatches(info);
+		Map<String,Patch> patches = getPatches(info);
 		switch (info.getServiceType()){
 		case NORMAL_SERVICE:
 		case NEW_SERVICE:
@@ -434,10 +433,13 @@ public class BlockProcessor {
 			break;
 
 		}
-		return buildTripUpdate(info);
+		if (patches == null){
+			return null;
+		}
+		return buildTripUpdate(patches,info);
 	}
 
-	private List<TripUpdate.Builder> buildTripUpdate(@NonNull ServiceInfoServiceType info){
+	private List<TripUpdate.Builder> buildTripUpdate(Map<String,Patch> patches,@NonNull ServiceInfoServiceType info){
 		List<TripUpdate.Builder> updates = new ArrayList<TripUpdate.Builder>();
 		for (Journey journey : block.getSegments()){
 			TripUpdate.Builder trip = TripUpdate.newBuilder();
