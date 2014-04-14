@@ -124,7 +124,6 @@ public class KV78TurboToPseudoKV6Service {
 				_log.info("GVB delta ID not found {}",id);
 			}
 		}
-		System.out.println(id);
 		if (j == null){
 			return null;
 		}
