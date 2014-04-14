@@ -454,7 +454,6 @@ public class BlockProcessor {
 				Patch p = patches.get(stationCode);
 				boolean lastStop = (i == journey.getJourneypattern().getPoints().size()-1);
 				String serviceCode = serviceCode(journey);
-				System.out.println("P" + journey.getPrivateCode() + " "+serviceCode + " " + p.serviceCode);
 				//Either no privatecode (realtime added) or serviceCode matches
 				boolean serviceCodeMatches = serviceCode == null ? true : (serviceCode.equals(p.serviceCode));
 				if (p != null && (lastStop || serviceCodeMatches )){ //Either servicecode matches or last stop (which can involve a switch of servicecode)
