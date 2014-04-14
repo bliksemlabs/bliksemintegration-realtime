@@ -75,6 +75,20 @@ public class GtfsRealtimeGuiceBindingTypes {
   @Retention(RUNTIME)
   public @interface TripUpdates {
   }
+  
+  /**
+   * Annotation to indicate that a wired instance of {@link GtfsRealtimeSink},
+   * {@link GtfsRealtimeSource}, or {@link GtfsRealtimeExporter} must support
+   * train updates data.
+   * 
+   * @author thomas
+   * @see GtfsRealtimeGuiceBindingTypes
+   */
+  @BindingAnnotation
+  @Target({FIELD, PARAMETER, METHOD})
+  @Retention(RUNTIME)
+  public @interface TrainUpdates {
+  }
 
   /**
    * Annotation to indicate that a wired instance of {@link GtfsRealtimeSink},

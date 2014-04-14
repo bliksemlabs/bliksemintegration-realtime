@@ -18,6 +18,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.Parser;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeFileWriter;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.Alerts;
+import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TrainUpdates;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripUpdates;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.VehiclePositions;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeServlet;
@@ -35,15 +36,17 @@ public class BisonToGtfsRealtimeMain {
 	private static final Logger _log = LoggerFactory.getLogger(BisonToGtfsRealtimeMain.class);
 
 	private GtfsRealtimeSink _tripUpdatesSink;
+	private GtfsRealtimeSink _trainUpdatesSink;
 	private GtfsRealtimeSink _vehiclePositionsSink;
 	private GtfsRealtimeSink _alertsSink;
 
 	private GtfsRealtimeSource _alertsSource;
 	private GtfsRealtimeSource _tripUpdatesSource;
+	private GtfsRealtimeSource _trainUpdatesSource;
 	private GtfsRealtimeSource _vehiclePositionsSource;
 	private BisonToGtfsRealtimeService _bisonToGtfsRealtimeService;
 	private KV78TurboToPseudoKV6Service  _kv78TurboToPseudoKV6Service;
-	private ARNUritInfoToGtfsRealTimeServices  _nsApiToGtfsRealTimeServices;
+	private ARNUritInfoToGtfsRealTimeServices  _arnuToGtfsRealTimeServices;
 
 	private LifecycleService _lifecycleService;
 
@@ -54,6 +57,9 @@ public class BisonToGtfsRealtimeMain {
 	private static final String ARG_VEHICLE_POSITIONS_URL = "vehiclePositionsUrl";
 	private static final String ARG_ALERTS_PATH = "alertsPath";
 	private static final String ARG_ALERTS_URL = "alertsUrl";
+	private static final String ARG_TRAIN_UPDATES_PATH = "trainUpdatesPath";
+	private static final String ARG_TRAIN_UPDATES_URL = "trainUpdatesUrl";
+
 
 	@Inject
 	public void setLifecycleService(LifecycleService lifecycleService) {
@@ -63,6 +69,11 @@ public class BisonToGtfsRealtimeMain {
 	@Inject
 	public void setTripUpdatesSink(@TripUpdates GtfsRealtimeSink tripUpdatesSink) {
 		_tripUpdatesSink = tripUpdatesSink;
+	}
+	
+	@Inject
+	public void setTrainUpdatesSink(@TrainUpdates GtfsRealtimeSink trainUpdatesSink) {
+		_trainUpdatesSink = trainUpdatesSink;
 	}
 
 	@Inject
@@ -76,8 +87,8 @@ public class BisonToGtfsRealtimeMain {
 	}
 
 	@Inject
-	public void setNSApiToGtfsRealTimeServices(ARNUritInfoToGtfsRealTimeServices nsApiToGtfsRealTimeServices) {
-		_nsApiToGtfsRealTimeServices = nsApiToGtfsRealTimeServices;
+	public void setARnuToGtfsRealTimeServices(ARNUritInfoToGtfsRealTimeServices arnuToGtfsRealTimeServices) {
+		_arnuToGtfsRealTimeServices = arnuToGtfsRealTimeServices;
 	}
 
 	@Inject
@@ -88,6 +99,11 @@ public class BisonToGtfsRealtimeMain {
 	@Inject
 	public void setTripUpdatesSource(@TripUpdates GtfsRealtimeSource tripUpdatesSource) {
 		_tripUpdatesSource = tripUpdatesSource;
+	}
+	
+	@Inject
+	public void setTrainUpdatesSource(@TrainUpdates GtfsRealtimeSource trainUpdatesSource) {
+		_trainUpdatesSource = trainUpdatesSource;
 	}
 	
 	@Inject
@@ -125,6 +141,28 @@ public class BisonToGtfsRealtimeMain {
 			GtfsRealtimeFileWriter fileWriter = injector.getInstance(GtfsRealtimeFileWriter.class);
 			fileWriter.setSource(_tripUpdatesSource);
 			fileWriter.setPath(new File(cli.getOptionValue(ARG_TRIP_UPDATES_PATH)));
+		}
+		
+		if (cli.hasOption(ARG_TRIP_UPDATES_URL)) {
+			GtfsRealtimeServlet servlet = injector.getInstance(GtfsRealtimeServlet.class);
+			servlet.setSource(_tripUpdatesSource);
+			servlet.setUrl(new URL(cli.getOptionValue(ARG_TRIP_UPDATES_URL)));
+		}
+		if (cli.hasOption(ARG_TRIP_UPDATES_PATH)) {
+			GtfsRealtimeFileWriter fileWriter = injector.getInstance(GtfsRealtimeFileWriter.class);
+			fileWriter.setSource(_tripUpdatesSource);
+			fileWriter.setPath(new File(cli.getOptionValue(ARG_TRIP_UPDATES_PATH)));
+		}
+
+		if (cli.hasOption(ARG_TRAIN_UPDATES_URL)) {
+			GtfsRealtimeServlet servlet = injector.getInstance(GtfsRealtimeServlet.class);
+			servlet.setSource(_trainUpdatesSource);
+			servlet.setUrl(new URL(cli.getOptionValue(ARG_TRAIN_UPDATES_URL)));
+		}
+		if (cli.hasOption(ARG_TRAIN_UPDATES_PATH)) {
+			GtfsRealtimeFileWriter fileWriter = injector.getInstance(GtfsRealtimeFileWriter.class);
+			fileWriter.setSource(_trainUpdatesSource);
+			fileWriter.setPath(new File(cli.getOptionValue(ARG_TRAIN_UPDATES_PATH)));
 		}
 
 		if (cli.hasOption(ARG_VEHICLE_POSITIONS_URL)) {
@@ -166,6 +204,8 @@ public class BisonToGtfsRealtimeMain {
 
 		options.addOption(ARG_TRIP_UPDATES_PATH, true, "trip updates path");
 		options.addOption(ARG_TRIP_UPDATES_URL, true, "trip updates url");
+		options.addOption(ARG_TRAIN_UPDATES_PATH, true, "train updates path");
+		options.addOption(ARG_TRAIN_UPDATES_URL, true, "tain updates url");
 		options.addOption(ARG_VEHICLE_POSITIONS_PATH, true, "vehicle positions path");
 		options.addOption(ARG_VEHICLE_POSITIONS_URL, true, "vehicle positions url");
 		options.addOption(ARG_ALERTS_PATH, true, "alerts path");

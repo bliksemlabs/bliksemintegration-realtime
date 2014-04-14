@@ -22,6 +22,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeExporter.AlertsExporter;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeExporter.MixedFeedExporter;
+import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeExporter.TrainUpdatesExporter;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeExporter.TripUpdatesExporter;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeExporter.VehiclePositionsExporter;
 
@@ -39,7 +40,7 @@ import com.google.transit.realtime.GtfsRealtimeOneBusAway.OneBusAwayFeedHeader;
  * @author bdferris
  */
 class GtfsRealtimeExporterImpl implements AlertsExporter, TripUpdatesExporter,
-    VehiclePositionsExporter, MixedFeedExporter {
+    VehiclePositionsExporter, MixedFeedExporter,TrainUpdatesExporter {
 
   private List<GtfsRealtimeIncrementalListener> _listeners = new CopyOnWriteArrayList<GtfsRealtimeIncrementalListener>();
 

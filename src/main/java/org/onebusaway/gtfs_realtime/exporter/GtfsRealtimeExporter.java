@@ -48,6 +48,10 @@ public interface GtfsRealtimeExporter extends GtfsRealtimeSource,
   interface TripUpdatesExporter extends GtfsRealtimeExporter {
 
   }
+  
+  interface TrainUpdatesExporter extends GtfsRealtimeExporter {
+
+  }
 
   interface VehiclePositionsExporter extends GtfsRealtimeExporter {
 

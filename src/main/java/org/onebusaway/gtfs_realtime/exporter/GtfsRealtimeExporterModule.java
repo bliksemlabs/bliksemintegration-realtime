@@ -21,10 +21,12 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeExporter.AlertsExporter;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeExporter.MixedFeedExporter;
+import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeExporter.TrainUpdatesExporter;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeExporter.TripUpdatesExporter;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeExporter.VehiclePositionsExporter;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.Alerts;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.MixedFeed;
+import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TrainUpdates;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripUpdates;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.VehiclePositions;
 import org.onebusaway.guice.jetty_exporter.JettyExporterModule;
@@ -52,80 +54,90 @@ import com.google.inject.name.Names;
  */
 public class GtfsRealtimeExporterModule extends AbstractModule {
 
-  public static final String NAME_EXECUTOR = "org.onebusway.gtfs_realtime.exporter.GtfsRealtimeExporterModule.executor";
+	public static final String NAME_EXECUTOR = "org.onebusway.gtfs_realtime.exporter.GtfsRealtimeExporterModule.executor";
 
-  /**
-   * Adds a {@link GtfsRealtimeExporterModule} instance to the specified set of
-   * modules, along with all its dependencies.
-   * 
-   * @param modules the resulting set of Guice modules
-   */
-  public static void addModuleAndDependencies(Set<Module> modules) {
-    modules.add(new GtfsRealtimeExporterModule());
-    JettyExporterModule.addModuleAndDependencies(modules);
-  }
+	/**
+	 * Adds a {@link GtfsRealtimeExporterModule} instance to the specified set of
+	 * modules, along with all its dependencies.
+	 * 
+	 * @param modules the resulting set of Guice modules
+	 */
+	public static void addModuleAndDependencies(Set<Module> modules) {
+		modules.add(new GtfsRealtimeExporterModule());
+		JettyExporterModule.addModuleAndDependencies(modules);
+	}
 
-  /**
-   * See {@link GtfsRealtimeExporter} for a discussion of the somewhat
-   * convoluted binding scheme used here.
-   */
-  @Override
-  protected void configure() {
+	/**
+	 * See {@link GtfsRealtimeExporter} for a discussion of the somewhat
+	 * convoluted binding scheme used here.
+	 */
+	@Override
+	protected void configure() {
 
-    bind(GtfsRealtimeSink.class).annotatedWith(Alerts.class).to(
-        AlertsExporter.class);
-    bind(GtfsRealtimeSource.class).annotatedWith(Alerts.class).to(
-        AlertsExporter.class);
-    bind(GtfsRealtimeExporter.class).annotatedWith(Alerts.class).to(
-        AlertsExporter.class);
-    bind(AlertsExporter.class).to(GtfsRealtimeExporterImpl.class).in(
-        Singleton.class);
+		bind(GtfsRealtimeSink.class).annotatedWith(Alerts.class).to(
+				AlertsExporter.class);
+		bind(GtfsRealtimeSource.class).annotatedWith(Alerts.class).to(
+				AlertsExporter.class);
+		bind(GtfsRealtimeExporter.class).annotatedWith(Alerts.class).to(
+				AlertsExporter.class);
+		bind(AlertsExporter.class).to(GtfsRealtimeExporterImpl.class).in(
+				Singleton.class);
 
-    bind(GtfsRealtimeSink.class).annotatedWith(TripUpdates.class).to(
-        TripUpdatesExporter.class);
-    bind(GtfsRealtimeSource.class).annotatedWith(TripUpdates.class).to(
-        TripUpdatesExporter.class);
-    bind(GtfsRealtimeExporter.class).annotatedWith(TripUpdates.class).to(
-        TripUpdatesExporter.class);
-    bind(TripUpdatesExporter.class).to(GtfsRealtimeExporterImpl.class).in(
-        Singleton.class);
+		bind(GtfsRealtimeSink.class).annotatedWith(TripUpdates.class).to(
+				TripUpdatesExporter.class);
+		bind(GtfsRealtimeSource.class).annotatedWith(TripUpdates.class).to(
+				TripUpdatesExporter.class);
+		bind(GtfsRealtimeExporter.class).annotatedWith(TripUpdates.class).to(
+				TripUpdatesExporter.class);
+		bind(TripUpdatesExporter.class).to(GtfsRealtimeExporterImpl.class).in(
+				Singleton.class);
 
-    bind(GtfsRealtimeSink.class).annotatedWith(VehiclePositions.class).to(
-        VehiclePositionsExporter.class);
-    bind(GtfsRealtimeSource.class).annotatedWith(VehiclePositions.class).to(
-        VehiclePositionsExporter.class);
-    bind(GtfsRealtimeExporter.class).annotatedWith(VehiclePositions.class).to(
-        VehiclePositionsExporter.class);
-    bind(VehiclePositionsExporter.class).to(GtfsRealtimeExporterImpl.class).in(
-        Singleton.class);
+		bind(GtfsRealtimeSink.class).annotatedWith(TrainUpdates.class).to(
+				TrainUpdatesExporter.class);
+		bind(GtfsRealtimeSource.class).annotatedWith(TrainUpdates.class).to(
+				TrainUpdatesExporter.class);
+		bind(GtfsRealtimeExporter.class).annotatedWith(TrainUpdates.class).to(
+				TrainUpdatesExporter.class);
+		bind(TrainUpdatesExporter.class).to(GtfsRealtimeExporterImpl.class).in(
+				Singleton.class);	
 
-    bind(GtfsRealtimeSink.class).annotatedWith(MixedFeed.class).to(
-        MixedFeedExporter.class);
-    bind(GtfsRealtimeSource.class).annotatedWith(MixedFeed.class).to(
-        MixedFeedExporter.class);
-    bind(MixedFeedExporter.class).to(GtfsRealtimeExporterImpl.class).in(
-        Singleton.class);
 
-    bind(ScheduledExecutorService.class).annotatedWith(
-        Names.named(NAME_EXECUTOR)).toInstance(
-        Executors.newSingleThreadScheduledExecutor());
-  }
+		bind(GtfsRealtimeSink.class).annotatedWith(VehiclePositions.class).to(
+				VehiclePositionsExporter.class);
+		bind(GtfsRealtimeSource.class).annotatedWith(VehiclePositions.class).to(
+				VehiclePositionsExporter.class);
+		bind(GtfsRealtimeExporter.class).annotatedWith(VehiclePositions.class).to(
+				VehiclePositionsExporter.class);
+		bind(VehiclePositionsExporter.class).to(GtfsRealtimeExporterImpl.class).in(
+				Singleton.class);
 
-  /**
-   * Implement hashCode() and equals() such that two instances of the module
-   * will be equal.
-   */
-  @Override
-  public int hashCode() {
-    return this.getClass().hashCode();
-  }
+		bind(GtfsRealtimeSink.class).annotatedWith(MixedFeed.class).to(
+				MixedFeedExporter.class);
+		bind(GtfsRealtimeSource.class).annotatedWith(MixedFeed.class).to(
+				MixedFeedExporter.class);
+		bind(MixedFeedExporter.class).to(GtfsRealtimeExporterImpl.class).in(
+				Singleton.class);
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null)
-      return false;
-    return this.getClass().equals(o.getClass());
-  }
+		bind(ScheduledExecutorService.class).annotatedWith(
+				Names.named(NAME_EXECUTOR)).toInstance(
+						Executors.newSingleThreadScheduledExecutor());
+	}
+
+	/**
+	 * Implement hashCode() and equals() such that two instances of the module
+	 * will be equal.
+	 */
+	@Override
+	public int hashCode() {
+		return this.getClass().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null)
+			return false;
+		return this.getClass().equals(o.getClass());
+	}
 }
