@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
 import nl.ovapi.rid.gtfsrt.services.RIDservice;
 import nl.ovapi.rid.model.Block;
@@ -28,7 +30,7 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 public class TrainProcessor {
 	private static final Logger _log = LoggerFactory.getLogger(TrainProcessor.class);
 
-	private List<BlockProcessor> _processors;
+	@Getter(AccessLevel.PROTECTED) private List<BlockProcessor> _processors;
 
 	private TrainProcessor(){
 		_processors = new ArrayList<BlockProcessor>();
