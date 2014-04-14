@@ -61,5 +61,15 @@ public class ARNUtests {
 		
 		jp.changeService(_ridService, feed.getValue().getServiceInfoList().getServiceInfo().get(0));
 		
+		assertEquals(1,jp.get_processors().size());
+		assertEquals(1394654040,jp.get_processors().get(0).getBlock().getDepartureEpoch());
+		assertEquals(1,jp.get_processors().get(0).getBlock().getSegments().size());
+		assertEquals(1394655540,jp.get_processors().get(0).getBlock().getEndEpoch());
+		assertEquals(5,jp.get_processors().get(0).getBlock().getSegments().get(0).getJourneypattern().getPoints().size());
+		assertEquals(new Long(4L),jp.get_processors().get(0).getBlock().getSegments().get(0).getJourneypattern().getPoints().get(0).getPointref());
+		assertEquals(new Long(5L),jp.get_processors().get(0).getBlock().getSegments().get(0).getJourneypattern().getPoints().get(1).getPointref());
+		assertEquals(new Long(1L),jp.get_processors().get(0).getBlock().getSegments().get(0).getJourneypattern().getPoints().get(2).getPointref());
+		assertEquals(new Long(2L),jp.get_processors().get(0).getBlock().getSegments().get(0).getJourneypattern().getPoints().get(3).getPointref());
+		assertEquals(new Long(3L),jp.get_processors().get(0).getBlock().getSegments().get(0).getJourneypattern().getPoints().get(4).getPointref());
 	}
 }
