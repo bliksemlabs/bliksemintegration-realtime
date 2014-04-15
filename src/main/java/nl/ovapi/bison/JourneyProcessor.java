@@ -433,7 +433,6 @@ public class JourneyProcessor {
 		feedEntity.setId(id);
 		VehiclePosition.Builder vehiclePosition = VehiclePosition.newBuilder();
 		int delay = posinfo.getPunctuality() == null ? 0 : posinfo.getPunctuality();
-
 		int passageSequence = 0; //Counter for how many times we came across the userstopcode in posinfo
 
 		for (int i = 0; i < datedPasstimes.size();i++){
@@ -491,6 +490,7 @@ public class JourneyProcessor {
 				if (posinfo.getReinforcementnumber() > 0){
 					tripDescription.setScheduleRelationship(ScheduleRelationship.ADDED);
 				}
+				vehiclePosition.setTrip(tripDescription);
 				//Set punctuality in OVapi extension
 				if (posinfo.getPunctuality() != null){
 					OVapiVehiclePosition.Builder ovapiVehiclePosition = OVapiVehiclePosition.newBuilder();
