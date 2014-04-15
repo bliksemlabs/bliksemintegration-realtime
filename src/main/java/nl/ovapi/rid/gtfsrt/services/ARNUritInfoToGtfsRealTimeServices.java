@@ -28,9 +28,12 @@ import javax.xml.transform.stream.StreamSource;
 import lombok.NonNull;
 import nl.ovapi.ZeroMQUtils;
 import nl.ovapi.arnu.ARNUexporter;
+import nl.ovapi.arnu.BlockProcessor;
 import nl.ovapi.arnu.TrainProcessor;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.Block;
+import nl.ovapi.rid.model.Journey;
+import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
@@ -130,6 +133,54 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			_executor = null;
 		}
 	}
+	
+	private String getDate(ServiceInfoServiceType info){
+		Calendar operatingDate = null;
+		for (ServiceInfoStopType s : info.getStopList().getStop()){
+			if (s.getDeparture() != null){
+				operatingDate = s.getDeparture().toGregorianCalendar();
+				break;
+			}
+		}
+		if (operatingDate.get(Calendar.HOUR_OF_DAY) < 4){
+			operatingDate.add(Calendar.DAY_OF_MONTH, -1);
+		}
+		operatingDate.set(Calendar.MINUTE, 0);
+		//Set at 4 because we DST of operatingday not at midnight
+		operatingDate.set(Calendar.HOUR_OF_DAY, 4); 
+		operatingDate.set(Calendar.SECOND, 0);
+		operatingDate.set(Calendar.MILLISECOND, 0);	
+		return DATE.format(operatingDate.getTime());
+	}
+	
+	private String getId(ServiceInfoServiceType info){
+		if (info.getStopList() == null || info.getStopList().getStop() == null || info.getStopList().getStop().size() == 0){
+			return null;
+		}
+
+		String date = getDate(info);
+
+		for (String transportModeCode : new String[] {info.getTransportModeCode(),"S","ST","SPR","HSN","IC","INT","ICE","THA","TGV"}){
+			String id = String.format("%s:IFF:%s:%s",date,transportModeCode,info.getServiceCode());
+			List<Block> trains = _ridService.getTrains(id);
+			if (trains == null){
+				continue;
+			}else{
+				for (Block b : trains){
+					for (Journey segment : b.getSegments()){
+						for (JourneyPatternPoint p : segment.getJourneypattern().getPoints()){
+							for (ServiceInfoStopType stop : info.getStopList().getStop()){
+								if (BlockProcessor.stationCode(p).equals(stop.getStopCode())){
+									return id;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
 
 	private TrainProcessor getOrCreateProcessorForId(@NonNull String id){
 		TrainProcessor tp = journeyProcessors.get(id);
@@ -197,7 +248,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 						default:
 							break;
 						}
-						String id = String.format("%s:IFF:%s:%s",getDate(info),info.getTransportModeCode(),info.getServiceCode());
+						String id = getId(info);
 						TrainProcessor jp = getOrCreateProcessorForId(id);
 						if (jp == null && info.getServiceType() != ServiceInfoKind.NORMAL_SERVICE){
 							jp = createFromARNU(info); //No static counterpart and ServiceInfoKind not normal
@@ -235,31 +286,8 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			pull.disconnect(PULL_ADDRESS);
 		}
 	}
-
-	private String getDate(ServiceInfoServiceType info){
-		if (info.getStopList() == null || info.getStopList().getStop() == null || info.getStopList().getStop().size() == 0){
-			return null;
-		}
-
-		Calendar operatingDate = null;
-		for (ServiceInfoStopType s : info.getStopList().getStop()){
-			if (s.getDeparture() != null){
-				operatingDate = s.getDeparture().toGregorianCalendar();
-				break;
-			}
-		}
-		if (operatingDate.get(Calendar.HOUR_OF_DAY) < 4){
-			operatingDate.add(Calendar.DAY_OF_MONTH, -1);
-		}
-		operatingDate.set(Calendar.MINUTE, 0);
-		//Set at 4 because we DST of operatingday not at midnight
-		operatingDate.set(Calendar.HOUR_OF_DAY, 4); 
-		operatingDate.set(Calendar.SECOND, 0);
-		operatingDate.set(Calendar.MILLISECOND, 0);
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-		return df.format(operatingDate.getTime());
-	}
-
+	
+	private final static SimpleDateFormat DATE = new SimpleDateFormat("yyyy-MM-dd");
 
 	private TrainProcessor createFromARNU(ServiceInfoServiceType info){
 		TrainProcessor jp = TrainProcessor.fromArnu(_ridService,info);
