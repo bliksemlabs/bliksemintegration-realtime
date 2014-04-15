@@ -261,14 +261,17 @@ public class BisonToGtfsRealtimeService {
 						vehicleUpdates.addDeletedEntity(getId(jp.getPosinfo()));
 						vehiclesCleaned += 1;
 					}
-					for (Entry<Integer, KV6posinfo> reinforcement : jp.getReinforcements().entrySet()){
-						if (jp.getPosinfo() != null && reinforcement.getValue().getTimestamp() < threshold){
-							vehicleUpdates.addDeletedEntity(String.format("%s:%s",getId(reinforcement.getValue()),reinforcement.getKey()));
-							vehiclesCleaned += 1;
+					if (jp.getReinforcements() != null){
+						for (Entry<Integer, KV6posinfo> reinforcement : jp.getReinforcements().entrySet()){
+							if (jp.getPosinfo() != null && reinforcement.getValue().getTimestamp() < threshold){
+								vehicleUpdates.addDeletedEntity(String.format("%s:%s",getId(reinforcement.getValue()),reinforcement.getKey()));
+								vehiclesCleaned += 1;
+							}
 						}
 					}
 				}catch (Exception e){
-					_log.error("Garbage Collection vehiclepositions",e);
+					e.printStackTrace();
+					_log.error("Garbage Collection vehiclepositions {}",jp,e);
 				}
 				try{
 					if (jp.getEndEpoch() < (Utils.currentTimeSecs()-TRIPUPDATE_EXPIRATION_HOURS*60*60)){ //
