@@ -63,14 +63,14 @@ public class ARNUritInfoToGtfsRealTimeServices {
 	private final static int TRIPUPDATE_EXPIRATION_HOURS = 1;
 	private GtfsRealtimeSink _tripUpdatesSink;
 	private RIDservice _ridService;
-	private ConcurrentMap<String, TrainProcessor> journeyProcessors;
+	private ConcurrentMap<String, TrainProcessor> trainProcessors;
 	private ARNUexporter _arnuExporter;
-	
+
 	@Inject
 	public void setARnuExporter(ARNUexporter arnuExporter) {
 		_arnuExporter = arnuExporter;
 	}
-	
+
 	@Inject
 	public void setRIDService(RIDservice ridService) {
 		_ridService = ridService;
@@ -85,7 +85,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 	public void start() {
 		_executor = Executors.newCachedThreadPool();
 		_scheduler = Executors.newScheduledThreadPool(5);
-		journeyProcessors = Maps.newConcurrentMap();
+		trainProcessors = Maps.newConcurrentMap();
 		_task = _executor.submit(new ProcessTask());
 		_task = _executor.submit(new ReceiveTask());
 		_scheduler.scheduleAtFixedRate(new GarbageCollectorTask(), GARBAGE_COLLECTOR_INTERVAL_SECONDS, GARBAGE_COLLECTOR_INTERVAL_SECONDS, TimeUnit.SECONDS);
@@ -101,12 +101,12 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			GtfsRealtimeIncrementalUpdate tripUpdates = new GtfsRealtimeIncrementalUpdate();
 			int tripsCleaned = 0;
 
-			for (Entry<String, TrainProcessor> entry : journeyProcessors.entrySet()){
+			for (Entry<String, TrainProcessor> entry : trainProcessors.entrySet()){
 				TrainProcessor jp = entry.getValue();
 				try{
 					if (jp.getEndEpoch() < (Utils.currentTimeSecs()-TRIPUPDATE_EXPIRATION_HOURS*60*60)){ //
 						tripUpdates.addDeletedEntity(entry.getKey());
-						journeyProcessors.remove(entry.getKey());
+						trainProcessors.remove(entry.getKey());
 						tripsCleaned++;
 						_log.trace("Garbage cleaned {}",entry.getKey());
 					}
@@ -133,7 +133,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			_executor = null;
 		}
 	}
-	
+
 	private String getDate(ServiceInfoServiceType info){
 		Calendar operatingDate = null;
 		for (ServiceInfoStopType s : info.getStopList().getStop()){
@@ -152,7 +152,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 		operatingDate.set(Calendar.MILLISECOND, 0);	
 		return DATE.format(operatingDate.getTime());
 	}
-	
+
 	private String getId(ServiceInfoServiceType info){
 		if (info.getStopList() == null || info.getStopList().getStop() == null || info.getStopList().getStop().size() == 0){
 			return null;
@@ -179,11 +179,22 @@ public class ARNUritInfoToGtfsRealTimeServices {
 				}
 			}
 		}
-		return null;
+		switch(info.getServiceType()){
+		case NORMAL_SERVICE:
+			return null;
+		case CANCELLED_SERVICE:
+		case NEW_SERVICE:
+		case DIVERTED_SERVICE:
+		case SCHEDULE_CHANGED_SERVICE:
+		case EXTENDED_SERVICE:
+		case SPLIT_SERVICE:
+		default:
+			return String.format("%s:IFF:%s:%s",date,info.getTransportModeCode(),info.getServiceCode());
+		}
 	}
 
 	private TrainProcessor getOrCreateProcessorForId(@NonNull String id){
-		TrainProcessor tp = journeyProcessors.get(id);
+		TrainProcessor tp = trainProcessors.get(id);
 		if (tp != null){
 			return tp;
 		}
@@ -192,7 +203,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			return null; //Journey not found
 		}
 		tp = new TrainProcessor(trains);
-		journeyProcessors.put(id, tp);
+		trainProcessors.put(id, tp);
 		return tp;
 	}
 
@@ -207,9 +218,9 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			pull.setRcvHWM(500000);
 			JAXBContext jc = null;
 			Unmarshaller unmarshaller = null;
-	        XMLInputFactory xif = XMLInputFactory.newFactory();
-	        xif.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
-	        xif.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+			XMLInputFactory xif = XMLInputFactory.newFactory();
+			xif.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+			xif.setProperty(XMLInputFactory.SUPPORT_DTD, false);
 
 			try {
 				jc = JAXBContext.newInstance(PutServiceInfoIn.class);
@@ -228,7 +239,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 				try {
 					String[] m = ZeroMQUtils.gunzipMultifameZMsg(ZMsg.recvMsg(pull));
 					InputStream stream = new ByteArrayInputStream(m[1].getBytes("UTF-8"));
-			        XMLStreamReader xsr = xif.createXMLStreamReader(new StreamSource(stream));
+					XMLStreamReader xsr = xif.createXMLStreamReader(new StreamSource(stream));
 					JAXBElement<PutServiceInfoIn> feed = unmarshaller.unmarshal(xsr, PutServiceInfoIn.class);
 					if (feed == null || feed.getValue() == null || feed.getValue().getServiceInfoList() == null){
 						continue;
@@ -249,11 +260,15 @@ public class ARNUritInfoToGtfsRealTimeServices {
 							break;
 						}
 						String id = getId(info);
+						if (id == null){
+							_log.error("Train id of {} not found",info);
+							continue;
+						}
 						TrainProcessor jp = getOrCreateProcessorForId(id);
 						if (jp == null && info.getServiceType() != ServiceInfoKind.NORMAL_SERVICE){
 							jp = createFromARNU(info); //No static counterpart and ServiceInfoKind not normal
 							if (jp != null)            //Create from ARNU XML
-								journeyProcessors.put(id, jp);
+								trainProcessors.put(id, jp);
 						}
 						if (jp != null){
 							if (info.getServiceType() != null){
@@ -286,7 +301,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			pull.disconnect(PULL_ADDRESS);
 		}
 	}
-	
+
 	private final static SimpleDateFormat DATE = new SimpleDateFormat("yyyy-MM-dd");
 
 	private TrainProcessor createFromARNU(ServiceInfoServiceType info){
