@@ -742,6 +742,9 @@ public class JourneyProcessor {
 		default:
 			return;
 		case DELAY:
+			if (posinfo.getPunctuality() > 3600){
+				return; //Filter DELAY messages with +1 hour delay.
+			}
 		case DEPARTURE:
 		case ONROUTE:
 		case ONSTOP:
