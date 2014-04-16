@@ -5,8 +5,12 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.TimeZone;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import lombok.Getter;
 import lombok.ToString;
+import nl.ovapi.rid.gtfsrt.services.ARNUritInfoToGtfsRealTimeServices;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
 
@@ -16,11 +20,12 @@ import com.google.transit.realtime.GtfsRealtimeOVapi;
 import com.google.transit.realtime.GtfsRealtimeOVapi.OVapiTripDescriptor;
 @ToString()
 public class Journey {
-	
+	private static final Logger _log = LoggerFactory.getLogger(Journey.class);
+
 	public static class Builder{
 		@Getter
 		private String id;
-		
+
 		/**
 		 * Set trip_id of this journey
 		 */
@@ -28,10 +33,10 @@ public class Journey {
 			this.id = id;
 			return this;
 		}
-		
+
 		@Getter
 		private String privateCode;
-		
+
 		/**
 		 * Set DataOwnerCode:LinePlanningNumber:Journeynumber of trip, matches with KV6/17
 		 */
@@ -39,7 +44,7 @@ public class Journey {
 			this.privateCode = privateCode;
 			return this;
 		}
-		
+
 		@Getter
 		private JourneyPattern journeypattern;
 		/**
@@ -49,11 +54,11 @@ public class Journey {
 			this.journeypattern = journeypattern;
 			return this;
 		}
-		
-		
+
+
 		@Getter
 		private TimeDemandGroup timedemandgroup;
-		
+
 		/**
 		 * Set TimeDemandGroup of the Journey
 		 */
@@ -61,14 +66,14 @@ public class Journey {
 			this.timedemandgroup = timedemandgroup;
 			return this;
 		}
-		
+
 
 		@Getter
 		/**
 		 * Departuretime of the Journey, in seconds since midnight of operatingday (00:00:00).
 		 */
 		private Integer departuretime;
-		
+
 		/**
 		 * Set TimeDemandGroup of the Journey
 		 */
@@ -76,7 +81,7 @@ public class Journey {
 			this.departuretime = departuretime;
 			return this;
 		}
-		
+
 		@Getter
 		private Boolean wheelchairaccessible;
 		/**
@@ -86,7 +91,7 @@ public class Journey {
 			this.wheelchairaccessible = wheelchairaccessible;
 			return this;
 		}
-		
+
 		@Getter
 		private String agencyId;
 		/**
@@ -97,7 +102,7 @@ public class Journey {
 			this.agencyId = agencyId;
 			return this;
 		}
-		
+
 		@Getter
 		private String operatingDay;
 		/**
@@ -107,8 +112,8 @@ public class Journey {
 			this.operatingDay = operatingDay;
 			return this;
 		}
-		
-		
+
+
 		@Getter
 		private Long routeId;
 		/**
@@ -138,7 +143,7 @@ public class Journey {
 			this.isAdded = isAdded;
 			return this;
 		}
-		
+
 		@Getter
 		private boolean isCanceled = false;
 		/**
@@ -148,7 +153,7 @@ public class Journey {
 			this.isCanceled = isCanceled;
 			return this;
 		}
-		
+
 		@Getter
 		private String blockRef;
 		/**
@@ -158,9 +163,9 @@ public class Journey {
 			this.blockRef = blockRef;
 			return this;
 		}
-		
+
 		public Builder(){}
-		
+
 		public Builder(Journey journey){
 			this.id = journey.id;
 			this.privateCode = journey.privateCode;
@@ -176,15 +181,15 @@ public class Journey {
 			this.isCanceled = journey.isCanceled;
 			this.blockRef = journey.blockRef;
 		}
-		
+
 		public Journey build(){
 			return new Journey(id,privateCode,journeypattern,timedemandgroup,departuretime,
 					wheelchairaccessible,agencyId,operatingDay,routeId,availabilityConditionRef,
 					isAdded,isCanceled,blockRef);
 		}
-		
+
 	}
-	
+
 	@Getter
 	/**
 	 * Trip_id of this journey
@@ -227,7 +232,7 @@ public class Journey {
 	 * ISO-8601 formatted (YYYY-MM-DD) OperatingDay.
 	 */
 	private final String operatingDay;
-	
+
 	@Getter
 	/**
 	 * ID of route.
@@ -239,13 +244,13 @@ public class Journey {
 	 * Availabilitycondition.
 	 */
 	private final Long availabilityConditionRef;
-	
+
 	@Getter
 	private final boolean isAdded;
-	
+
 	@Getter
 	private final boolean isCanceled;
-	
+
 	@Getter
 	private final String blockRef;
 
@@ -293,6 +298,11 @@ public class Journey {
 		return tripDescriptor;
 	}
 
+	private final static SimpleDateFormat DATE = new SimpleDateFormat("yyyy-MM-dd");
+
+	static {
+		DATE.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));
+	}
 	/**
 	 * @return POSIX time when journey end in seconds since January 1st 1970 00:00:00 UTC
 	 */
@@ -300,13 +310,19 @@ public class Journey {
 	public long getEndEpoch(){
 		try {
 			Calendar c = Calendar.getInstance(TimeZone.getDefault());
-			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(getOperatingDay()));
-			c.set(Calendar.HOUR, 0);
+			if (getOperatingDay() != null && getOperatingDay().length() > 0)
+				c.setTime(DATE.parse(getOperatingDay()));
+			else{
+				_log.error("No operatingday {}",this);
+			}
+			//The 4 hour trick here is to get correct DST time for the operatingday
+			c.set(Calendar.HOUR, 4);
 			c.set(Calendar.MINUTE, 0);
 			c.set(Calendar.SECOND, 0);
 			c.set(Calendar.MILLISECOND, 0);
 			c.add(Calendar.SECOND, getDeparturetime());
 			c.add(Calendar.SECOND, timedemandgroup.getPoints().get(timedemandgroup.getPoints().size()-1).getTotaldrivetime());
+			c.add(Calendar.SECOND, getDeparturetime()-4*60*60); //Remove 4 hours of day (timezone workaround
 			return c.getTimeInMillis()/1000;
 		} catch (ParseException e) {
 			return -1;
@@ -320,13 +336,17 @@ public class Journey {
 	public long getDepartureEpoch(){
 		try {
 			Calendar c = Calendar.getInstance(TimeZone.getDefault());
-			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(getOperatingDay()));
+			if (getOperatingDay() != null && getOperatingDay().length() > 0){
+				c.setTime(DATE.parse(getOperatingDay()));
+			}else{
+				_log.error("No operatingday {}",this);
+			}
 			//The 4 hour trick here is to get correct DST time for the operatingday
 			c.set(Calendar.HOUR, 4);
 			c.set(Calendar.MINUTE, 0);
 			c.set(Calendar.SECOND, 0);
 			c.set(Calendar.MILLISECOND, 0);
-			c.add(Calendar.SECOND, getDeparturetime()-4*60*60);
+			c.add(Calendar.SECOND, getDeparturetime()-4*60*60); //Remove 4 hours of day (timezone workaround)
 			return c.getTimeInMillis()/1000;
 		} catch (ParseException e) {
 			return -1;
@@ -365,11 +385,11 @@ public class Journey {
 		}
 		return null;
 	}
-	
+
 	public static Builder newBuilder(){
 		return new Builder();
 	}
-	
+
 	public Builder edit(){
 		return new Builder(this);
 	}
