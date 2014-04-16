@@ -276,6 +276,8 @@ public class BisonToGtfsRealtimeService {
 				try{
 					if (jp.getEndEpoch() < (Utils.currentTimeSecs()-TRIPUPDATE_EXPIRATION_HOURS*60*60)){ //
 						tripUpdates.addDeletedEntity(entry.getKey());
+						//This is to avoid any JourneyProcessor's being removed while there is still a VehiclePosition stored
+						vehicleUpdates.addDeletedEntity(entry.getKey()); 
 						journeyProcessors.remove(entry.getKey());
 						tripsCleaned++;
 						_log.trace("Garbage cleaned {}",entry.getKey());
@@ -318,6 +320,7 @@ public class BisonToGtfsRealtimeService {
 					}
 					String id = getId(posinfo);
 					JourneyProcessor jp = getOrCreateProcessorForId(id);
+					//TODO Fuzzy match for BISON Journey
 					if (jp == null){
 						Calendar c = Calendar.getInstance();
 						SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
