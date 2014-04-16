@@ -455,7 +455,7 @@ public class BlockProcessor {
 				boolean lastStop = (i == journey.getJourneypattern().getPoints().size()-1);
 				String serviceCode = serviceCode(journey);
 				//Either no privatecode (realtime added) or serviceCode matches
-				boolean serviceCodeMatches = serviceCode == null ? true : (serviceCode.equals(p.serviceCode));
+				boolean serviceCodeMatches = serviceCode == null || p == null ? true : (serviceCode.equals(p.serviceCode));
 				if (p != null && (lastStop || serviceCodeMatches )){ //Either servicecode matches or last stop (which can involve a switch of servicecode)
 					if (p.canceled || jp.isSkipped()){
 						stop.setScheduleRelationship(ScheduleRelationship.SKIPPED);
