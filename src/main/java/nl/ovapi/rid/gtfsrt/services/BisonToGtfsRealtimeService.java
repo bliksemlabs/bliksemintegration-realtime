@@ -263,8 +263,8 @@ public class BisonToGtfsRealtimeService {
 					}
 					if (jp.getReinforcements() != null){
 						for (Entry<Integer, KV6posinfo> reinforcement : jp.getReinforcements().entrySet()){
-							if (jp.getPosinfo() != null && reinforcement.getValue().getTimestamp() < threshold){
-								vehicleUpdates.addDeletedEntity(String.format("%s:%s",getId(reinforcement.getValue()),reinforcement.getKey()));
+							if (reinforcement.getValue().getTimestamp() < threshold){
+								vehicleUpdates.addDeletedEntity(getId(reinforcement.getValue()));
 								vehiclesCleaned += 1;
 							}
 						}
@@ -296,12 +296,21 @@ public class BisonToGtfsRealtimeService {
 	}
 
 	private String getId(KV6posinfo posinfo){
-		String id = String.format("%s:%s:%s:%s", 
-				posinfo.getOperatingday(),
-				posinfo.getDataownercode().name(),
-				posinfo.getLineplanningnumber(),
-				posinfo.getJourneynumber());
-		return id;
+		if (posinfo.getReinforcementnumber() == 0){
+			return String.format("%s:%s:%s:%s", 
+					posinfo.getOperatingday(),
+					posinfo.getDataownercode().name(),
+					posinfo.getLineplanningnumber(),
+					posinfo.getJourneynumber());
+
+		}else{
+			return String.format("%s:%s:%s:%s:%s", 
+					posinfo.getOperatingday(),
+					posinfo.getDataownercode().name(),
+					posinfo.getLineplanningnumber(),
+					posinfo.getJourneynumber(),
+					posinfo.getReinforcementnumber());
+		}
 	}
 
 	private class ProcessKV6Task implements Runnable{
@@ -348,8 +357,6 @@ public class BisonToGtfsRealtimeService {
 							continue; //Trip not in database
 						}
 					}
-					if (posinfo.getReinforcementnumber() > 0)
-						id += ":"+posinfo.getReinforcementnumber().toString(); // Key for reinforcement
 					if (posinfo.getMessagetype() == Type.END){
 						if (posinfo.getReinforcementnumber() == 0)
 							jp.clearKV6(); //Primary vehicle finished
