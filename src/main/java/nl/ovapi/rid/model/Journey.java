@@ -320,11 +320,11 @@ public class Journey {
 			c.set(Calendar.MINUTE, 0);
 			c.set(Calendar.SECOND, 0);
 			c.set(Calendar.MILLISECOND, 0);
-			c.add(Calendar.SECOND, getDeparturetime());
 			c.add(Calendar.SECOND, timedemandgroup.getPoints().get(timedemandgroup.getPoints().size()-1).getTotaldrivetime());
 			c.add(Calendar.SECOND, getDeparturetime()-4*60*60); //Remove 4 hours of day (timezone workaround
 			return c.getTimeInMillis()/1000;
-		} catch (ParseException e) {
+		} catch (Exception e) {
+			_log.error("Error parsing operatingday {}",this,e);
 			return -1;
 		}
 	}
@@ -348,7 +348,8 @@ public class Journey {
 			c.set(Calendar.MILLISECOND, 0);
 			c.add(Calendar.SECOND, getDeparturetime()-4*60*60); //Remove 4 hours of day (timezone workaround)
 			return c.getTimeInMillis()/1000;
-		} catch (ParseException e) {
+		} catch (Exception e) {
+			_log.error("Error parsing operatingday {}",this,e);
 			return -1;
 		}
 	}
