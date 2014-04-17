@@ -375,10 +375,10 @@ public class BisonToGtfsRealtimeService {
 						try{
 							Update update = jp.update(posinfo);
 							if (update != null){
-								if (update.getChangedPasstimes() != null){
+								if (update.getChangedPasstimes() != null && _kv78TurboExporter != null){
 									_kv78TurboExporter.export(update.getChangedPasstimes());
 								}
-								if (update.getServiceInfo() != null){
+								if (update.getServiceInfo() != null && _arnuExporter != null){
 									_arnuExporter.export(update.getServiceInfo());
 								}
 								if (update.getGtfsRealtimeTrip() != null){
