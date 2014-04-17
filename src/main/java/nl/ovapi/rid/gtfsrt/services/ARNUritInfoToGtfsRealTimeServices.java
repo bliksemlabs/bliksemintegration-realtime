@@ -2,8 +2,6 @@ package nl.ovapi.rid.gtfsrt.services;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
@@ -283,8 +281,6 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			pull.disconnect(PULL_ADDRESS);
 		}
 	}
-
-	private final static SimpleDateFormat DATE = new SimpleDateFormat("yyyy-MM-dd");
 
 	private TrainProcessor createFromARNU(ServiceInfoServiceType info){
 		TrainProcessor jp = TrainProcessor.fromArnu(_ridService,info);

@@ -1,18 +1,16 @@
 package nl.ovapi.rid.model;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import lombok.Getter;
 import lombok.ToString;
-import nl.ovapi.rid.gtfsrt.services.ARNUritInfoToGtfsRealTimeServices;
 import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
@@ -304,20 +302,18 @@ public class Journey {
 		return tripDescriptor;
 	}
 
-	private final static SimpleDateFormat DATE = new SimpleDateFormat("yyyy-MM-dd");
-
-	static {
-		DATE.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));
-	}
+	private final static TimeZone TIMEZONE = TimeZone.getTimeZone("Europe/Amsterdam");
 	/**
 	 * @return POSIX time when journey end in seconds since January 1st 1970 00:00:00 UTC
 	 */
 
 	public long getEndEpoch(){
+		SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd");
+		date.setTimeZone(TIMEZONE);
 		try {
 			Calendar c = Calendar.getInstance(TimeZone.getDefault());
 			if (getOperatingDay() != null && getOperatingDay().length() > 0)
-				c.setTime(DATE.parse(getOperatingDay()));
+				c.setTime(date.parse(getOperatingDay()));
 			else{
 				_log.error("No operatingday {}",this);
 			}
@@ -341,9 +337,11 @@ public class Journey {
 
 	public long getDepartureEpoch(){
 		try {
+			SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd");
+			date.setTimeZone(TIMEZONE);
 			Calendar c = Calendar.getInstance(TimeZone.getDefault());
 			if (getOperatingDay() != null && getOperatingDay().length() > 0){
-				c.setTime(DATE.parse(getOperatingDay()));
+				c.setTime(date.parse(getOperatingDay()));
 			}else{
 				_log.error("No operatingday {}",this);
 			}
