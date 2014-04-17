@@ -134,31 +134,13 @@ public class ARNUritInfoToGtfsRealTimeServices {
 		}
 	}
 
-	private String getDate(ServiceInfoServiceType info){
-		Calendar operatingDate = null;
-		for (ServiceInfoStopType s : info.getStopList().getStop()){
-			if (s.getDeparture() != null){
-				operatingDate = s.getDeparture().toGregorianCalendar();
-				break;
-			}
-		}
-		if (operatingDate.get(Calendar.HOUR_OF_DAY) < 4){
-			operatingDate.add(Calendar.DAY_OF_MONTH, -1);
-		}
-		operatingDate.set(Calendar.MINUTE, 0);
-		//Set at 4 because we DST of operatingday not at midnight
-		operatingDate.set(Calendar.HOUR_OF_DAY, 4); 
-		operatingDate.set(Calendar.SECOND, 0);
-		operatingDate.set(Calendar.MILLISECOND, 0);	
-		return DATE.format(operatingDate.getTime());
-	}
 
 	private String getId(ServiceInfoServiceType info){
 		if (info.getStopList() == null || info.getStopList().getStop() == null || info.getStopList().getStop().size() == 0){
 			return null;
 		}
 
-		String date = getDate(info);
+		String date = BlockProcessor.getDate(info);
 
 		for (String transportModeCode : new String[] {info.getTransportModeCode(),"S","ST","SPR","HSN","IC","INT","ICE","THA","TGV"}){
 			String id = String.format("%s:IFF:%s:%s",date,transportModeCode,info.getServiceCode());
@@ -312,7 +294,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			TrainProcessor origJp = null;
 			// Fuzzy matching for ARNU bug where split Intercity's are suddenly Sneltrein etc. 
 			for (String transportModeCode : new String[] {info.getTransportModeCode(),"S","ST","SPR","HSN","IC","INT","ICE","THA","TGV"}){
-				String origId = String.format("%s:IFF:%s:%s",getDate(info),transportModeCode,originalTrainNumber);	
+				String origId = String.format("%s:IFF:%s:%s",BlockProcessor.getDate(info),transportModeCode,originalTrainNumber);	
 				origJp = getOrCreateProcessorForId(origId);
 				//The original journey has to be the journey this new service is a subset of.
 				if (origJp != null && !jp.isDisjoint(origJp)){

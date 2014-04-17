@@ -327,6 +327,26 @@ public class BlockProcessor {
 	static {
 		ISO_DATE.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));
 	}
+	
+	public static String getDate(ServiceInfoServiceType info){
+		Calendar operatingDate = null;
+		for (ServiceInfoStopType s : info.getStopList().getStop()){
+			if (s.getDeparture() != null){
+				operatingDate = s.getDeparture().toGregorianCalendar();
+				break;
+			}
+		}
+		if (operatingDate.get(Calendar.HOUR_OF_DAY) < 4){
+			operatingDate.add(Calendar.DAY_OF_MONTH, -1);
+		}
+		operatingDate.set(Calendar.MINUTE, 0);
+		//Set at 4 because we DST of operatingday not at midnight
+		operatingDate.set(Calendar.HOUR_OF_DAY, 4); 
+		operatingDate.set(Calendar.SECOND, 0);
+		operatingDate.set(Calendar.MILLISECOND, 0);	
+		return ISO_DATE.format(operatingDate.getTime());
+	}
+
 
 	public static BlockProcessor fromArnu(@NonNull RIDservice ridService,@NonNull ServiceInfoServiceType info){
 		try{
@@ -334,7 +354,8 @@ public class BlockProcessor {
 					.setIsAdded(true)
 					.setPrivateCode(String.format("%s:IFF:%s:%s",ISO_DATE.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
 					.setId(String.format("%s:IFF:%s:%s",ISO_DATE.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
-					.setJourneyPattern(patternFromArnu(ridService,info));
+					.setJourneyPattern(patternFromArnu(ridService,info))
+					.setOperatingDay(getDate(info));
 			j.setTimeDemandGroup(timePatternFromArnu(j,info));
 			j.setId(j.getPrivateCode());
 			if (j.getJourneypattern().getPoints().size() != j.getTimedemandgroup().getPoints().size()){
@@ -344,6 +365,7 @@ public class BlockProcessor {
 			b.addJourney(j.build());
 			return new BlockProcessor(b);
 		}catch (Exception e){
+			e.printStackTrace();
 			_log.error("Exception during Journey adding {}",info,e);
 			throw e;
 		} 

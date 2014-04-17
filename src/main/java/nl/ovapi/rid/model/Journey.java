@@ -183,6 +183,12 @@ public class Journey {
 		}
 
 		public Journey build(){
+			if (operatingDay == null || operatingDay.length() != 10){
+				throw new IllegalArgumentException("Invalid operatingday "+operatingDay);
+			}
+			if (departuretime == null){
+				throw new IllegalArgumentException("Depaturetime required");
+			}
 			return new Journey(id,privateCode,journeypattern,timedemandgroup,departuretime,
 					wheelchairaccessible,agencyId,operatingDay,routeId,availabilityConditionRef,
 					isAdded,isCanceled,blockRef);
