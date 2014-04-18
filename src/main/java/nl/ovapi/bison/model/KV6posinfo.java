@@ -31,9 +31,13 @@ public class KV6posinfo {
 	@Getter
 	@Setter
 	private Integer journeynumber;
-	@Getter
+
 	@Setter
 	private Integer reinforcementnumber;
+	public Integer getReinforcementnumber(){
+		return reinforcementnumber == null ? 0 : reinforcementnumber;
+	}
+	
 	@Getter
 	@Setter
 	private Long timestamp;
