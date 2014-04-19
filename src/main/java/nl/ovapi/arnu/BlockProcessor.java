@@ -319,16 +319,15 @@ public class BlockProcessor {
 		return jp.build();
 	}
 
+	private final static TimeZone TIMEZONE = TimeZone.getTimeZone("Europe/Amsterdam");
+
 	public static int secondsSinceMidnight(Calendar c){
 		return c.get(Calendar.HOUR_OF_DAY)*60*60+c.get(Calendar.MINUTE)*60+c.get(Calendar.SECOND);
 	}
 
-	private final static SimpleDateFormat ISO_DATE = new SimpleDateFormat("yyyy-MM-dd");
-	static {
-		ISO_DATE.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));
-	}
-	
 	public static String getDate(ServiceInfoServiceType info){
+		SimpleDateFormat isoDate = new SimpleDateFormat("yyyy-MM-dd");
+		isoDate.setTimeZone(TIMEZONE);
 		Calendar operatingDate = null;
 		for (ServiceInfoStopType s : info.getStopList().getStop()){
 			if (s.getDeparture() != null){
@@ -344,16 +343,18 @@ public class BlockProcessor {
 		operatingDate.set(Calendar.HOUR_OF_DAY, 4); 
 		operatingDate.set(Calendar.SECOND, 0);
 		operatingDate.set(Calendar.MILLISECOND, 0);	
-		return ISO_DATE.format(operatingDate.getTime());
+		return isoDate.format(operatingDate.getTime());
 	}
 
 
 	public static BlockProcessor fromArnu(@NonNull RIDservice ridService,@NonNull ServiceInfoServiceType info){
+		SimpleDateFormat isoDate = new SimpleDateFormat("yyyy-MM-dd");
+		isoDate.setTimeZone(TIMEZONE);
 		try{
 			Journey.Builder j = Journey.newBuilder()
 					.setIsAdded(true)
-					.setPrivateCode(String.format("%s:IFF:%s:%s",ISO_DATE.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
-					.setId(String.format("%s:IFF:%s:%s",ISO_DATE.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
+					.setPrivateCode(String.format("%s:IFF:%s:%s",isoDate.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
+					.setId(String.format("%s:IFF:%s:%s",isoDate.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
 					.setJourneyPattern(patternFromArnu(ridService,info))
 					.setOperatingDay(getDate(info));
 			j.setTimeDemandGroup(timePatternFromArnu(j,info));
