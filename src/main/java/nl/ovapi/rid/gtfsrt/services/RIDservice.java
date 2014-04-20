@@ -291,7 +291,9 @@ public class RIDservice {
 						.setStopWaitTime(rs.getInt("stopwaittime")).build();
 				group.add(point);
 			}
-			newTimedemandgroups.put(timedemandgroupref, group.build());
+                        if (group != null){ //This will avoid NPE's if ALL timedemandgroups are already stored in the hashmap
+				newTimedemandgroups.put(timedemandgroupref, group.build());
+                        }
 			st = conn.prepareStatement(Database.journeyPatternQuery);
 			rs = st.executeQuery();
 			String journeypatternRef = null;
@@ -326,7 +328,9 @@ public class RIDservice {
 				jp.setDirectionType(rs.getInt("directiontype"));
 				jp.setJourneyPatternref(journeypatternRef);
 			}
-			newJourneypatterns.put(journeypatternRef, jp.build());
+                        if (jp != null){  //This will avoid NPE's if ALL journeypatterns are already stored in the hashmap
+				newJourneypatterns.put(journeypatternRef, jp.build());
+			}
 			st = conn.prepareStatement(Database.journeyQuery);
 			rs = st.executeQuery();
 			int newCount = 0;
