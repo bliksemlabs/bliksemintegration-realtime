@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -82,9 +80,9 @@ public class RIDservice {
 		String key = hf.hashString(id).toString();
 		return journeys.get(key);
 	}
-	
+
 	public Collection<Journey> getAllJourneys(){
-		 return journeys.values();
+		return journeys.values();
 	}
 
 	/**
@@ -235,7 +233,7 @@ public class RIDservice {
 		c.set(Calendar.MILLISECOND, 0);
 		int toNextRun = (int)((c.getTimeInMillis() - now)/1000/60); // time to 2am
 		int betweenRuns = 24*60; //24h in minutes
-		_scheduler.scheduleWithFixedDelay(new UpdateTask(), toNextRun, betweenRuns, TimeUnit.MINUTES);
+		_scheduler.scheduleWithFixedDelay(new UpdateTask(), toNextRun, betweenRuns, TimeUnit.SECONDS);
 	}
 
 	private class UpdateTask implements Runnable {
@@ -278,8 +276,8 @@ public class RIDservice {
 						newTimedemandgroups.put(timedemandgroupref, group.build());
 					}
 					group = null;
-					if (timedemandgroups.containsKey(timedemandgroupref)){ //Interning
-						newTimedemandgroups.put(timedemandgroupref, timedemandgroups.get(timedemandgroupref));
+					if (timedemandgroups.containsKey(curRef)){ //Interning
+						newTimedemandgroups.put(curRef, timedemandgroups.get(curRef));
 						continue;
 					}
 					group = TimeDemandGroup.newBuilder();
@@ -291,9 +289,9 @@ public class RIDservice {
 						.setStopWaitTime(rs.getInt("stopwaittime")).build();
 				group.add(point);
 			}
-                        if (group != null){ //This will avoid NPE's if ALL timedemandgroups are already stored in the hashmap
+			if (group != null){
 				newTimedemandgroups.put(timedemandgroupref, group.build());
-                        }
+			}
 			st = conn.prepareStatement(Database.journeyPatternQuery);
 			rs = st.executeQuery();
 			String journeypatternRef = null;
@@ -305,8 +303,8 @@ public class RIDservice {
 						newJourneypatterns.put(journeypatternRef, jp.build());
 					}
 					jp = null;
-					if (journeypatterns.containsKey(journeypatternRef)){ //Recycle
-						newJourneypatterns.put(journeypatternRef, journeypatterns.get(journeypatternRef));
+					if (journeypatterns.containsKey(curRef)){ //Recycle
+						newJourneypatterns.put(curRef, journeypatterns.get(curRef));
 						continue;
 					}
 					jp = JourneyPattern.newBuilder();
@@ -328,7 +326,7 @@ public class RIDservice {
 				jp.setDirectionType(rs.getInt("directiontype"));
 				jp.setJourneyPatternref(journeypatternRef);
 			}
-                        if (jp != null){  //This will avoid NPE's if ALL journeypatterns are already stored in the hashmap
+			if (jp != null){
 				newJourneypatterns.put(journeypatternRef, jp.build());
 			}
 			st = conn.prepareStatement(Database.journeyQuery);
