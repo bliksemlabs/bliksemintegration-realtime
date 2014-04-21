@@ -258,13 +258,13 @@ public class BisonToGtfsRealtimeService {
 				JourneyProcessor jp = entry.getValue();
 				try{
 					if (jp.getPosinfo() != null && jp.getPosinfo().getTimestamp() < threshold){
-						vehicleUpdates.addDeletedEntity(getId(jp.getPosinfo()));
+						vehicleUpdates.addDeletedEntity(getId(jp.getPosinfo(),null));
 						vehiclesCleaned += 1;
 					}
 					if (jp.getReinforcements() != null){
 						for (Entry<Integer, KV6posinfo> reinforcement : jp.getReinforcements().entrySet()){
 							if (reinforcement.getValue().getTimestamp() < threshold){
-								vehicleUpdates.addDeletedEntity(getId(reinforcement.getValue()));
+								vehicleUpdates.addDeletedEntity(getId(reinforcement.getValue(),reinforcement.getValue().getReinforcementnumber()));
 								vehiclesCleaned += 1;
 							}
 						}
@@ -295,8 +295,12 @@ public class BisonToGtfsRealtimeService {
 		}
 	}
 
-	private String getId(KV6posinfo posinfo){
-		if (posinfo.getReinforcementnumber() == 0){
+	private String getId(KV6posinfo posinfo,Integer reinforcementnumber){
+		if (posinfo.getDataownercode() == null){
+			_log.error("No DaOwCode {}",posinfo);
+			return null; //Find out how this can happen in the first place?
+		}
+		if (reinforcementnumber == null || reinforcementnumber == 0){
 			return String.format("%s:%s:%s:%s", 
 					posinfo.getOperatingday(),
 					posinfo.getDataownercode().name(),
@@ -309,7 +313,7 @@ public class BisonToGtfsRealtimeService {
 					posinfo.getDataownercode().name(),
 					posinfo.getLineplanningnumber(),
 					posinfo.getJourneynumber(),
-					posinfo.getReinforcementnumber());
+					reinforcementnumber);
 		}
 	}
 
@@ -327,7 +331,7 @@ public class BisonToGtfsRealtimeService {
 					if (posinfo.getLineplanningnumber() == null || "".equals(posinfo.getLineplanningnumber())){
 						continue;
 					}
-					String id = getId(posinfo);
+					String id = getId(posinfo,null);
 					JourneyProcessor jp = getOrCreateProcessorForId(id);
 					//TODO Fuzzy match for BISON Journey
 					if (jp == null){
@@ -340,7 +344,7 @@ public class BisonToGtfsRealtimeService {
 						if (posinfo.getDataownercode() == DataOwnerCode.CXX && c.get(Calendar.HOUR_OF_DAY) < 4){//Connexxion operday fuckup workaround
 							c.add(Calendar.DAY_OF_YEAR, -1);
 							posinfo.setOperatingday(df.format(c.getTime()));
-							id = getId(posinfo);
+							id = getId(posinfo,null);
 							jp = getOrCreateProcessorForId(id);
 						}
 						if (posinfo.getDataownercode() == DataOwnerCode.GVB){
@@ -362,9 +366,9 @@ public class BisonToGtfsRealtimeService {
 							jp.clearKV6(); //Primary vehicle finished
 						else if (jp.getReinforcements().containsKey(posinfo.getReinforcementnumber()))
 							jp.getReinforcements().remove(posinfo.getReinforcementnumber()); //Remove reinforcement
-						vehicleUpdates.addDeletedEntity(id);
+						vehicleUpdates.addDeletedEntity(getId(posinfo,posinfo.getReinforcementnumber()));
 					}
-					FeedEntity vehiclePosition = jp.vehiclePosition(id,jp,posinfo,_ridService,_geometryService);
+					FeedEntity vehiclePosition = jp.vehiclePosition(getId(posinfo,posinfo.getReinforcementnumber()),jp,posinfo,_ridService,_geometryService);
 					if (vehiclePosition != null){
 						vehicleUpdates.addUpdatedEntity(vehiclePosition);
 						if (posinfo.getReinforcementnumber() > 0){
