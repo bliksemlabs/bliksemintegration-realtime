@@ -368,7 +368,7 @@ public class DatedPasstime {
 		sb.append(tripStopStatus.name()).append('|');
 		sb.append(messageContent == null ? "\\0" : messageContent).append('|');
 		sb.append(messageType == null ? "\\0" : messageType).append('|');
-		sb.append(sideCode == null ? "\\0" : sideCode).append('|');
+		sb.append(sideCode == null ? "-" : sideCode).append('|');
 		sb.append(numberOfCoaches == null ? "\\0" : numberOfCoaches).append('|');
 		sb.append(wheelChairAccessible == null ? WheelChairAccessible.UNKNOWN : wheelChairAccessible).append('|');
 		sb.append(operatorCode == null ? "\\0" : operatorCode).append('|');
