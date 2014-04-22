@@ -233,7 +233,7 @@ public class RIDservice {
 		c.set(Calendar.MILLISECOND, 0);
 		int toNextRun = (int)((c.getTimeInMillis() - now)/1000/60); // time to 2am
 		int betweenRuns = 24*60; //24h in minutes
-		_scheduler.scheduleWithFixedDelay(new UpdateTask(), toNextRun, betweenRuns, TimeUnit.SECONDS);
+		_scheduler.scheduleWithFixedDelay(new UpdateTask(), toNextRun, betweenRuns, TimeUnit.MINUTES);
 	}
 
 	private class UpdateTask implements Runnable {
