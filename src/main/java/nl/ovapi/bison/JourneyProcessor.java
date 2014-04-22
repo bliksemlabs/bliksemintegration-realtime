@@ -974,6 +974,7 @@ public class JourneyProcessor {
 					stop.setStopType(ServiceInfoStopKind.CANCELLED_STOP);
 				}
 				if (dp.isForAlighting() && dp.getJourneyStopType() != JourneyStopType.FIRST){
+					stop.setArrivalPlatform(dp.getSideCode());
 					GregorianCalendar cal = new GregorianCalendar();
 					cal.setTimeInMillis((dayEpoch+dp.getTargetArrivalTime())*1000);
 					if (cal.get(Calendar.SECOND) >= 30){
@@ -996,6 +997,7 @@ public class JourneyProcessor {
 					stop.setArrival(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 				}
 				if (dp.isForBoarding() && dp.getJourneyStopType() != JourneyStopType.LAST){
+					stop.setDeparturePlatform(dp.getSideCode());
 					GregorianCalendar cal = new GregorianCalendar();
 					cal.setTimeInMillis((dayEpoch+dp.getTargetDepartureTime())*1000);
 					if (cal.get(Calendar.SECOND) >= 30){
