@@ -290,6 +290,7 @@ public class JourneyProcessor {
 	 * Clear
 	 *  KV6 posinfo object.
 	 */
+	@Synchronized("writeLock")
 	public void clearKV6(){
 		posinfo = null;
 	}
@@ -1093,7 +1094,9 @@ public class JourneyProcessor {
 				initTrip(posinfo);
 			setTripStatus(posinfo);
 			setPunctuality(posinfo);
-			this.posinfo = posinfo;
+			if (this.posinfo.getDataownercode() != null){
+				this.posinfo = posinfo;
+			}
 		}
 		Update update = new Update();
 		update.changedPasstimes = new ArrayList<DatedPasstime>();
