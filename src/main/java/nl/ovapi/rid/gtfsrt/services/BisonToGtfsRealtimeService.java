@@ -259,6 +259,7 @@ public class BisonToGtfsRealtimeService {
 				try{
 					if (jp.getPosinfo() != null && jp.getPosinfo().getTimestamp() < threshold){
 						vehicleUpdates.addDeletedEntity(getId(jp.getPosinfo(),null));
+						jp.clearKV6();
 						vehiclesCleaned += 1;
 					}
 					if (jp.getReinforcements() != null){
