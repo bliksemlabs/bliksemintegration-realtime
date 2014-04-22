@@ -318,7 +318,7 @@ public class RIDservice {
 						.setDistanceFromStartRoute(rs.getInt("distancefromstartroute"))
 						.setIsScheduled(rs.getBoolean("isscheduled"))
 						.setDestinationCode(rs.getString("destinationcode"))
-						.setPlatformCode(rs.getString("destinationcode"))
+						.setPlatformCode(rs.getString("platformcode"))
 						.setForBoarding(rs.getBoolean("forboarding"))
 						.setForAlighting(rs.getBoolean("foralighting"))
 						.build();
