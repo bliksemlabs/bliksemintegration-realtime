@@ -1096,7 +1096,7 @@ public class JourneyProcessor {
 				initTrip(posinfo);
 			setTripStatus(posinfo);
 			setPunctuality(posinfo);
-			if (this.posinfo.getDataownercode() != null){
+			if (posinfo.getDataownercode() != null){
 				this.posinfo = posinfo;
 			}
 		}
