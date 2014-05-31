@@ -32,9 +32,9 @@ public class Database {
 
 
 	public final static String kv15Query = "SELECT dataownercode,messagecodedate,messagecodenumber,userstopcodes,messagepriority,messagetype,messagedurationtype,messagestarttime,messageendtime,messagecontent,reasontype,subreasontype,reasoncontent,effecttype,subeffecttype,effectcontent,advicetype,subadvicetype,advicecontent,messagetimestamp,measuretype,submeasuretype,measurecontent,lineplanningnumbers "+
-			"FROM kv15_stopmessage LEFT JOIN (SELECT dataownercode,messagecodedate,messagecodenumber,string_agg(userstopcode,';') as userstopcodes "+
-			"        FROM  kv15_stopmessage_userstopcode GROUP BY dataownercode,messagecodedate,messagecodenumber) as u USING (dataownercode,messagecodedate,messagecodenumber) "+
+			"FROM kv15.stopmessage LEFT JOIN (SELECT dataownercode,messagecodedate,messagecodenumber,string_agg(userstopcode,';') as userstopcodes "+
+			"        FROM  kv15.stopmessage_userstopcode GROUP BY dataownercode,messagecodedate,messagecodenumber) as u USING (dataownercode,messagecodedate,messagecodenumber) "+
 			" LEFT JOIN (SELECT dataownercode,messagecodedate,messagecodenumber,string_agg(lineplanningnumber,';') as lineplanningnumbers "+
-			"        FROM  kv15_stopmessage_lineplanningnumber GROUP BY dataownercode,messagecodedate,messagecodenumber) as l USING (dataownercode,messagecodedate,messagecodenumber) "+
+			"        FROM  kv15.stopmessage_lineplanningnumber GROUP BY dataownercode,messagecodedate,messagecodenumber) as l USING (dataownercode,messagecodedate,messagecodenumber) "+
 			"WHERE ((messagetype != 'REMOVE' AND messageendtime is null) OR messageendtime > date 'now') and coalesce(isdeleted,false) = false AND (dataownercode = 'QBUZZ' OR messagepriority != 'COMMERCIAL')";
 }
