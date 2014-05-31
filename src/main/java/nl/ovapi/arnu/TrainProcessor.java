@@ -118,8 +118,8 @@ public class TrainProcessor {
 			jp.setRouteId(routeId);
 		}
 	}
-
-	public void changeService(@NonNull RIDservice ridService,ServiceInfoServiceType info) throws ParseException{
+	
+	private Multimap<String,String> plannedPath(){
 		Multimap<String,String> plannedPath = ArrayListMultimap.create();
 		for (BlockProcessor p : _processors){
 			for (Journey j : p.getBlock().getSegments()){
@@ -130,6 +130,11 @@ public class TrainProcessor {
 				}
 			}
 		}
+		return plannedPath;
+	}
+
+	public void changeService(@NonNull RIDservice ridService,ServiceInfoServiceType info) throws ParseException{
+		Multimap<String,String> plannedPath = plannedPath();
 		if (_processors.size() > 1){
 			_log.error("We currently do not support service modifications for 'vleugeltreinen'"); //TODO
 			return;
