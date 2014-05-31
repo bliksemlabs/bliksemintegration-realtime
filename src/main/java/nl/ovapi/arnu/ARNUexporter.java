@@ -43,7 +43,7 @@ public class ARNUexporter {
 		workQueue = Queues.newConcurrentLinkedQueue();
 		context = ZMQ.context(1);
 		publisher = context.socket(ZMQ.XPUB);
-		publisher.bind("tcp://0.0.0.0:9817");
+		publisher.bind("tcp://0.0.0.0:9345");
 	}
 
 	private class SendTask implements Runnable{
@@ -81,7 +81,6 @@ public class ARNUexporter {
 				publisher.sendMore("/OVAPI/ARNURitinfo");
 				publisher.send(out.toByteArray());
 				out.close();
-				gzip.close();
 			} catch (Exception e) {
 				_log.error("ARNU exporter exception",e);
 				e.printStackTrace();
