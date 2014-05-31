@@ -218,7 +218,7 @@ public class KV78TurboToPseudoKV6Service {
 			subscriber.connect(kv8turboPublishers[addressPointer]);
 			char enable = 0x01;
 			subscriber.send(enable+"/GOVI/KV8passtimes/GVB");
-			subscriber.send(enable+"/GOVI/KV8passtimes/UT-STD");
+			//subscriber.send(enable+"/GOVI/KV8passtimes/UT-STD");
 			_log.info("Connected to {}",kv8turboPublishers[addressPointer]);
 			org.zeromq.ZMQ.Poller poller = context.poller();
 			poller.register(subscriber);
@@ -239,13 +239,13 @@ public class KV78TurboToPseudoKV6Service {
 							switch (pt.getDataOwnerCode()){
 							case GVB:
 								break;
-							case QBUZZ:
+							/*case QBUZZ:
 								if ("u060".equals(pt.getLinePlanningNumber()))
 									break;
 								if ("u061".equals(pt.getLinePlanningNumber()))
 									break;
 								if ("u260".equals(pt.getLinePlanningNumber()))
-									break;
+									break;*/
 							default:
 								continue;
 							}
