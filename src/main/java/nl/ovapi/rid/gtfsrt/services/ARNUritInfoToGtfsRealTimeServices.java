@@ -261,7 +261,13 @@ public class ARNUritInfoToGtfsRealTimeServices {
 								case DIVERTED_SERVICE:
 								case EXTENDED_SERVICE:
 								case SCHEDULE_CHANGED_SERVICE:
-									jp.changeService(_ridService,info);
+									try{
+										jp.changeService(_ridService,info);
+									}catch (Exception e){
+										_log.error("Error changing service {}",m[1]);
+										_log.error("Error changing service {}",m[1],e);
+										throw e;
+									}
 								default:
 									break;
 								}
