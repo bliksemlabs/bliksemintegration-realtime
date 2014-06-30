@@ -433,6 +433,7 @@ public class JourneyProcessor {
 		FeedEntity.Builder feedEntity = FeedEntity.newBuilder();
 		feedEntity.setId(id);
 		VehiclePosition.Builder vehiclePosition = VehiclePosition.newBuilder();
+		vehiclePosition.setTimestamp(posinfo.getTimestamp());
 		int delay = posinfo.getPunctuality() == null ? 0 : posinfo.getPunctuality();
 		int passageSequence = 0; //Counter for how many times we came across the userstopcode in posinfo
 
