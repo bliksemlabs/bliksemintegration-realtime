@@ -1082,7 +1082,7 @@ public class JourneyProcessor {
 		}
 		if (currentTime < departureTime){
 			int timeDeltaSeconds = (int)(departureTime-Utils.currentTimeSecs());
-			if (timeDeltaSeconds>=3600 && posinfo.getMessagetype() != Type.INIT){
+			if (timeDeltaSeconds>=3600 && (posinfo.getMessagetype() != Type.INIT || posinfo.getMessagetype() != Type.DELAY)){
 				throw new TooEarlyException(posinfo.toString());
 			}
 		}
