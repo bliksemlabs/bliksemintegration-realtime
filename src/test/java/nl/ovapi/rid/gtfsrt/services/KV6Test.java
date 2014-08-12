@@ -339,8 +339,8 @@ public class KV6Test {
 		posinfo.setTimestamp(journey.getDepartureEpoch()+20);
 		posinfo.setPassagesequencenumber(0);
 		TripUpdate.Builder tripUpdate = j.update(posinfo).getGtfsRealtimeTrip();
-		assertEquals(5,tripUpdate.getStopTimeUpdateCount());
+		assertEquals(4,tripUpdate.getStopTimeUpdateCount());
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasDeparture());
-		assertEquals(56,tripUpdate.getStopTimeUpdate(4).getDeparture().getDelay());
+		assertEquals(56,tripUpdate.getStopTimeUpdate(3).getDeparture().getDelay());
 	}
 }

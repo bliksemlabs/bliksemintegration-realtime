@@ -769,6 +769,10 @@ public class JourneyProcessor {
 			boolean userStopMatches = dp.getUserStopCode().equals(posinfo.getUserstopcode());
 			if (userStopMatches && passageSequence == posinfo.getPassagesequencenumber()){ 
 				prognosis = posinfo.getPunctuality(); //Set initial prognosis for following stops
+				//Punctuality in departure message indicates difference between target and expected departure at stop
+				if (posinfo.getMessagetype() == Type.DEPARTURE && prognosis >= MIN_PUNCTUALITY && (!dp.isTimingStop() || prognosis > MIN_PROGNOSIS_FROM_TIMINGPOINT)){
+					dp.setExpectedDepartureTime(dp.getTargetDepartureTime()+prognosis);
+				}
 
 				//set time to possibly use in simple timedecay 
 				timeAtCurrentKV6Stop = dp.getTargetArrivalTime();
