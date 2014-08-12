@@ -178,7 +178,7 @@ public class JourneyPattern implements Cloneable{
 			/**
 			 * Set PlatformCode / sideCode
 			 */
-			public Builder setPlatformCode(@NonNull String platformCode){
+			public Builder setPlatformCode(String platformCode){
 				this.platformCode = platformCode;
 				return this;
 			}
