@@ -41,7 +41,7 @@ public class KV78TurboToPseudoKV6Service {
 	private Future<?> _task;
 	private static final Logger _log = LoggerFactory.getLogger(KV78TurboToPseudoKV6Service.class);
 	private ScheduledExecutorService _scheduler;
-	private final static String[] kv8turboPublishers = new String[] {"tcp://post.ndovloket.nl:7817"};
+	private final static String[] kv8turboPublishers = new String[] {"tcp://node01.kv7.openov.nl:7817","tcp://node03.kv7.openov.nl:7817",};
 	private RIDservice _ridService;
 	private HashMap<String,DatedPasstime> livePasstimes;
 
