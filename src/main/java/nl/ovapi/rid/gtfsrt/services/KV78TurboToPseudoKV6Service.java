@@ -118,10 +118,6 @@ public class KV78TurboToPseudoKV6Service {
 		if (j == null){
 			return null;
 		}
-		if (pt.getDataOwnerCode() == DataOwnerCode.GVB && pt.getUserStopCode().length() == 6){
-			String stopCode = pt.getUserStopCode();
-			pt.setUserStopCode(stopCode.substring(0,stopCode.length()-1));
-		}
 		KV6posinfo posinfo = new KV6posinfo();
 		switch (pt.getTripStopStatus()){
 		case ARRIVED:
