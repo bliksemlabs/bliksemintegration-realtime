@@ -47,7 +47,7 @@ public class JourneyPattern implements Cloneable{
 				boolean scheduled, boolean skipped, boolean waitpoint,
 				String destinationCode, String platformCode,boolean added,boolean forBoarding, boolean forAlighting) {
 			this.added = added;
-			this.distancefromstartroute = distancefromstartroute;
+			this.distancefromstartroute = distancefromstartroute == null ? 0 : distancefromstartroute;
 			this.operatorpointref = operatorpointref;
 			this.pointorder = pointorder;
 			this.pointref = pointref;

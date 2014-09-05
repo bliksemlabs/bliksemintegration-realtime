@@ -360,7 +360,7 @@ public class Journey {
 
 	public long getDepartureTime(int pointorder){
 		for (TimeDemandGroupPoint tpt : getTimedemandgroup().getPoints()){
-			if (tpt.getPointorder().equals(pointorder)){
+			if (tpt.getPointorder() == pointorder){
 				return getDepartureEpoch()+tpt.getTotaldrivetime()+tpt.getStopwaittime();
 			}
 		}
@@ -369,7 +369,7 @@ public class Journey {
 
 	public long getArrivalTime(int pointorder){
 		for (TimeDemandGroupPoint tpt : getTimedemandgroup().getPoints()){
-			if (tpt.getPointorder().equals(pointorder)){
+			if (tpt.getPointorder() == pointorder){
 				return getDepartureEpoch()+tpt.getTotaldrivetime();
 			}
 		}
