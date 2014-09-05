@@ -115,15 +115,6 @@ public class KV78TurboToPseudoKV6Service {
 	private KV6posinfo makePseudoKV6(DatedPasstime pt){
 		String id = String.format("%s:%s:%s:%s", pt.getOperationDate(),pt.getDataOwnerCode(),pt.getLinePlanningNumber(),pt.getJourneyNumber());
 		Journey j = _ridService.getJourney(id);
-		if (j == null && pt.getDataOwnerCode() == DataOwnerCode.GVB){
-			String newId = _ridService.getGVBdeltaId(id);
-			j = _ridService.getJourney(id);
-			if (newId != null){
-				id = newId;
-			}else{
-				_log.info("GVB delta ID not found {}",id);
-			}
-		}
 		if (j == null){
 			return null;
 		}

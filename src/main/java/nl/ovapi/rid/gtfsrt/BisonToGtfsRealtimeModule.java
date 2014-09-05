@@ -29,7 +29,7 @@ public class BisonToGtfsRealtimeModule extends AbstractModule {
 	protected void configure() {
 		bind(ARNUexporter.class);
 		bind(KV78TurboExporter.class);
-		bind(KV78TurboToPseudoKV6Service.class);
+		//bind(KV78TurboToPseudoKV6Service.class);
 		bind(BisonToGtfsRealtimeService.class);
 		bind(ARNUritInfoToGtfsRealTimeServices.class);
 		bind(GeometryService.class);

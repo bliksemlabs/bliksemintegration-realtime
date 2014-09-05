@@ -66,7 +66,7 @@ public class RIDservice {
 	private Map<String, StopPoint> stoppoints = Maps.newHashMapWithExpectedSize(0);
 	private Map<String, ArrayList<Long>> userstops = Maps.newHashMapWithExpectedSize(50000);
 	private Map<String, ArrayList<String>> lines = Maps.newHashMapWithExpectedSize(500);
-	private Map<String, String> gvbJourneys = Maps.newHashMapWithExpectedSize(0);
+
 	private final static int HOUR_TO_RUN_UPDATE = 2;
 	@Getter private long fromDate = 0;
 
@@ -93,14 +93,6 @@ public class RIDservice {
 		String key = hf.hashString(id).toString();
 		ArrayList<Block> blocks = trains.get(key);
 		return blocks;
-	}
-	/**
-	 * @param oldId OperatingDay+':'+DataOwnerCode+':'+LinePlanningNumber+':'+JourneyNumber in legacy KV1 deliveries.
-	 * @return OperatingDay+':'+DataOwnerCode+':'+LinePlanningNumber+':'+JourneyNumber of new KV1 system, if known otherwise NULL.
-	 */
-	public String getGVBdeltaId(String oldId){
-		String key = hf.hashString(oldId).toString();
-		return gvbJourneys.get(key);
 	}
 
 	/**
@@ -437,19 +429,9 @@ public class RIDservice {
 					lines.put(lineOperatorId, ids);
 				}
 			}
-			//TODO remove when GVB get their shit in order
-			Map<String, String> newgvbJourneys = Maps.newHashMapWithExpectedSize(30000);
-			st = conn.prepareStatement(Database.gvbJourneyQuery);
-			rs = st.executeQuery();
-			while (rs.next()) {
-				String key = hf.hashString(rs.getString(1)).toString();
-				String deltaId = rs.getString(2);
-				newgvbJourneys.put(key, deltaId);
-			}
 			journeypatterns = newJourneypatterns;
 			timedemandgroups = newTimedemandgroups;
 			journeys = newJourneys;
-			gvbJourneys = newgvbJourneys;
 			trains = newTrains;
 		}catch (Exception e) {
 			_log.error("Loading SQL crash", e);

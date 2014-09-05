@@ -348,15 +348,6 @@ public class BisonToGtfsRealtimeService {
 							id = getId(posinfo,null);
 							jp = getOrCreateProcessorForId(id);
 						}
-						if (posinfo.getDataownercode() == DataOwnerCode.GVB){
-							String newId = _ridService.getGVBdeltaId(id);
-							if (newId != null){
-								id = newId;
-							}else{
-								_log.info("GVB delta ID not found {}",id);
-							}
-							jp = getOrCreateProcessorForId(id);
-						}
 						if (jp == null){ //Double check for the CXX workaround
 							_log.info("Journey {} not found",id);
 							continue; //Trip not in database

@@ -45,7 +45,7 @@ public class BisonToGtfsRealtimeMain {
 	private GtfsRealtimeSource _trainUpdatesSource;
 	private GtfsRealtimeSource _vehiclePositionsSource;
 	private BisonToGtfsRealtimeService _bisonToGtfsRealtimeService;
-	private KV78TurboToPseudoKV6Service  _kv78TurboToPseudoKV6Service;
+	//private KV78TurboToPseudoKV6Service  _kv78TurboToPseudoKV6Service;
 	private ARNUritInfoToGtfsRealTimeServices  _arnuToGtfsRealTimeServices;
 
 	private LifecycleService _lifecycleService;
@@ -81,10 +81,10 @@ public class BisonToGtfsRealtimeMain {
 		_bisonToGtfsRealtimeService = bisonToGtfsRealtimeService;
 	}
 	
-	@Inject
+	/*@Inject
 	public void setKV78TurboToPseudoKV6Service(KV78TurboToPseudoKV6Service kv78TurboToPseudoKV6Service) {
 		_kv78TurboToPseudoKV6Service = kv78TurboToPseudoKV6Service;
-	}
+	}*/
 
 	@Inject
 	public void setARnuToGtfsRealTimeServices(ARNUritInfoToGtfsRealTimeServices arnuToGtfsRealTimeServices) {
