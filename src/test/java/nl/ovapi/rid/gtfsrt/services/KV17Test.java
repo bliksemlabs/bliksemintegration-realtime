@@ -51,10 +51,10 @@ public class KV17Test {
 	public static JourneyPattern testPattern(){
 		JourneyPattern.Builder jp = JourneyPattern.newBuilder();
 		jp.setJourneyPatternref("403");
-		jp.setDirectionType(2);
+		jp.setDirectionType((byte)2);
 		JourneyPatternPoint pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(0)
-				.setPointOrder(1)
+				.setPointOrder((short)1)
 				.setOperatorPointRef("10006900")
 				.setPointRef(56858L)
 				.setIsScheduled(true)
@@ -62,7 +62,7 @@ public class KV17Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(153)
-				.setPointOrder(2)
+				.setPointOrder((short)2)
 				.setOperatorPointRef("10007110")
 				.setPointRef(57796L)
 				.setIsScheduled(true)
@@ -70,7 +70,7 @@ public class KV17Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(446)
-				.setPointOrder(3)
+				.setPointOrder((short)3)
 				.setOperatorPointRef("10006780")
 				.setPointRef(58494L)
 				.setIsScheduled(true)
@@ -78,7 +78,7 @@ public class KV17Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(861)
-				.setPointOrder(4)
+				.setPointOrder((short)4)
 				.setOperatorPointRef("10006450")
 				.setPointRef(59619L)
 				.setIsScheduled(true)
@@ -86,7 +86,7 @@ public class KV17Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(1087)
-				.setPointOrder(5)
+				.setPointOrder((short)5)
 				.setOperatorPointRef("10006820")
 				.setPointRef(59619L)
 				.setIsScheduled(true)
@@ -94,7 +94,7 @@ public class KV17Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(1087)
-				.setPointOrder(6)
+				.setPointOrder((short)6)
 				.setOperatorPointRef("10006450")
 				.setPointRef(58636L)
 				.setIsScheduled(true)
@@ -105,12 +105,12 @@ public class KV17Test {
 	
 	public TimeDemandGroup testGroup(){
 		TimeDemandGroup.Builder td = TimeDemandGroup.newBuilder();
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(0).setStopWaitTime(0).setPointOrder(1).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(60).setStopWaitTime(60).setPointOrder(2).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(120).setStopWaitTime(0).setPointOrder(3).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(180).setStopWaitTime(0).setPointOrder(4).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(240).setStopWaitTime(0).setPointOrder(5).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(300).setStopWaitTime(0).setPointOrder(6).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(0).setStopWaitTime(0).setPointOrder((short)1).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(60).setStopWaitTime(60).setPointOrder((short)2).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(120).setStopWaitTime(0).setPointOrder((short)3).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(180).setStopWaitTime(0).setPointOrder((short)4).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(240).setStopWaitTime(0).setPointOrder((short)5).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(300).setStopWaitTime(0).setPointOrder((short)6).build());
 		return td.build();
 	}
 

@@ -219,7 +219,7 @@ public class Journey {
 	/**
 	 * Departuretime of the Journey, in seconds since midnight of operatingday (00:00:00).
 	 */
-	private final Integer departuretime;
+	private final int departuretime;
 	@Getter
 	/**
 	 * Indicates whether Journey is accessible to Journey

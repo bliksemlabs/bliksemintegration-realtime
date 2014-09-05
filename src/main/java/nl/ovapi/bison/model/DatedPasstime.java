@@ -24,23 +24,23 @@ public class DatedPasstime {
 	@Getter private DataOwnerCode dataOwnerCode;
 	@Getter private String operationDate;
 	@Getter private String linePlanningNumber;
-	@Getter private Integer journeyNumber;
-	@Getter private Integer fortifyOrderNumber;
-	@Getter private Integer userStopOrderNumber;
+	@Getter private int journeyNumber;
+	@Getter private short fortifyOrderNumber;
+	@Getter private short userStopOrderNumber;
 	@Getter private String userStopCode;
-	@Getter private Integer localServiceLevelCode;
-	@Getter private Integer journeyPatternCode;
-	@Getter private Integer lineDirection;
-	@Getter private Long lastUpdateTimeStamp;
+	@Getter private int localServiceLevelCode;
+	@Getter private int journeyPatternCode;
+	@Getter private byte lineDirection;
+	@Getter private long lastUpdateTimeStamp;
 	@Getter private String destinationCode;
 	@Getter private boolean isTimingStop;
-	@Getter private Integer expectedArrivalTime;
-	@Getter private Integer expectedDepartureTime;
+	@Getter private int expectedArrivalTime;
+	@Getter private int expectedDepartureTime;
 	@Getter private TripStopStatus tripStopStatus;
 	@Getter private String messageContent;
 	@Getter private MessageType messageType;
 	@Getter private String sideCode;
-	@Getter private Integer numberOfCoaches;
+	@Getter private short numberOfCoaches = Short.MIN_VALUE;
 	@Getter private WheelChairAccessible wheelChairAccessible;
 	@Getter private String operatorCode;
 	@Getter private String reasonType;
@@ -52,10 +52,10 @@ public class DatedPasstime {
 	@Getter private DataOwnerCode timingPointDataOwnerCode;
 	@Getter private String timingPointCode;
 	@Getter private JourneyStopType journeyStopType;
-	@Getter private Integer targetArrivalTime;
-	@Getter private Integer targetDepartureTime;
-	@Getter private Integer recordedArrivalTime;
-	@Getter private Integer recordedDepartureTime;
+	@Getter private int targetArrivalTime = Integer.MIN_VALUE;
+	@Getter private int targetDepartureTime = Integer.MIN_VALUE;
+	@Getter private int recordedArrivalTime = Integer.MIN_VALUE;
+	@Getter private int recordedDepartureTime = Integer.MIN_VALUE;
 	@Getter private boolean forBoarding;
 	@Getter private boolean forAlighting;
 
@@ -104,7 +104,7 @@ public class DatedPasstime {
 		this.wheelChairAccessible = wheelChairAccessible;
 	}
 
-	public void setNumberOfCoaches(Integer numberOfCoaches) {
+	public void setNumberOfCoaches(short numberOfCoaches) {
 		if (!Objects.equal(numberOfCoaches, this.numberOfCoaches)){
 			this.setLastUpdateTimeStamp(Utils.currentTimeSecs());
 		}
@@ -171,7 +171,7 @@ public class DatedPasstime {
 		this.lastUpdateTimeStamp = lastUpdateTimeStamp;
 	}
 
-	public void setLineDirection(Integer lineDirection) {
+	public void setLineDirection(byte lineDirection) {
 		if (!Objects.equal(lineDirection, this.lineDirection)){
 			this.setLastUpdateTimeStamp(Utils.currentTimeSecs());
 		}
@@ -199,14 +199,14 @@ public class DatedPasstime {
 		this.userStopCode = userStopCode;
 	}
 
-	public void setUserStopOrderNumber(Integer userStopOrderNumber) {
+	public void setUserStopOrderNumber(short userStopOrderNumber) {
 		if (!Objects.equal(userStopOrderNumber, this.userStopOrderNumber)){
 			this.setLastUpdateTimeStamp(Utils.currentTimeSecs());
 		}
 		this.userStopOrderNumber = userStopOrderNumber;
 	}
 
-	public void setFortifyOrderNumber(Integer fortifyOrderNumber) {
+	public void setFortifyOrderNumber(short fortifyOrderNumber) {
 		if (!Objects.equal(fortifyOrderNumber, this.fortifyOrderNumber)){
 			this.setLastUpdateTimeStamp(Utils.currentTimeSecs());
 		}
@@ -298,6 +298,9 @@ public class DatedPasstime {
 	}
 
 	public void setTargetDepartureTime(Integer targetDepartureTime){
+		if (targetDepartureTime == null){
+			targetDepartureTime = Integer.MIN_VALUE;
+		}
 		if (!Objects.equal(targetDepartureTime, this.targetDepartureTime)){
 			this.setLastUpdateTimeStamp(Utils.currentTimeSecs());
 		}
@@ -305,6 +308,9 @@ public class DatedPasstime {
 	}
 
 	public void setTargetArrivalTime(Integer targetArrivalTime){
+		if (targetArrivalTime == null){
+			targetArrivalTime = Integer.MIN_VALUE;
+		}
 		if (!Objects.equal(targetArrivalTime, this.targetArrivalTime)){
 			this.setLastUpdateTimeStamp(Utils.currentTimeSecs());
 		}
@@ -312,6 +318,9 @@ public class DatedPasstime {
 	}
 
 	public void setRecordedDepartureTime(Integer recordedDepartureTime){
+		if (recordedDepartureTime == null){
+			recordedDepartureTime = Integer.MIN_VALUE;
+		}
 		if (!Objects.equal(recordedDepartureTime, this.recordedDepartureTime)){
 			this.setLastUpdateTimeStamp(Utils.currentTimeSecs());
 		}
@@ -319,6 +328,9 @@ public class DatedPasstime {
 	}
 
 	public void setRecordedArrivalTime(Integer recordedArrivalTime){
+		if (recordedArrivalTime == null){
+			recordedArrivalTime = Integer.MIN_VALUE;
+		}
 		if (!Objects.equal(recordedArrivalTime, this.recordedArrivalTime)){
 			this.setLastUpdateTimeStamp(Utils.currentTimeSecs());
 		}
@@ -333,8 +345,8 @@ public class DatedPasstime {
 		return (hours * 60 + minutes) * 60 + seconds;
 	}
 
-	private static String to32Time(Integer secondsSinceMidnight) {
-		if (secondsSinceMidnight == null){
+	private static String to32Time(int secondsSinceMidnight) {
+		if (secondsSinceMidnight < 0){
 			return null;
 		}
 		int hours = secondsSinceMidnight/3600;
@@ -369,7 +381,7 @@ public class DatedPasstime {
 		sb.append(messageContent == null ? "\\0" : messageContent).append('|');
 		sb.append(messageType == null ? "\\0" : messageType).append('|');
 		sb.append(sideCode == null ? "-" : sideCode).append('|');
-		sb.append(numberOfCoaches == null ? "\\0" : numberOfCoaches).append('|');
+		sb.append(numberOfCoaches < 0 ? "\\0" : numberOfCoaches).append('|');
 		sb.append(wheelChairAccessible == null ? WheelChairAccessible.UNKNOWN : wheelChairAccessible).append('|');
 		sb.append(operatorCode == null ? "\\0" : operatorCode).append('|');
 
@@ -409,12 +421,12 @@ public class DatedPasstime {
 		res.setOperationDate(v[1]);
 		res.setLinePlanningNumber(v[2]);
 		res.setJourneyNumber(Integer.valueOf(v[3]));
-		res.setFortifyOrderNumber(Integer.valueOf(v[4]));
-		res.setUserStopOrderNumber(Integer.valueOf(v[5]));
+		res.setFortifyOrderNumber(Short.valueOf(v[4]));
+		res.setUserStopOrderNumber(Short.valueOf(v[5]));
 		res.setUserStopCode(v[6]);
 		res.setLocalServiceLevelCode(Integer.valueOf(v[7]));
 		res.setJourneyPatternCode(Integer.valueOf(v[8]));
-		res.setLineDirection(Integer.valueOf(v[9]));
+		res.setLineDirection(Byte.valueOf(v[9]));
 		res.setDestinationCode(v[11]);
 		res.setTimingStop(Boolean.valueOf(v[12]));
 		res.setExpectedArrivalTime(secondsSinceMidnight(v[13]));
@@ -425,7 +437,7 @@ public class DatedPasstime {
 			res.setMessageType(MessageType.valueOf(v[17]));
 		res.setSideCode(v[18]);
 		if (v[19] != null)
-			res.setNumberOfCoaches(Integer.valueOf(v[19]));
+			res.setNumberOfCoaches(Short.valueOf(v[19]));
 		res.setWheelChairAccessible(WheelChairAccessible.valueOf(v[20]));
 		res.setOperatorCode(v[21]);
 		if (v[22] != null)

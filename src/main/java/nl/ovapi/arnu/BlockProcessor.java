@@ -190,19 +190,19 @@ public class BlockProcessor {
 		for (int j = 0; j < block.getSegments().size(); j++){
 			Journey journey = block.getSegments().get(j);
 			Journey.Builder builder = null;
-			for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
+			for (short i = 0;i < journey.getJourneypattern().getPoints().size();i++){
 				JourneyPatternPoint pt = journey.getJourneypattern().getPoints().get(i);
 				String stationCode = stationCode(pt);
 				_log.error("Adding station, checking {} ",stationCode);
 				if (stationCode.equals(afterStation)){
 					builder = journey.edit();
 					_log.error("Found match at {} adding stop ",stationCode);
-					if (journey.getJourneypattern().getPoint(pt.getPointorder()+1) != null){
+					if (journey.getJourneypattern().getPoint((short)(pt.getPointorder()+1)) != null){
 						throw new IllegalArgumentException("Duplicate pointorder "+stop.getStopCode()+" "+stop.getStopServiceCode());
 					}
 					JourneyPatternPoint.Builder newJpt = JourneyPatternPoint.newBuilder()
 							.setIsAdded(true)
-							.setPointOrder(pt.getPointorder()+1)
+							.setPointOrder((short) (pt.getPointorder()+1))
 							.setIsScheduled(true)
 							.setIsWaitpoint(true)
 							.setOperatorPointRef(operatorPointRef(stop));
@@ -226,7 +226,7 @@ public class BlockProcessor {
 					}
 					TimeDemandGroup.Builder td = journey.getTimedemandgroup().edit();
 					TimeDemandGroupPoint tpt = TimeDemandGroupPoint.newBuilder()
-							.setPointOrder(pt.getPointorder()+1)
+							.setPointOrder((short) (pt.getPointorder()+1))
 							.setStopWaitTime(stopwaittime)
 							.setTotalDriveTime(totaldrivetime).build();
 					td.add(i+1, tpt);
@@ -255,7 +255,7 @@ public class BlockProcessor {
 	private static TimeDemandGroup timePatternFromArnu(Journey.Builder j,ServiceInfoServiceType info){
 		TimeDemandGroup.Builder tp = TimeDemandGroup.newBuilder();
 		int departuretime = -1;
-		for (int i = 0; i < info.getStopList().getStop().size(); i++){
+		for (short i = 0; i < info.getStopList().getStop().size(); i++){
 			ServiceInfoStopType s = info.getStopList().getStop().get(i);
 			if (s.getArrival() == null && s.getDeparture() == null){
 				continue; //Train does not stop at this station;
@@ -296,7 +296,7 @@ public class BlockProcessor {
 	private static JourneyPattern patternFromArnu(RIDservice ridService,ServiceInfoServiceType info){
 		JourneyPattern.Builder jp = JourneyPattern.newBuilder();
 		try{
-			jp.setDirectionType(Integer.parseInt(info.getServiceCode())%2 == 0 ? 2 :1);
+			jp.setDirectionType((byte) (Integer.parseInt(info.getServiceCode())%2 == 0 ? 2 :1));
 		}catch (Exception e){}
 		for (int i = 0; i < info.getStopList().getStop().size(); i++){
 			ServiceInfoStopType s = info.getStopList().getStop().get(i);
@@ -304,7 +304,7 @@ public class BlockProcessor {
 				continue; //Train does not stop at this station;
 			}
 			JourneyPattern.JourneyPatternPoint.Builder pt = JourneyPatternPoint.newBuilder()
-					.setPointOrder((i+1)*10)
+					.setPointOrder((short) ((i+1)*10))
 					.setIsScheduled(true)
 					.setIsWaitpoint(true)
 					.setOperatorPointRef(operatorPointRef(s));

@@ -41,7 +41,7 @@ public class KV78TurboToPseudoKV6Service {
 	private Future<?> _task;
 	private static final Logger _log = LoggerFactory.getLogger(KV78TurboToPseudoKV6Service.class);
 	private ScheduledExecutorService _scheduler;
-	private final static String[] kv8turboPublishers = new String[] {"tcp://node01.kv7.openov.nl:7817","tcp://node03.kv7.openov.nl:7817",};
+	private final static String[] kv8turboPublishers = new String[] {"tcp://post.ndovloket.nl:7817"};
 	private RIDservice _ridService;
 	private HashMap<String,DatedPasstime> livePasstimes;
 
@@ -155,7 +155,7 @@ public class KV78TurboToPseudoKV6Service {
 			break;
 		}
 		posinfo.setOperatingday(pt.getOperationDate());
-		posinfo.setReinforcementnumber(pt.getFortifyOrderNumber());
+		posinfo.setReinforcementnumber((int) pt.getFortifyOrderNumber());
 		posinfo.setTimestamp(pt.getLastUpdateTimeStamp());
 		posinfo.setRd_x(-1);
 		posinfo.setRd_y(-1);

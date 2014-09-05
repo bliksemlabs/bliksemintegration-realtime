@@ -85,7 +85,7 @@ public class KV6SAXHandler extends DefaultHandler {
 			posinfo.setWheelchairaccessible(WheelChairAccessible
 					.valueOf(builder.toString()));
 		} else if ("numberofcoaches".equals(localName)) {
-			posinfo.setNumberofcoaches(Integer.valueOf(builder.toString()));
+			posinfo.setNumberofcoaches(Short.valueOf(builder.toString()));
 		} else if ("distancesincelastuserstop".equals(localName)) {
 			posinfo.setDistancesincelastuserstop(Integer.valueOf(builder
 					.toString()));

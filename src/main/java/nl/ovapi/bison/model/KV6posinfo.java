@@ -61,7 +61,7 @@ public class KV6posinfo {
 	private WheelChairAccessible wheelchairaccessible;
 	@Getter
 	@Setter
-	private Integer numberofcoaches;
+	private Short numberofcoaches;
 	@Getter
 	@Setter
 	private Integer distancesincelastuserstop;

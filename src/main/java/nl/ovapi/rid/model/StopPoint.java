@@ -5,8 +5,8 @@ import lombok.Getter;
 public class StopPoint {
 	
 	public static class Builder{
-		private Float latitude;
-		private Float longitude;
+		private float latitude;
+		private float longitude;
 
 		private Builder(){}
 		

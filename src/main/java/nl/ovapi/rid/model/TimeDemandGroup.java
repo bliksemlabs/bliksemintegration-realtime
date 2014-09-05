@@ -30,9 +30,9 @@ public class TimeDemandGroup implements Cloneable{
 	public static class TimeDemandGroupPoint implements Cloneable{
 
 		public static class Builder{
-			private Integer pointorder;
-			private Integer totaldrivetime;
-			private Integer stopwaittime;
+			private short pointorder;
+			private int totaldrivetime;
+			private int stopwaittime;
 
 			private Builder(){}
 
@@ -40,7 +40,7 @@ public class TimeDemandGroup implements Cloneable{
 			 * @param pointorder Sequential order in JourneyPattern and TimeDemandGroup
 			 * @return Builder instance
 			 */
-			public Builder setPointOrder(Integer pointorder){
+			public Builder setPointOrder(short pointorder){
 				this.pointorder = pointorder;
 				return this;
 			}
@@ -76,12 +76,12 @@ public class TimeDemandGroup implements Cloneable{
 		}
 
 		public TimeDemandGroupPoint(TimeDemandGroupPoint toClone){
-			this.pointorder = toClone.pointorder == null ? null : toClone.pointorder.intValue();
+			this.pointorder = toClone.pointorder == null ? null : toClone.pointorder.shortValue();
 			this.stopwaittime = toClone.stopwaittime == null ? null : toClone.stopwaittime.intValue();
 			this.totaldrivetime = toClone.totaldrivetime == null ? null : toClone.totaldrivetime.intValue();
 		}
 
-		public TimeDemandGroupPoint(@NonNull Integer pointorder, @NonNull Integer totaldrivetime,@NonNull Integer stopwaittime) {
+		public TimeDemandGroupPoint(@NonNull Short pointorder, @NonNull Integer totaldrivetime,@NonNull Integer stopwaittime) {
 			this.pointorder = pointorder;
 			this.totaldrivetime = totaldrivetime;
 			this.stopwaittime = stopwaittime;
@@ -91,7 +91,7 @@ public class TimeDemandGroup implements Cloneable{
 		/**
 		 * Sequential order in JourneyPattern and TimeDemandGroup
 		 */
-		private final Integer pointorder;
+		private final Short pointorder;
 		@Getter
 		/**
 		 * Seconds since start of trip

@@ -32,10 +32,10 @@ public class KV6Test {
 	public static JourneyPattern testPattern(){
 		JourneyPattern.Builder jp = JourneyPattern.newBuilder();
 		jp.setJourneyPatternref("403");
-		jp.setDirectionType(2);
+		jp.setDirectionType((byte)2);
 		JourneyPatternPoint pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(0)
-				.setPointOrder(1)
+				.setPointOrder((short)1)
 				.setOperatorPointRef("10006900")
 				.setPointRef(56858L)
 				.setIsScheduled(true)
@@ -43,7 +43,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(153)
-				.setPointOrder(2)
+				.setPointOrder((short)2)
 				.setOperatorPointRef("10007110")
 				.setPointRef(57796L)
 				.setIsScheduled(true)
@@ -51,7 +51,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(446)
-				.setPointOrder(3)
+				.setPointOrder((short)3)
 				.setOperatorPointRef("10006780")
 				.setPointRef(58494L)
 				.setIsScheduled(true)
@@ -59,7 +59,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(861)
-				.setPointOrder(4)
+				.setPointOrder((short)4)
 				.setOperatorPointRef("10006450")
 				.setPointRef(59619L)
 				.setIsScheduled(true)
@@ -67,7 +67,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(1087)
-				.setPointOrder(5)
+				.setPointOrder((short)5)
 				.setOperatorPointRef("10006820")
 				.setPointRef(59619L)
 				.setIsScheduled(true)
@@ -75,7 +75,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(1087)
-				.setPointOrder(6)
+				.setPointOrder((short)6)
 				.setOperatorPointRef("10006450")
 				.setPointRef(58636L)
 				.setIsScheduled(true)
@@ -87,10 +87,10 @@ public class KV6Test {
 	public static JourneyPattern testPattern3(){
 		JourneyPattern.Builder jp = JourneyPattern.newBuilder();
 		jp.setJourneyPatternref("403");
-		jp.setDirectionType(2);
+		jp.setDirectionType((byte)2);
 		JourneyPatternPoint pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(0)
-				.setPointOrder(1)
+				.setPointOrder((short)1)
 				.setOperatorPointRef("10006900")
 				.setPointRef(56858L)
 				.setIsScheduled(true)
@@ -98,7 +98,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(153)
-				.setPointOrder(2)
+				.setPointOrder((short)2)
 				.setOperatorPointRef("10007110")
 				.setPointRef(57796L)
 				.setIsScheduled(true)
@@ -106,7 +106,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(446)
-				.setPointOrder(3)
+				.setPointOrder((short)3)
 				.setOperatorPointRef("10006780")
 				.setPointRef(58494L)
 				.setIsScheduled(true)
@@ -114,7 +114,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(861)
-				.setPointOrder(4)
+				.setPointOrder((short)4)
 				.setOperatorPointRef("10006450")
 				.setPointRef(59619L)
 				.setIsScheduled(true)
@@ -122,7 +122,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(1087)
-				.setPointOrder(5)
+				.setPointOrder((short)5)
 				.setOperatorPointRef("10006820")
 				.setPointRef(59619L)
 				.setIsScheduled(true)
@@ -130,7 +130,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(1087)
-				.setPointOrder(6)
+				.setPointOrder((short)6)
 				.setOperatorPointRef("10006450")
 				.setPointRef(58636L)
 				.setIsScheduled(true)
@@ -142,10 +142,10 @@ public class KV6Test {
 	public static JourneyPattern testPattern2(){
 		JourneyPattern.Builder jp = JourneyPattern.newBuilder();
 		jp.setJourneyPatternref("403");
-		jp.setDirectionType(2);
+		jp.setDirectionType((byte)2);
 		JourneyPatternPoint pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(0)
-				.setPointOrder(1)
+				.setPointOrder((short)1)
 				.setOperatorPointRef("10006900")
 				.setPointRef(56858L)
 				.setIsScheduled(true)
@@ -153,7 +153,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(153)
-				.setPointOrder(2)
+				.setPointOrder((short)2)
 				.setOperatorPointRef("10007110")
 				.setPointRef(57796L)
 				.setIsScheduled(true)
@@ -161,7 +161,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(446)
-				.setPointOrder(3)
+				.setPointOrder((short)3)
 				.setOperatorPointRef("10006780")
 				.setPointRef(58494L)
 				.setIsScheduled(true)
@@ -169,7 +169,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(861)
-				.setPointOrder(4)
+				.setPointOrder((short)4)
 				.setOperatorPointRef("10006450")
 				.setPointRef(59619L)
 				.setIsScheduled(true)
@@ -177,7 +177,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(1087)
-				.setPointOrder(5)
+				.setPointOrder((short)5)
 				.setOperatorPointRef("10006820")
 				.setPointRef(59619L)
 				.setIsScheduled(true)
@@ -185,7 +185,7 @@ public class KV6Test {
 		jp.add(pt);
 		pt = JourneyPatternPoint.newBuilder()
 				.setDistanceFromStartRoute(1087)
-				.setPointOrder(6)
+				.setPointOrder((short)6)
 				.setOperatorPointRef("10006450")
 				.setPointRef(58636L)
 				.setIsScheduled(true)
@@ -197,12 +197,12 @@ public class KV6Test {
 
 	public TimeDemandGroup testGroup(){
 		TimeDemandGroup.Builder td = TimeDemandGroup.newBuilder();
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(0).setStopWaitTime(0).setPointOrder(1).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(60).setStopWaitTime(0).setPointOrder(2).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(120).setStopWaitTime(60).setPointOrder(3).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(180).setStopWaitTime(0).setPointOrder(4).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(240).setStopWaitTime(0).setPointOrder(5).build());
-		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(300).setStopWaitTime(0).setPointOrder(6).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(0).setStopWaitTime(0).setPointOrder((short)1).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(60).setStopWaitTime(0).setPointOrder((short)2).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(120).setStopWaitTime(60).setPointOrder((short)3).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(180).setStopWaitTime(0).setPointOrder((short)4).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(240).setStopWaitTime(0).setPointOrder((short)5).build());
+		td.add(TimeDemandGroupPoint.newBuilder().setTotalDriveTime(300).setStopWaitTime(0).setPointOrder((short)6).build());
 		return td.build();
 	}
 
@@ -243,7 +243,7 @@ public class KV6Test {
 		posinfo.setTimestamp(journey.getDepartureEpoch()-60);
 		posinfo.setPassagesequencenumber(0);
 		TripUpdate.Builder tripUpdate = j.update(posinfo,true).getGtfsRealtimeTrip();
-		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
+		assertEquals(1,tripUpdate.getStopTimeUpdateCount());
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),journey.getDepartureEpoch()-60);
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getDelay(),-60);
@@ -289,7 +289,7 @@ public class KV6Test {
 		posinfo.setJourneynumber(1034);
 		posinfo.setVehiclenumber(911);
 		posinfo.setMessagetype(Type.ARRIVAL);
-		posinfo.setUserstopcode(journey.getJourneypattern().getPoint(3).getOperatorpointref());
+		posinfo.setUserstopcode(journey.getJourneypattern().getPoint((short)3).getOperatorpointref());
 		posinfo.setPunctuality(-30);
 		posinfo.setTimestamp(journey.getDepartureEpoch()+100);
 		posinfo.setPassagesequencenumber(0);

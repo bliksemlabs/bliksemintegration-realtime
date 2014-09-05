@@ -255,7 +255,7 @@ public class JourneyProcessor {
 			}else{
 				dp.setJourneyStopType(JourneyStopType.INTERMEDIATE);
 			}
-			dp.setFortifyOrderNumber(0);
+			dp.setFortifyOrderNumber((short)0);
 			dp.setTimingPointCode(jpt.getPointref()+"");
 			dp.setUserStopCode(jpt.getOperatorpointref());
 			dp.setTargetArrivalTime(journey.getDeparturetime()+tpt.getTotaldrivetime());
@@ -627,14 +627,14 @@ public class JourneyProcessor {
 			}
 		}
 		for (DatedPasstime pt : datedPasstimes){
-			if (pt.getRecordedArrivalTime() != null || pt.getRecordedDepartureTime() != null){
+			if (pt.getRecordedArrivalTime() >= 0 || pt.getRecordedDepartureTime() >= 0){
 				pt.setRecordedArrivalTime(null);
 				pt.setRecordedDepartureTime(null);
-				pt.setLastUpdateTimeStamp(posinfo.getTimestamp());
-				if (accessible != null)
-					pt.setWheelChairAccessible(accessible);
-				pt.setNumberOfCoaches(posinfo.getNumberofcoaches());
 			}
+			pt.setLastUpdateTimeStamp(posinfo.getTimestamp());
+			if (accessible != null)
+				pt.setWheelChairAccessible(accessible);
+			pt.setNumberOfCoaches(posinfo.getNumberofcoaches());
 		}
 	}
 
@@ -924,10 +924,10 @@ public class JourneyProcessor {
 				break;
 			}
 			StopTimeEvent.Builder arrival = StopTimeEvent.newBuilder();
-			if (dp.getRecordedArrivalTime() != null){
+			if (dp.getRecordedArrivalTime() >= 0){
 				arrival.setTime(departureTime+dp.getRecordedArrivalTime());
 				arrival.setDelay((dp.getRecordedArrivalTime()-dp.getTargetArrivalTime()));
-			}else if (dp.getRecordedDepartureTime() != null && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
+			}else if (dp.getRecordedDepartureTime() > 0 && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
 				arrival.setDelay((dp.getRecordedDepartureTime()-dp.getTargetDepartureTime()));
 				arrival.setTime(departureTime+dp.getRecordedDepartureTime());
 			}else{
@@ -936,10 +936,10 @@ public class JourneyProcessor {
 			}
 			stop.setArrival(arrival);
 			StopTimeEvent.Builder departure = StopTimeEvent.newBuilder();
-			if (dp.getRecordedDepartureTime() != null){
+			if (dp.getRecordedDepartureTime() >= 0){
 				departure.setDelay((dp.getRecordedDepartureTime()-dp.getTargetDepartureTime()));
 				departure.setTime(departureTime+dp.getRecordedDepartureTime());
-			}else if (dp.getRecordedArrivalTime() != null && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
+			}else if (dp.getRecordedArrivalTime() >= 0 && dp.getTargetArrivalTime() == dp.getTargetDepartureTime() && dp.getRecordedArrivalTime() >= dp.getTargetDepartureTime()){
 				departure.setDelay((dp.getRecordedArrivalTime()-dp.getTargetDepartureTime()));
 				departure.setTime(departureTime+dp.getRecordedArrivalTime());
 			}else{
@@ -987,10 +987,10 @@ public class JourneyProcessor {
 					}
 					cal.set(Calendar.SECOND, 0);
 					int delay = 0; // in Seconds
-					if (dp.getRecordedArrivalTime() != null && (dp.getRecordedDepartureTime() == null || dp.getRecordedDepartureTime() <= dp.getRecordedArrivalTime())){
+					if (dp.getRecordedArrivalTime() > 0 && (dp.getRecordedDepartureTime() > 0 || dp.getRecordedDepartureTime() <= dp.getRecordedArrivalTime())){
 						//No recorded arrivaltime and either no or >= recorded departuretime
 						delay = dp.getRecordedArrivalTime()-dp.getTargetArrivalTime();
-					}else if (dp.getRecordedArrivalTime() != null && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
+					}else if (dp.getRecordedArrivalTime() > 0 && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
 						//No recorded arrivaltime fall back to recorded departure time if possible
 						delay = dp.getRecordedDepartureTime()-dp.getTargetArrivalTime();
 					}else{
@@ -1010,9 +1010,9 @@ public class JourneyProcessor {
 					}
 					cal.set(Calendar.SECOND, 0);
 					int delay = 0; // in Seconds
-					if (dp.getRecordedDepartureTime() != null){
+					if (dp.getRecordedDepartureTime() > 0){
 						delay = dp.getRecordedDepartureTime()-dp.getTargetArrivalTime();
-					}else if (dp.getRecordedArrivalTime() != null && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
+					}else if (dp.getRecordedArrivalTime() > 0 && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
 						delay = dp.getRecordedArrivalTime()-dp.getTargetArrivalTime();
 					}else{
 						delay = dp.getExpectedDepartureTime()-dp.getTargetArrivalTime();

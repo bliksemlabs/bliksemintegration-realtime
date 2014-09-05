@@ -284,7 +284,7 @@ public class RIDservice {
 				}
 				timedemandgroupref = curRef;
 				TimeDemandGroupPoint point = TimeDemandGroup.TimeDemandGroupPoint.newBuilder()
-						.setPointOrder(rs.getInt("pointorder"))
+						.setPointOrder(rs.getShort("pointorder"))
 						.setTotalDriveTime(rs.getInt("totaldrivetime"))
 						.setStopWaitTime(rs.getInt("stopwaittime")).build();
 				group.add(point);
@@ -311,7 +311,7 @@ public class RIDservice {
 				}
 				journeypatternRef = curRef;
 				JourneyPatternPoint point = JourneyPatternPoint.newBuilder()
-						.setPointOrder(rs.getInt("pointorder"))
+						.setPointOrder(rs.getShort("pointorder"))
 						.setPointRef(rs.getLong("pointref"))
 						.setOperatorPointRef(rs.getString("operatorpointref"))
 						.setIsWaitpoint(rs.getBoolean("iswaitpoint"))
@@ -323,7 +323,7 @@ public class RIDservice {
 						.setForAlighting(rs.getBoolean("foralighting"))
 						.build();
 				jp.add(point);
-				jp.setDirectionType(rs.getInt("directiontype"));
+				jp.setDirectionType(rs.getByte("directiontype"));
 				jp.setJourneyPatternref(journeypatternRef);
 			}
 			if (jp != null){

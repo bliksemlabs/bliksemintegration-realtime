@@ -18,17 +18,17 @@ public class JourneyPattern implements Cloneable{
 	/**
 	 * DirectionType of JourneyPattern within Line. 1 or 2.
 	 */
-	public final Integer directiontype;
+	public final byte directiontype;
 	
 	@ToString()
 	public static class JourneyPatternPoint implements Cloneable{
 		
 		private JourneyPatternPoint(JourneyPatternPoint toClone){
 			this.added = toClone.added;
-			this.distancefromstartroute = toClone.distancefromstartroute == null ? null : toClone.distancefromstartroute.intValue();
+			this.distancefromstartroute = toClone.distancefromstartroute;
 			this.operatorpointref = toClone.operatorpointref;
-			this.pointorder = toClone.pointorder == null ? null : toClone.pointorder.intValue();
-			this.pointref = toClone.pointref == null ? null : toClone.pointref.longValue();
+			this.pointorder = toClone.pointorder;
+			this.pointref = toClone.pointref;
 			this.scheduled = toClone.scheduled;
 			this.skipped = toClone.skipped;
 			this.waitpoint = toClone.waitpoint;
@@ -42,7 +42,7 @@ public class JourneyPattern implements Cloneable{
 			return new Builder(new JourneyPatternPoint(this));
 		}
 		
-		private JourneyPatternPoint(Integer pointorder, Long pointref,
+		private JourneyPatternPoint(Short pointorder, Long pointref,
 				String operatorpointref, Integer distancefromstartroute,
 				boolean scheduled, boolean skipped, boolean waitpoint,
 				String destinationCode, String platformCode,boolean added,boolean forBoarding, boolean forAlighting) {
@@ -66,14 +66,14 @@ public class JourneyPattern implements Cloneable{
 		}
 				
 		public static class Builder{
-			private Integer pointorder;
+			private Short pointorder;
 			private Builder(){}
 			private Builder(JourneyPatternPoint toClone) {
 				this.added = toClone.added;
-				this.distancefromstartroute = toClone.distancefromstartroute == null ? null : toClone.distancefromstartroute.intValue();
+				this.distancefromstartroute = toClone.distancefromstartroute;
 				this.operatorpointref = toClone.operatorpointref;
-				this.pointorder = toClone.pointorder == null ? null : toClone.pointorder.intValue();
-				this.pointref = toClone.pointref == null ? null : toClone.pointref.longValue();
+				this.pointorder = toClone.pointorder;
+				this.pointref = toClone.pointref;
 				this.scheduled = toClone.scheduled;
 				this.skipped = toClone.skipped;
 				this.waitpoint = toClone.waitpoint;
@@ -86,7 +86,7 @@ public class JourneyPattern implements Cloneable{
 			/**
 			 * Set sequential order in JourneyPattern and TimeDemandGroup
 			 */
-			public Builder setPointOrder(@NonNull Integer pointorder){
+			public Builder setPointOrder(@NonNull Short pointorder){
 				this.pointorder = pointorder;
 				return this;
 			}
@@ -218,13 +218,13 @@ public class JourneyPattern implements Cloneable{
 		/**
 		 * Sequential order in JourneyPattern and TimeDemandGroup
 		 */
-		private final Integer pointorder;
+		private final short pointorder;
 		@Getter
 		@NonNull
 		/**
 		 * Reference to this point in RID database.
 		 */
-		private final Long pointref;
+		private final long pointref;
 		@Getter
 		@NonNull
 		/**
@@ -242,7 +242,7 @@ public class JourneyPattern implements Cloneable{
 		/**
 		 * Distance in meters from start of route. NOTE: does not have to start at 0.
 		 */
-		private final Integer distancefromstartroute;
+		private final int distancefromstartroute;
 		@Getter
 		@NonNull
 		/**
@@ -311,9 +311,9 @@ public class JourneyPattern implements Cloneable{
 	 *         StopPoint with given PointOrder
 	 */
 	
-	public JourneyPatternPoint getPoint(int pointOrder){
+	public JourneyPatternPoint getPoint(short pointOrder){
 		for (JourneyPatternPoint pt : points){
-			if (pt.pointorder.equals(pointOrder)){
+			if (pt.pointorder == pointOrder){
 				return pt;
 			}
 		}
@@ -327,7 +327,7 @@ public class JourneyPattern implements Cloneable{
 	
 	@Getter private final String journeyPatternRef;
 	
-	private JourneyPattern(String journeyPatternRef,Integer directionType,@NonNull List<JourneyPatternPoint> points){
+	private JourneyPattern(String journeyPatternRef,Byte directionType,@NonNull List<JourneyPatternPoint> points){
 		this.journeyPatternRef = journeyPatternRef;
 		this.directiontype = directionType;
 		ImmutableList.Builder<JourneyPatternPoint> builder = ImmutableList.builder();
@@ -343,12 +343,12 @@ public class JourneyPattern implements Cloneable{
 			points = new ArrayList<JourneyPatternPoint>();
 		}
 		
-		public Integer directiontype;
+		public Byte directiontype;
 
 		/**
 		 * Set directionType of JourneyPattern within Line. 1 or 2.
 		 */
-		public void setDirectionType(Integer directionType){
+		public void setDirectionType(Byte directionType){
 			this.directiontype = directionType;
 		}
 
