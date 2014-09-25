@@ -336,7 +336,7 @@ public class JourneyProcessor {
 
 	/**
 	 * Process KV17MutateJourney mutation
-	 * @param UNIX timestamp milliseconds sinds 1970
+	 * @param timestamp unix timestamp: milliseconds sinds 1970
 	 * @param m KV17Mutation message
 	 */
 	private void parseMutateJourney(Long timestamp, Mutation m) {
@@ -541,11 +541,9 @@ public class JourneyProcessor {
 		}
 		int posinfoAge = (posinfo == null) ? Integer.MAX_VALUE : 
 			(int)(Utils.currentTimeSecs()-posinfo.getTimestamp());
-		if (timestamp == 0)
-			timestamp = Utils.currentTimeSecs();
 		if (posinfo != null && posinfoAge < POSINFO_MAX_AGE){
 			setPunctuality(posinfo);
-			return update(posinfo,true);
+			return update(posinfo,true,true);
 		}else{
 			KV6posinfo posinfo = new KV6posinfo();
 			posinfo.setMessagetype(Type.DELAY); //Fake KV6posinfo to get things moving
@@ -554,7 +552,7 @@ public class JourneyProcessor {
 			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 			posinfo.setOperatingday(format.format(new Date()));
 			setPunctuality(posinfo);
-			return update(posinfo,true);
+			return update(posinfo,true,true);
 		}
 	}
 
@@ -1052,13 +1050,30 @@ public class JourneyProcessor {
 	 * @throws ParseException
 	 */
 	public Update update(KV6posinfo posinfo) throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
-		return update(posinfo,false);
+		return update(posinfo,false,false);
 	}
 
-	/**
+
+    /**
+     * Process KV6posinfo object
+     * @param posinfo KV6posinfo object
+     * @param ignoreState ignore previous state, always create GTFSrealtime update
+     * @return Update object, with GTFSrealtime and KV8 objects
+     * @throws StopNotFoundException UserstopCode of Posinfo not in journey
+     * @throws UnknownKV6PosinfoType Unknown MessageType in KV6
+     * @throws TooEarlyException KV6posinfo arrives too sucipiosuly eraly
+     * @throws TooOldException KV6posinfo is too old
+     * @throws ParseException
+     */
+    public Update update(KV6posinfo posinfo,boolean ignoreState) throws StopNotFoundException, UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException{
+        return update(posinfo,ignoreState,false);
+    }
+
+    /**
 	 * Process KV6posinfo object
 	 * @param posinfo KV6posinfo object
 	 * @param ignoreState ignore previous state, always create GTFSrealtime update.
+     * @param ignoreTooEarly ignore too early/late KV6 messages, used for KV17 pseudo KV6
 	 * @return Update object, with GTFSrealtime and KV8 objects
 	 * @throws StopNotFoundException UserstopCode of Posinfo not in journey
 	 * @throws UnknownKV6PosinfoType Unknown MessageType in KV6
@@ -1067,7 +1082,7 @@ public class JourneyProcessor {
 	 * @throws ParseException
 	 */
 	@Synchronized("writeLock")
-	public Update update(KV6posinfo posinfo,boolean ignoreState) throws StopNotFoundException,UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
+	public Update update(KV6posinfo posinfo,boolean ignoreState,boolean ignoreTooEarly) throws StopNotFoundException,UnknownKV6PosinfoType, TooEarlyException, TooOldException, ParseException {
 		int[] arriveDelays = new int[datedPasstimes.size()];
 		int[] departureDelays = new int[datedPasstimes.size()];
 		long lastUpdate = 0;
@@ -1078,7 +1093,7 @@ public class JourneyProcessor {
 			lastUpdate = Math.max(dp.getLastUpdateTimeStamp(), lastUpdate);
 		}
 		long currentTime = Utils.currentTimeSecs();
-		if (posinfo.getTimestamp()<currentTime-POSINFO_MAX_AGE){
+		if (posinfo.getTimestamp()<currentTime-POSINFO_MAX_AGE && !ignoreTooEarly){
 			throw new TooOldException(posinfo.toString());
 		}
 		long departureTime = _journey.getDepartureEpoch();
@@ -1087,7 +1102,7 @@ public class JourneyProcessor {
 		}
 		if (currentTime < departureTime){
 			int timeDeltaSeconds = (int)(departureTime-Utils.currentTimeSecs());
-			if (timeDeltaSeconds>=3600 && (posinfo.getMessagetype() != Type.INIT || posinfo.getMessagetype() != Type.DELAY)){
+			if (timeDeltaSeconds>=3600 && !ignoreTooEarly &&(posinfo.getMessagetype() != Type.INIT || posinfo.getMessagetype() != Type.DELAY)){
 				throw new TooEarlyException(posinfo.toString());
 			}
 		}
@@ -1106,7 +1121,7 @@ public class JourneyProcessor {
 			}
 		}
 		Update update = new Update();
-		update.changedPasstimes = new ArrayList<DatedPasstime>();
+		update.changedPasstimes = new ArrayList<>();
 		if (ignoreState){
 			update.changedPasstimes.addAll(datedPasstimes);
 			update.gtfsRealtimeTrip = filter(tripUpdateFromKV8());
