@@ -217,7 +217,6 @@ public class KV78TurboToPseudoKV6Service {
 					}
 					try {
 						String[] m = ZeroMQUtils.gunzipMultifameZMsg(ZMsg.recvMsg(subscriber));
-						m = ZeroMQUtils.gunzipMultifameZMsg(ZMsg.recvMsg(subscriber));
 						HashMap<String,DatedPasstime> passtimesFuture = new HashMap<String,DatedPasstime>();
 						HashMap<String,DatedPasstime> passtimesPassed = new HashMap<String,DatedPasstime>();
 						for (DatedPasstime pt : DatedPasstime.fromCtx(m[1])){
