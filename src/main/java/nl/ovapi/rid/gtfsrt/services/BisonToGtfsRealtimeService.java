@@ -515,7 +515,6 @@ public class BisonToGtfsRealtimeService {
 						try {
 							xr.parse(s);
 							_executor.submit(new ProcessKV17Task(handler.getCvlinfos()));
-							System.out.println(m[1]);
 						} catch (Exception e) {
 							_log.error("KV17 parsing {}",m[1],e);
 						}
