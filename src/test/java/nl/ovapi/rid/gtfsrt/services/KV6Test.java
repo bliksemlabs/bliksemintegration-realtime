@@ -268,7 +268,7 @@ public class KV6Test {
 		posinfo.setPunctuality(-120);
 		posinfo.setTimestamp(journey.getDepartureEpoch()-120);
 		posinfo.setPassagesequencenumber(0);
-		TripUpdate.Builder tripUpdate = j.update(posinfo,true).getGtfsRealtimeTrip();
+		TripUpdate.Builder tripUpdate = j.update(posinfo,true,true).getGtfsRealtimeTrip();
 		assertTrue(tripUpdate.getStopTimeUpdateCount() == 1);
 		assertTrue(tripUpdate.getStopTimeUpdate(0).hasArrival());
 		assertEquals(tripUpdate.getStopTimeUpdate(0).getArrival().getTime(),journey.getDepartureEpoch()-120);
