@@ -970,7 +970,7 @@ public class JourneyProcessor {
 					continue; // Skip dummies
 				}
 				ServiceInfoStopType stop = new ServiceInfoStopType();
-				stop.setStopCode(dp.getTimingPointCode());
+				stop.setStopCode(String.format("%s:%s",dp.getDataOwnerCode().name(),dp.getUserStopCode()));
 				stop.setStopServiceCode(_journey.getPrivateCode());
 				if (dp.getTripStopStatus() == TripStopStatus.CANCEL){
 					serviceInfo.setServiceType(ServiceInfoKind.CANCELLED_SERVICE);
