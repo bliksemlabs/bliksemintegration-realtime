@@ -45,8 +45,8 @@ public class KV6SAXHandler extends DefaultHandler {
 		super.startElement(uri, localName, name, attr);
 		builder.setLength(0);
 		if ("KV6posinfo".equals(localName)) {
-			posinfo = new KV6posinfo();
-		} else if (posinfo != null && posinfo.getMessagetype() == null) {
+            posinfo = new KV6posinfo();
+        } else if (posinfo != null && posinfo.getMessagetype() == null && ! "delimiter".equals(localName)) {
 			posinfo.setMessagetype(Type.valueOf(localName));
 		}
 	}
