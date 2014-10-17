@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<tmi8:VV_TM_PUSH xsi:schemaLocation="http://bison.connekt.nl/tmi8/kv17/msg/kv17-msg.xsd" xmlns:tmi8c="http://bison.connekt.nl/tmi8/kv17/core" xmlns:tmi8="http://bison.connekt.nl/tmi8/kv17/msg" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<tmi8:VV_TM_PUSH xmlns:tmi8="http://bison.connekt.nl/tmi8/kv17/msg"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <tmi8:SubscriberID>OV9292</tmi8:SubscriberID>
     <tmi8:Version>BISON 8.1.0.0</tmi8:Version>
     <tmi8:DossierName>KV17cvlinfo</tmi8:DossierName>
@@ -16,6 +17,25 @@
             <tmi8:timestamp>2013-08-27T14:33:39.584+02:00</tmi8:timestamp>
             <tmi8:RECOVER/>
         </tmi8:KV17MUTATEJOURNEY>
+    </tmi8:KV17cvlinfo>
+    <tmi8:KV17cvlinfo>
+        <tmi8:KV17JOURNEY>
+            <tmi8:dataownercode>QBUZZ</tmi8:dataownercode>
+            <tmi8:lineplanningnumber>g005</tmi8:lineplanningnumber>
+            <tmi8:operatingday>2013-08-27</tmi8:operatingday>
+            <tmi8:journeynumber>1034</tmi8:journeynumber>
+            <tmi8:reinforcementnumber>0</tmi8:reinforcementnumber>
+        </tmi8:KV17JOURNEY>
+        <tmi8:KV17MUTATEJOURNEYSTOP>
+            <tmi8:timestamp>2013-08-27T14:33:39.584+02:00</tmi8:timestamp>
+            <tmi8:CHANGEDESTINATION>
+                <tmi8:userstopcode>10006900</tmi8:userstopcode>
+                <tmi8:passagesequencenumber>0</tmi8:passagesequencenumber>
+                <tmi8:destinationname50>Arnhem Centraalspoor</tmi8:destinationname50>
+                <tmi8:destinationname16>Arnhem</tmi8:destinationname16>
+                <tmi8:destinationdetail16>Centraalspoor</tmi8:destinationdetail16>
+            </tmi8:CHANGEDESTINATION>
+        </tmi8:KV17MUTATEJOURNEYSTOP>
     </tmi8:KV17cvlinfo>
     <tmi8:KV17cvlinfo>
         <tmi8:KV17JOURNEY>

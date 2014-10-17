@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<tmi8:VV_TM_PUSH xsi:schemaLocation="http://bison.connekt.nl/tmi8/kv17/msg/kv17-msg.xsd"
-	xmlns:tmi8c="http://bison.connekt.nl/tmi8/kv17/core" xmlns:tmi8="http://bison.connekt.nl/tmi8/kv17/msg"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<tmi8:VV_TM_PUSH
+        xmlns:tmi8="http://bison.connekt.nl/tmi8/kv17/msg"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<tmi8:SubscriberID>OV9292</tmi8:SubscriberID>
 	<tmi8:Version>BISON 8.1.0.0</tmi8:Version>
 	<tmi8:DossierName>KV17cvlinfo</tmi8:DossierName>
