@@ -51,7 +51,8 @@ public class BisonToGtfsRealtimeMain {
 	private LifecycleService _lifecycleService;
 
 	private static final String ARG_PUBADDRESS = "pubAddress";
-	private static final String ARG_TRIP_UPDATES_PATH = "tripUpdatesPath";
+    private static final String ARG_PUBARNUADDRESS = "pubArnuAddress";
+    private static final String ARG_TRIP_UPDATES_PATH = "tripUpdatesPath";
 	private static final String ARG_TRIP_UPDATES_URL = "tripUpdatesUrl";
 	private static final String ARG_VEHICLE_POSITIONS_PATH = "vehiclePositionsPath";
 	private static final String ARG_VEHICLE_POSITIONS_URL = "vehiclePositionsUrl";
@@ -132,6 +133,11 @@ public class BisonToGtfsRealtimeMain {
 		Injector injector = Guice.createInjector(modules);
 		injector.injectMembers(this);
 		_bisonToGtfsRealtimeService.setPubAdress(cli.getOptionValue(ARG_PUBADDRESS));
+
+        if (cli.hasOption(ARG_PUBARNUADDRESS)){
+            _arnuToGtfsRealTimeServices.setArnuPubAdress(cli.getOptionValue(ARG_PUBARNUADDRESS));
+        }
+
 		if (cli.hasOption(ARG_TRIP_UPDATES_URL)) {
 			GtfsRealtimeServlet servlet = injector.getInstance(GtfsRealtimeServlet.class);
 			servlet.setSource(_tripUpdatesSource);
@@ -198,11 +204,14 @@ public class BisonToGtfsRealtimeMain {
 	}
 
 	protected void buildOptions(Options options) {
-		Option pubAdressOption = new Option(ARG_PUBADDRESS, true, "IP address and port of ZeroMQ publisher");
+		Option pubAdressOption = new Option(ARG_PUBADDRESS, true, "IP address and port of ZeroMQ publisher of BISON KV{6,15,17} data, eg 'tcp://127.0.0.1:7658'");
 		pubAdressOption.setRequired(true);
 		options.addOption(pubAdressOption);
 
-		options.addOption(ARG_TRIP_UPDATES_PATH, true, "trip updates path");
+        Option ArnupubAdressOption = new Option(ARG_PUBARNUADDRESS, true, "IP address and port of ZeroMQ publisher with ARNU RITinfo data, eg 'tcp://127.0.0.1:7662'");
+        options.addOption(ArnupubAdressOption);
+
+        options.addOption(ARG_TRIP_UPDATES_PATH, true, "trip updates path");
 		options.addOption(ARG_TRIP_UPDATES_URL, true, "trip updates url");
 		options.addOption(ARG_TRAIN_UPDATES_PATH, true, "train updates path");
 		options.addOption(ARG_TRAIN_UPDATES_URL, true, "tain updates url");

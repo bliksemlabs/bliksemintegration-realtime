@@ -56,13 +56,17 @@ public class ARNUritInfoToGtfsRealTimeServices {
 	private ScheduledExecutorService _scheduler;
 	private Future<?> _task;
 	private static final Logger _log = LoggerFactory.getLogger(ARNUritInfoToGtfsRealTimeServices.class);
-	private final static String pubAddress = "tcp://pubsub.ndovloket.nl:7662";
+	private String pubAddress = "tcp://pubsub.ndovloket.nl:7662";
 	private final static int GARBAGE_COLLECTOR_INTERVAL_SECONDS = 60;
 	private final static int TRIPUPDATE_EXPIRATION_HOURS = 1;
 	private GtfsRealtimeSink _tripUpdatesSink;
 	private RIDservice _ridService;
 	private ConcurrentMap<String, TrainProcessor> trainProcessors;
 	private ARNUexporter _arnuExporter;
+
+    public void setArnuPubAdress(String pubAddress){
+        this.pubAddress = pubAddress;
+    }
 
 	@Inject
 	public void setARnuExporter(ARNUexporter arnuExporter) {
