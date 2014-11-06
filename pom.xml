@@ -31,7 +31,7 @@
 		</repository>
 	</repositories>
 	<properties>
-		<gtfs_realtime_api_version>1.1.1-SNAPSHOT</gtfs_realtime_api_version>
+		<gtfs_realtime_api_version>1.1.1</gtfs_realtime_api_version>
 		<jetty.version>9.1.2.v20140210</jetty.version>
 	</properties>
 
