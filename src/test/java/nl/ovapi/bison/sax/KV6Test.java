@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -19,12 +20,19 @@ import junit.framework.Assert;
 import nl.ovapi.bison.model.KV6posinfo;
 import nl.ovapi.bison.model.KV6posinfo.Type;
 
+import org.joda.time.DateTimeZone;
+import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
 public class KV6Test {
+    @Before
+    public void setUp() {
+        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Amsterdam"));
+        DateTimeZone.setDefault(DateTimeZone.forID("Europe/Amsterdam"));
+    }
 
     @Test
     public void test1() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException {
