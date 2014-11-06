@@ -98,10 +98,9 @@ public class KV6Test {
         ArrayList<KV6posinfo> posinfos = handler.getPosinfos();
         assertEquals(1,posinfos.size());
         KV6posinfo posinfo = posinfos.get(0);
-        assertEquals(Type.OFFROUTE,posinfo.getMessagetype());
-        assertEquals(105,posinfo.getPunctuality().intValue());
+        assertEquals(Type.OFFROUTE, posinfo.getMessagetype());
         Assert.assertNull(posinfo.getRd_x());
         Assert.assertNull(posinfo.getRd_y());
-        assertEquals(1415281494, posinfo.getTimestamp().longValue());
+        assertEquals(1415302308, posinfo.getTimestamp().longValue());
     }
 }
