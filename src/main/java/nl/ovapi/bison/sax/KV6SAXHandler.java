@@ -93,12 +93,14 @@ public class KV6SAXHandler extends DefaultHandler {
                         .toString()));
         } else if ("rd-x".equals(localName)) {
             try {
-                posinfo.setRd_x(Integer.valueOf(builder.toString()));
+                int rdx = Integer.valueOf(builder.toString());
+                posinfo.setRd_x(rdx > 0 ? rdx : null);
             } catch (Exception e) {
             }
         } else if ("rd-y".equals(localName)) {
             try {
-                posinfo.setRd_y(Integer.valueOf(builder.toString()));
+                int rdy = Integer.valueOf(builder.toString());
+                posinfo.setRd_y(rdy > 0 ? rdy : null);
             } catch (Exception e) {
             }
         } else if ("punctuality".equals(localName)) {
