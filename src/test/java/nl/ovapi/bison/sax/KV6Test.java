@@ -15,6 +15,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import junit.framework.Assert;
 import nl.ovapi.bison.model.KV6posinfo;
 import nl.ovapi.bison.model.KV6posinfo.Type;
 
@@ -79,6 +80,28 @@ public class KV6Test {
         KV6posinfo posinfo = posinfos.get(0);
         assertEquals(Type.ONROUTE,posinfo.getMessagetype());
         assertEquals(105,posinfo.getPunctuality().intValue());
+        assertEquals(1415281494, posinfo.getTimestamp().longValue());
+    }
+
+
+    @Test
+    public void testGVB3() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException {
+        SAXParserFactory spf = SAXParserFactory.newInstance();
+        spf.setNamespaceAware(true);
+        SAXParser sp = spf.newSAXParser();
+        XMLReader xr = sp.getXMLReader();
+        KV6SAXHandler handler = new KV6SAXHandler();
+        xr.setContentHandler(handler);
+        URL url = this.getClass().getResource("kv6gvb3.xml");
+        File f = new File(url.getFile());
+        xr.parse(new InputSource(new FileInputStream(f)));
+        ArrayList<KV6posinfo> posinfos = handler.getPosinfos();
+        assertEquals(1,posinfos.size());
+        KV6posinfo posinfo = posinfos.get(0);
+        assertEquals(Type.OFFROUTE,posinfo.getMessagetype());
+        assertEquals(105,posinfo.getPunctuality().intValue());
+        Assert.assertNull(posinfo.getRd_x());
+        Assert.assertNull(posinfo.getRd_y());
         assertEquals(1415281494, posinfo.getTimestamp().longValue());
     }
 }

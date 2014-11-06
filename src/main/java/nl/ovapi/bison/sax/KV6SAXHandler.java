@@ -11,6 +11,8 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 
 public class KV6SAXHandler extends DefaultHandler {
@@ -90,9 +92,15 @@ public class KV6SAXHandler extends DefaultHandler {
                 posinfo.setDistancesincelastuserstop(Integer.valueOf(builder
                         .toString()));
         } else if ("rd-x".equals(localName)) {
-            posinfo.setRd_x(Integer.valueOf(builder.toString()));
+            try {
+                posinfo.setRd_x(Integer.valueOf(builder.toString()));
+            } catch (Exception e) {
+            }
         } else if ("rd-y".equals(localName)) {
-            posinfo.setRd_y(Integer.valueOf(builder.toString()));
+            try {
+                posinfo.setRd_y(Integer.valueOf(builder.toString()));
+            } catch (Exception e) {
+            }
         } else if ("punctuality".equals(localName)) {
             posinfo.setPunctuality(Integer.valueOf(builder.toString()));
         }
