@@ -103,4 +103,25 @@ public class KV6Test {
         Assert.assertNull(posinfo.getRd_y());
         assertEquals(1415302308, posinfo.getTimestamp().longValue());
     }
+
+
+    @Test
+    public void testGVB4() throws ParserConfigurationException, SAXException, FileNotFoundException, IOException {
+        SAXParserFactory spf = SAXParserFactory.newInstance();
+        spf.setNamespaceAware(true);
+        SAXParser sp = spf.newSAXParser();
+        XMLReader xr = sp.getXMLReader();
+        KV6SAXHandler handler = new KV6SAXHandler();
+        xr.setContentHandler(handler);
+        URL url = this.getClass().getResource("kv6gvb4.xml");
+        File f = new File(url.getFile());
+        xr.parse(new InputSource(new FileInputStream(f)));
+        ArrayList<KV6posinfo> posinfos = handler.getPosinfos();
+        assertEquals(1,posinfos.size());
+        KV6posinfo posinfo = posinfos.get(0);
+        assertEquals(Type.OFFROUTE, posinfo.getMessagetype());
+        Assert.assertNull(posinfo.getRd_x());
+        Assert.assertNull(posinfo.getRd_y());
+        assertEquals(1415306163, posinfo.getTimestamp().longValue());
+    }
 }
