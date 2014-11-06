@@ -5,7 +5,6 @@ import java.io.StringReader;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.TimeZone;
@@ -47,6 +46,8 @@ import nl.ovapi.exceptions.UnknownKV6PosinfoType;
 import nl.ovapi.rid.gtfsrt.Utils;
 import nl.ovapi.rid.model.Journey;
 
+import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.Alerts;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TripUpdates;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.VehiclePositions;
@@ -336,15 +337,13 @@ public class BisonToGtfsRealtimeService {
 					JourneyProcessor jp = getOrCreateProcessorForId(id);
 					//TODO Fuzzy match for BISON Journey
 					if (jp == null){
-						Calendar c = Calendar.getInstance();
-						SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-						c.setTime(df.parse(posinfo.getOperatingday()));
-						if (_ridService.getFromDate() > c.getTimeInMillis()){
+						LocalDate serviceDay = LocalDate.parse(posinfo.getOperatingday());
+						if (_ridService.getFromDate() > serviceDay.toDateTimeAtStartOfDay().getMillis()){
 							continue;
 						}
-						if (posinfo.getDataownercode() == DataOwnerCode.CXX && c.get(Calendar.HOUR_OF_DAY) < 4){//Connexxion operday fuckup workaround
-							c.add(Calendar.DAY_OF_YEAR, -1);
-							posinfo.setOperatingday(df.format(c.getTime()));
+						DateTime now = DateTime.now();
+						if (posinfo.getDataownercode() == DataOwnerCode.CXX && now.getHourOfDay() < 7){//Connexxion operday fuckup workaround
+							posinfo.setOperatingday(serviceDay.minusDays(1).toString());
 							id = getId(posinfo,null);
 							jp = getOrCreateProcessorForId(id);
 						}

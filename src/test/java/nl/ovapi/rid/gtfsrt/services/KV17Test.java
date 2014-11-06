@@ -11,10 +11,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -37,6 +34,8 @@ import nl.ovapi.rid.model.JourneyPattern.JourneyPatternPoint;
 import nl.ovapi.rid.model.TimeDemandGroup;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
 
+import org.joda.time.DateTimeZone;
+import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -47,6 +46,11 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 
 public class KV17Test {
+	@Before
+	public void setUp() {
+		TimeZone.setDefault(TimeZone.getTimeZone("Europe/Amsterdam"));
+		DateTimeZone.setDefault(DateTimeZone.forID("Europe/Amsterdam"));
+	}
 
 	public static JourneyPattern testPattern(){
 		JourneyPattern.Builder jp = JourneyPattern.newBuilder();

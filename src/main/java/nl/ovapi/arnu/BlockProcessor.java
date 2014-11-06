@@ -3,17 +3,11 @@ package nl.ovapi.arnu;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
-
-import javax.xml.datatype.XMLGregorianCalendar;
-
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Synchronized;
@@ -30,6 +24,9 @@ import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +52,7 @@ public class BlockProcessor {
 		Long eta,etd;
 		Integer arrivalDelay,departureDelay;
 		String serviceCode,departurePlatform,actualDeparturePlatform,arrivalPlatform,actualArrivalPlatform;
-		boolean canceled; 
+		boolean canceled;
 	}
 
 	public BlockProcessor(@NonNull Block b){
@@ -63,7 +60,7 @@ public class BlockProcessor {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param stationCode NS stationcode such as lls, asd,asdz etc.
 	 * @param serviceCode of train passing by
 	 * @return whether this journey contains station of stationCode
@@ -137,7 +134,7 @@ public class BlockProcessor {
 			_log.error("No matching stops {}",info); //TODO
 			return;
 		}
-		long newEpoch = newOrigin.getDeparture().toGregorianCalendar().getTimeInMillis()/1000;
+		long newEpoch = newOrigin.getDeparture().getMillis()/1000;
 		int newDepartureTime = editor.getDeparturetime()-(int)(toEdit.getDepartureEpoch()-newEpoch);
 		editor.setDeparturetime(newDepartureTime);
 
@@ -216,13 +213,16 @@ public class BlockProcessor {
 					}
 					builder.setJourneyPattern(newPattern.build());
 					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-					Date date = df.parse(journey.getOperatingDay());
-					XMLGregorianCalendar time = stop.getArrival() != null ? stop.getArrival() : stop.getDeparture();
-					int totaldrivetime = (int) ((time.toGregorianCalendar().getTimeInMillis() - date.getTime())/1000);
+
+					journey.getDepartureEpoch();
+
+					DateTime dt = stop.getArrival() != null ? stop.getArrival() : stop.getDeparture();
+
+					int totaldrivetime = (int) ((journey.getDepartureEpoch() - dt.getMillis()/1000));
 					int stopwaittime = 0;
 					if (stop.getDeparture() != null){
-						stopwaittime = (int) ((stop.getDeparture().toGregorianCalendar().getTimeInMillis() -
-								stop.getArrival().toGregorianCalendar().getTimeInMillis())/1000);
+						stopwaittime = (int) ((stop.getDeparture().getMillis() -
+								stop.getArrival().getMillis())/1000);
 					}
 					TimeDemandGroup.Builder td = journey.getTimedemandgroup().edit();
 					TimeDemandGroupPoint tpt = TimeDemandGroupPoint.newBuilder()
@@ -236,7 +236,7 @@ public class BlockProcessor {
 					_log.error("TimeGroup {}",journey.getTimedemandgroup());
 					if (journey.getJourneypattern().getPoints().size() != journey.getTimedemandgroup().getPoints().size()){
 						throw new IllegalArgumentException("Adding point failed: Size of timedemandgroup and journeypattern do not match "+journey);
-					}				
+					}
 					_log.error("Service {} Stop {} added sucessfully for ",stop.getStopServiceCode(),stop.getStopCode());
 					if (builder != null){
 						block.getSegments().set(j, builder.build());
@@ -261,11 +261,11 @@ public class BlockProcessor {
 				continue; //Train does not stop at this station;
 			}
 			if (departuretime == -1){
-				Calendar c = s.getDeparture().toGregorianCalendar();
+				DateTime dt = s.getDeparture();
 				SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-				j.setOperatingDay(df.format(c.getTime()));
+				j.setOperatingDay(dt.toLocalDate().toString());
 				//Seconds since midnight
-				departuretime = secondsSinceMidnight(c);
+				departuretime = secondsSinceMidnight(dt);
 				j.setDeparturetime(departuretime);
 				TimeDemandGroup.TimeDemandGroupPoint pt = TimeDemandGroupPoint.newBuilder()
 						.setPointOrder(i)
@@ -273,16 +273,15 @@ public class BlockProcessor {
 						.setTotalDriveTime(0).build();
 				tp.add(pt);
 			}else{
-				Calendar c = s.getArrival() == null ? s.getDeparture().toGregorianCalendar() : 
-					s.getArrival().toGregorianCalendar();
+				DateTime dt = s.getArrival() == null ? s.getDeparture() : s.getArrival();
 				//SEconds since midnight
-				int time = secondsSinceMidnight(c);
+				int time = secondsSinceMidnight(dt);
 				TimeDemandGroup.TimeDemandGroupPoint.Builder pt = TimeDemandGroupPoint.newBuilder()
 						.setTotalDriveTime(time-departuretime)
 						.setPointOrder(i);
 				if (s.getDeparture() != null){
-					c = s.getDeparture().toGregorianCalendar();
-					int depTime = secondsSinceMidnight(c);
+					dt = s.getDeparture();
+					int depTime = secondsSinceMidnight(dt);
 					pt.setStopWaitTime(depTime-time);
 				}else{
 					pt.setStopWaitTime(0);
@@ -291,7 +290,7 @@ public class BlockProcessor {
 			}
 		}
 		return tp.build();
-	}	
+	}
 
 	private static JourneyPattern patternFromArnu(RIDservice ridService,ServiceInfoServiceType info){
 		JourneyPattern.Builder jp = JourneyPattern.newBuilder();
@@ -319,44 +318,35 @@ public class BlockProcessor {
 		return jp.build();
 	}
 
-	private final static TimeZone TIMEZONE = TimeZone.getTimeZone("Europe/Amsterdam");
+	private final static DateTimeZone TIMEZONE = DateTimeZone.forID("Europe/Amsterdam");
 
-	public static int secondsSinceMidnight(Calendar c){
-		return c.get(Calendar.HOUR_OF_DAY)*60*60+c.get(Calendar.MINUTE)*60+c.get(Calendar.SECOND);
+	public static int secondsSinceMidnight(DateTime dt){
+		return dt.withZone(TIMEZONE).getSecondOfDay();
 	}
 
-	public static String getDate(ServiceInfoServiceType info){
-		SimpleDateFormat isoDate = new SimpleDateFormat("yyyy-MM-dd");
-		isoDate.setTimeZone(TIMEZONE);
-		Calendar operatingDate = null;
+	public static LocalDate getDate(ServiceInfoServiceType info){
+		DateTime operatingDate = null;
 		for (ServiceInfoStopType s : info.getStopList().getStop()){
 			if (s.getDeparture() != null){
-				operatingDate = s.getDeparture().toGregorianCalendar();
+				operatingDate = s.getDeparture();
 				break;
 			}
 		}
-		if (operatingDate.get(Calendar.HOUR_OF_DAY) < 4){
-			operatingDate.add(Calendar.DAY_OF_MONTH, -1);
+		if (operatingDate.getHourOfDay() < 4){
+			operatingDate = operatingDate.minusDays(1);
 		}
-		operatingDate.set(Calendar.MINUTE, 0);
-		//Set at 4 because we DST of operatingday not at midnight
-		operatingDate.set(Calendar.HOUR_OF_DAY, 4); 
-		operatingDate.set(Calendar.SECOND, 0);
-		operatingDate.set(Calendar.MILLISECOND, 0);	
-		return isoDate.format(operatingDate.getTime());
+		return operatingDate.toLocalDate();
 	}
 
 
 	public static BlockProcessor fromArnu(@NonNull RIDservice ridService,@NonNull ServiceInfoServiceType info){
-		SimpleDateFormat isoDate = new SimpleDateFormat("yyyy-MM-dd");
-		isoDate.setTimeZone(TIMEZONE);
 		try{
 			Journey.Builder j = Journey.newBuilder()
 					.setIsAdded(true)
-					.setPrivateCode(String.format("%s:IFF:%s:%s",isoDate.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
-					.setId(String.format("%s:IFF:%s:%s",isoDate.format(new Date()),info.getTransportModeCode(),info.getServiceCode()))
-					.setJourneyPattern(patternFromArnu(ridService,info))
-					.setOperatingDay(getDate(info));
+					.setPrivateCode(String.format("%s:IFF:%s:%s",LocalDate.now().toString(),info.getTransportModeCode(),info.getServiceCode()))
+					.setId(String.format("%s:IFF:%s:%s", LocalDate.now().toString(), info.getTransportModeCode(), info.getServiceCode()))
+					.setJourneyPattern(patternFromArnu(ridService, info))
+					.setOperatingDay(getDate(info).toString());
 			j.setTimeDemandGroup(timePatternFromArnu(j,info));
 			j.setId(j.getPrivateCode());
 			if (j.getJourneypattern().getPoints().size() != j.getTimedemandgroup().getPoints().size()){
@@ -369,7 +359,7 @@ public class BlockProcessor {
 			e.printStackTrace();
 			_log.error("Exception during Journey adding {}",info,e);
 			throw e;
-		} 
+		}
 	}
 
 	public String getId(){
@@ -401,37 +391,33 @@ public class BlockProcessor {
 			p.departurePlatform = station.getDeparturePlatform();
 			if (station.getStopType() != null){
 				switch (station.getStopType()){
-				case CANCELLED_STOP:
-				case DIVERTED_STOP:	
-					p.canceled = true;
-					break;
-				case SPLIT_STOP:
-					_log.debug("Split stop not supported {}",info);
-					break;
-				default:
-					break;
+					case CANCELLED_STOP:
+					case DIVERTED_STOP:
+						p.canceled = true;
+						break;
+					case SPLIT_STOP:
+						_log.debug("Split stop not supported {}",info);
+						break;
+					default:
+						break;
 				}
 			}else{
 				//This also sets passage-stations as canceled, but that is assumed to be a non-issue
 				p.canceled = ((station.getArrival() == null && station.getDeparture() == null) ||
-						station.getStopType() == ServiceInfoStopKind.CANCELLED_STOP || 
+						station.getStopType() == ServiceInfoStopKind.CANCELLED_STOP ||
 						station.getStopType() == ServiceInfoStopKind.DIVERTED_STOP);
 			}
 			if (station.getArrivalTimeDelay() != null){
 				p.arrivalDelay = Utils.toSeconds(station.getArrivalTimeDelay());
-				Calendar c = (Calendar) station.getArrival().toGregorianCalendar().clone();
-				station.getArrivalTimeDelay().addTo(c);
-				p.eta = (c.getTimeInMillis()/1000) + p.arrivalDelay; // in Seconds since 1970
+				p.eta = (station.getArrival().plusSeconds(p.arrivalDelay).getMillis()/1000) + p.arrivalDelay; // in Seconds since 1970
 			}else if (station.getArrival() != null){
-				p.eta = station.getArrival().toGregorianCalendar().getTimeInMillis()/1000; // in Seconds since 1970
+				p.eta = station.getArrival().getMillis()/1000; // in Seconds since 1970
 			}
 			if (station.getDepartureTimeDelay() != null){
 				p.departureDelay = Utils.toSeconds(station.getDepartureTimeDelay());
-				Calendar c = (Calendar) station.getDeparture().toGregorianCalendar().clone();
-				station.getDepartureTimeDelay().addTo(c);
-				p.etd = (c.getTimeInMillis()/1000) + p.departureDelay; // in Seconds since 1970
+				p.eta = (station.getDeparture().plusSeconds(p.departureDelay).getMillis()/1000) + p.departureDelay; // in Seconds since 1970
 			}else if (station.getDeparture() != null){
-				p.etd = station.getDeparture().toGregorianCalendar().getTimeInMillis()/1000; // in Seconds since 1970
+				p.etd = station.getDeparture().getMillis()/1000; // in Seconds since 1970
 			}
 			patches.put(stationCode, p);
 		}
@@ -442,18 +428,18 @@ public class BlockProcessor {
 	public List<TripUpdate.Builder> process(@NonNull ServiceInfoServiceType info){
 		Map<String,Patch> patches = getPatches(info);
 		switch (info.getServiceType()){
-		case NORMAL_SERVICE:
-		case NEW_SERVICE:
-		case CANCELLED_SERVICE:
-		case DIVERTED_SERVICE:
-		case EXTENDED_SERVICE:
-		case SCHEDULE_CHANGED_SERVICE:
-			break;
-		case SPLIT_SERVICE:
-			_log.debug("Unsupported serviceType {}",info);
-			break;
-		default:
-			break;
+			case NORMAL_SERVICE:
+			case NEW_SERVICE:
+			case CANCELLED_SERVICE:
+			case DIVERTED_SERVICE:
+			case EXTENDED_SERVICE:
+			case SCHEDULE_CHANGED_SERVICE:
+				break;
+			case SPLIT_SERVICE:
+				_log.debug("Unsupported serviceType {}",info);
+				break;
+			default:
+				break;
 
 		}
 		if (patches == null){
@@ -467,7 +453,7 @@ public class BlockProcessor {
 		for (Journey journey : block.getSegments()){
 			TripUpdate.Builder trip = TripUpdate.newBuilder();
 			//Keep track how many stations are canceled along the journey
-			int stopsCanceled = 0; 
+			int stopsCanceled = 0;
 			for (int i = 0;i < journey.getJourneypattern().getPoints().size();i++){
 				JourneyPatternPoint jp = journey.getJourneypattern().getPoints().get(i);
 				StopTimeUpdate.Builder stop = StopTimeUpdate.newBuilder();

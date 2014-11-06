@@ -1,12 +1,13 @@
 
 package nl.tt_solutions.schemas.ns.rti._1;
 
+import org.joda.time.DateTime;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 
 /**
@@ -50,7 +51,7 @@ public class PlatformInfoStopType {
     protected String departurePlatform;
     @XmlElement(name = "Departure")
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar departure;
+    protected DateTime departure;
 
     /**
      * Gets the value of the stopCode property.
@@ -129,10 +130,10 @@ public class PlatformInfoStopType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link DateTime }
      *     
      */
-    public XMLGregorianCalendar getDeparture() {
+    public DateTime getDeparture() {
         return departure;
     }
 
@@ -141,10 +142,10 @@ public class PlatformInfoStopType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link DateTime }
      *     
      */
-    public void setDeparture(XMLGregorianCalendar value) {
+    public void setDeparture(DateTime value) {
         this.departure = value;
     }
 

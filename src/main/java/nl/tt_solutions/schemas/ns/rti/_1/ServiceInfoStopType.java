@@ -9,9 +9,9 @@ import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import javax.xml.datatype.Duration;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 import lombok.ToString;
+import org.joda.time.DateTime;
 
 
 /**
@@ -66,16 +66,14 @@ public class ServiceInfoStopType {
     @XmlElement(name = "StopServiceCode", required = true)
     protected String stopServiceCode;
     @XmlElement(name = "Arrival")
-    @XmlJavaTypeAdapter(DateAdapter.class)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar arrival;
+    protected DateTime arrival;
     @XmlElement(name = "ArrivalTimeDelay")
     @XmlJavaTypeAdapter(DelayAdapter.class)
     protected Duration arrivalTimeDelay;
     @XmlElement(name = "Departure")
     @XmlSchemaType(name = "dateTime")
-    @XmlJavaTypeAdapter(DateAdapter.class)
-    protected XMLGregorianCalendar departure;
+    protected DateTime departure;
     @XmlJavaTypeAdapter(DelayAdapter.class)
     @XmlElement(name = "DepartureTimeDelay")
     protected Duration departureTimeDelay;
@@ -143,10 +141,10 @@ public class ServiceInfoStopType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link DateTime }
      *     
      */
-    public XMLGregorianCalendar getArrival() {
+    public DateTime getArrival() {
         return arrival;
     }
 
@@ -155,10 +153,10 @@ public class ServiceInfoStopType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link DateTime }
      *     
      */
-    public void setArrival(XMLGregorianCalendar value) {
+    public void setArrival(DateTime value) {
         this.arrival = value;
     }
 
@@ -191,10 +189,10 @@ public class ServiceInfoStopType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link DateTime }
      *     
      */
-    public XMLGregorianCalendar getDeparture() {
+    public DateTime getDeparture() {
         return departure;
     }
 
@@ -203,10 +201,10 @@ public class ServiceInfoStopType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link DateTime }
      *     
      */
-    public void setDeparture(XMLGregorianCalendar value) {
+    public void setDeparture(DateTime value) {
         this.departure = value;
     }
 

@@ -37,6 +37,7 @@ import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
 
+import org.joda.time.LocalDate;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeGuiceBindingTypes.TrainUpdates;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeIncrementalUpdate;
 import org.onebusaway.gtfs_realtime.exporter.GtfsRealtimeSink;
@@ -142,7 +143,7 @@ public class ARNUritInfoToGtfsRealTimeServices {
 			return null;
 		}
 
-		String date = BlockProcessor.getDate(info);
+		LocalDate date = BlockProcessor.getDate(info);
 
 		for (String transportModeCode : new String[] {info.getTransportModeCode(),"S","ST","SPR","HSN","IC","INT","ICE","THA","TGV"}){
 			String id = String.format("%s:IFF:%s:%s",date,transportModeCode,info.getServiceCode());

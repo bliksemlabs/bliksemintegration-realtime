@@ -1,13 +1,14 @@
 
 package nl.tt_solutions.schemas.ns.rti._1;
 
+import org.joda.time.DateTime;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 
 /**
@@ -50,7 +51,7 @@ public class ServiceInputJitType {
     protected String serviceCode;
     @XmlElement(name = "DateTime", required = true)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar dateTime;
+    protected DateTime dateTime;
     @XmlElement(name = "CallerId")
     protected String callerId;
     @XmlAttribute(name = "SearchType")
@@ -109,10 +110,10 @@ public class ServiceInputJitType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link DateTime }
      *     
      */
-    public XMLGregorianCalendar getDateTime() {
+    public DateTime getDateTime() {
         return dateTime;
     }
 
@@ -121,10 +122,10 @@ public class ServiceInputJitType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link DateTime }
      *     
      */
-    public void setDateTime(XMLGregorianCalendar value) {
+    public void setDateTime(DateTime value) {
         this.dateTime = value;
     }
 

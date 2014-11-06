@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.TimeZone;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -18,6 +19,8 @@ import nl.ovapi.arnu.TrainProcessor;
 import nl.ovapi.rid.gtfsrt.services.RIDservice;
 import nl.tt_solutions.schemas.ns.rti._1.PutServiceInfoIn;
 
+import org.joda.time.DateTimeZone;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ARNUtests {
@@ -28,6 +31,12 @@ public class ARNUtests {
 		_ridService = new FakeRidService();
 	}
 
+	@Before
+	public void setUp() {
+		TimeZone.setDefault(TimeZone.getTimeZone("Europe/Amsterdam"));
+		DateTimeZone.setDefault(DateTimeZone.forID("Europe/Amsterdam"));
+	}
+	
 	@Test
 	public void testOriginalTrainNumber(){
 		assertEquals(TrainProcessor.orginalTrainNumber("305622"),Integer.valueOf(5622));
@@ -35,7 +44,7 @@ public class ARNUtests {
 		assertEquals(TrainProcessor.orginalTrainNumber("325622"),Integer.valueOf(5622));
 		assertEquals(TrainProcessor.orginalTrainNumber("300839"),Integer.valueOf(839));
 	}
-		
+
 	@Test
 	public void addAndExtend() throws JAXBException, FileNotFoundException, ParseException{
 		JAXBContext jc = JAXBContext.newInstance(PutServiceInfoIn.class);

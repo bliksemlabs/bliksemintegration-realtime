@@ -7,7 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TimeZone;
@@ -42,6 +41,7 @@ import nl.ovapi.rid.model.StopPoint;
 import nl.ovapi.rid.model.TimeDemandGroup;
 import nl.ovapi.rid.model.TimeDemandGroup.TimeDemandGroupPoint;
 
+import org.joda.time.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,9 +66,15 @@ public class RIDservice {
 	private Map<String, StopPoint> stoppoints = Maps.newHashMapWithExpectedSize(0);
 	private Map<String, ArrayList<Long>> userstops = Maps.newHashMapWithExpectedSize(50000);
 	private Map<String, ArrayList<String>> lines = Maps.newHashMapWithExpectedSize(500);
+	private final static int SECONDS_IN_A_DAY = 60 * 60 * 24;
 
 	private final static int HOUR_TO_RUN_UPDATE = 2;
 	@Getter private long fromDate = 0;
+	@Getter private DateTimeZone timeZone = DateTimeZone.forTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));
+	static {
+		TimeZone.setDefault(TimeZone.getTimeZone("Europe/Amsterdam"));
+		DateTimeZone.setDefault(DateTimeZone.forTimeZone(TimeZone.getTimeZone("Europe/Amsterdam")));
+	}
 
 	public RIDservice(){}
 
@@ -215,15 +221,11 @@ public class RIDservice {
 	public void start() throws SQLException {
 		update();
 		_scheduler = Executors.newScheduledThreadPool(5);
-		Calendar c = Calendar.getInstance();
-		c.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));		
-		long now = c.getTimeInMillis();
-		c.add(Calendar.DAY_OF_MONTH,1);
-		c.set(Calendar.HOUR_OF_DAY, HOUR_TO_RUN_UPDATE);
-		c.set(Calendar.MINUTE, 0);
-		c.set(Calendar.SECOND, 0);
-		c.set(Calendar.MILLISECOND, 0);
-		int toNextRun = (int)((c.getTimeInMillis() - now)/1000/60); // time to 2am
+
+		DateTime dt = DateTime.now();
+		long now = dt.getMillis();
+		dt = dt.plusDays(1).withTime(HOUR_TO_RUN_UPDATE,0,0,0);
+		int toNextRun = (int)((dt.getMillis() - now)/1000/60); // time to 2am
 		int betweenRuns = 24*60; //24h in minutes
 		_scheduler.scheduleWithFixedDelay(new UpdateTask(), toNextRun, betweenRuns, TimeUnit.MINUTES);
 	}
@@ -459,5 +461,88 @@ public class RIDservice {
 		sb.append(String.format("%d timepatterns\n", timedemandgroups.size()));
 		sb.append(String.format("%d stoppoints\n", stoppoints.size()));
 		return sb.toString();
+	}
+
+	/**
+	 * Check if a trip with departureTime in TimeZone tz on date, is in the DST gap (between 2 and 3 when switchting to DST)
+	 * These trips will never occur
+	 * @param date serviceDate
+	 * @param tz Timezone of the region
+	 * @param departureTime departureTime for trip in seconds from midnight.
+	 * @return whether the trip is in the DST gap.
+	 */
+	public static boolean tripDepartureInDSTGap(LocalDate date, DateTimeZone tz, int departureTime) {
+		int seconds = departureTime;
+		int days = seconds / SECONDS_IN_A_DAY;
+		seconds = seconds % SECONDS_IN_A_DAY;
+		int hourOfDay = seconds / 3600;
+		seconds = seconds % 3600;
+		int minutes = seconds / 60;
+		seconds = seconds % 60;
+
+		LocalDateTime ldt = new LocalDateTime(date.getYear(), date.getMonthOfYear(), date.getDayOfMonth(), hourOfDay, minutes, seconds);
+		if (days == 0) {
+			if (tz.isLocalDateTimeGap(ldt)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Return a DateTime for a trip with departureTime and time since start since departuretime.
+	 * Both are in seconds since midnight
+	 * @param date serviceday of the trip
+	 * @param tz Timezone of the region
+	 * @param departureTime departureTime of the trip in seconds from midnight
+	 * @param driveTime time since start of trip in seconds
+	 * @return DateTime object with the time of departuretime+drivetime with the correct epoch.
+	 */
+	public static DateTime toDateTime(LocalDate date, DateTimeZone tz, int departureTime, int driveTime) {
+		int seconds = departureTime;
+		int days = seconds / SECONDS_IN_A_DAY;
+		seconds = seconds % SECONDS_IN_A_DAY;
+		int hourOfDay = seconds / 3600;
+		seconds = seconds % 3600;
+		int minutes = seconds / 60;
+		seconds = seconds % 60;
+
+		LocalDateTime ldt = new LocalDateTime(date.getYear(), date.getMonthOfYear(), date.getDayOfMonth(), hourOfDay, minutes, seconds);
+		if (days == 0) {
+			if (tz.isLocalDateTimeGap(ldt)) {
+				return null; //Time does not exist
+			}
+			DateTime dt = new DateTime(date.getYear(), date.getMonthOfYear(), date.getDayOfMonth(), hourOfDay, minutes, seconds);
+			return dt.plusSeconds(driveTime);
+		}
+		long epoch = date.toDateTime(new LocalTime(4, 0, 0), tz).getMillis() - TimeUnit.MILLISECONDS.convert(4, TimeUnit.HOURS);
+		epoch += TimeUnit.MILLISECONDS.convert(days, TimeUnit.DAYS) +
+				TimeUnit.MILLISECONDS.convert(hourOfDay, TimeUnit.HOURS) +
+				TimeUnit.MILLISECONDS.convert(minutes, TimeUnit.MINUTES) +
+				TimeUnit.MILLISECONDS.convert(seconds, TimeUnit.SECONDS) + driveTime * 1000;
+		return new DateTime(epoch).toDateTime(tz);
+	}
+
+	/**
+	 * Check if a trip with departureTime on date, is in the DST gap (between 2 and 3 when switching to DST)
+	 * These trips will never occur
+	 * @param date serviceDate
+	 * @param departureTime departureTime for trip in seconds from midnight.
+	 * @return whether the trip is in the DST gap.
+	 */
+	public boolean tripDepartureInDSTGap(LocalDate date, int departureTime) {
+		return tripDepartureInDSTGap(date, getTimeZone(), departureTime);
+	}
+
+	/**
+	 * Return a DateTime for a trip with departureTime and time since start since departuretime.
+	 * Both are in seconds since midnight
+	 * @param date serviceday of the trip
+	 * @param departureTime departureTime of the trip in seconds from midnight
+	 * @param driveTime time since start of trip in seconds
+	 * @return DateTime object with the time of departuretime+drivetime with the correct epoch.
+	 */
+	public DateTime toDateTime(LocalDate date, int departureTime, int driveTime) {
+		return toDateTime(date, getTimeZone(), departureTime, driveTime);
 	}
 }

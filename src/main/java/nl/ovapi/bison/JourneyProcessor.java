@@ -2,13 +2,7 @@ package nl.ovapi.bison;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -44,6 +38,7 @@ import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoServiceType.StopList;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopKind;
 import nl.tt_solutions.schemas.ns.rti._1.ServiceInfoStopType;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,22 +117,7 @@ public class JourneyProcessor {
 	 * @return POSIX time when journey end in seconds since January 1st 1970 00:00:00 UTC
 	 */
 	public long getEndEpoch(){
-		try {
-			Calendar c = Calendar.getInstance(TimeZone.getDefault());
-			c.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(_journey.getOperatingDay()));
-			c.set(Calendar.HOUR, 0);
-			c.set(Calendar.MINUTE, 0);
-			c.set(Calendar.SECOND, 0);
-			c.set(Calendar.MILLISECOND, 0);
-			c.add(Calendar.SECOND, _journey.getDeparturetime());
-			c.add(Calendar.SECOND, _journey.getTimedemandgroup().getPoints().get(_journey.getTimedemandgroup().getPoints().size()-1).getTotaldrivetime());
-			if (posinfo != null && posinfo.getPunctuality() != null){
-				c.add(Calendar.SECOND, Math.abs(posinfo.getPunctuality()));
-			}
-			return c.getTimeInMillis()/1000;
-		} catch (ParseException e) {
-			return -1;
-		}
+		return _journey.getEndEpoch();
 	}
 
 	private TripUpdate.Builder filter(TripUpdate.Builder tripUpdate){
@@ -272,7 +252,7 @@ public class JourneyProcessor {
 			}else{
 				dp.setWheelChairAccessible(WheelChairAccessible.NOTACCESSIBLE);
 			}
-			dp.setOperationDate(journey.getOperatingDay());
+			dp.setOperationDate(journey.getOperatingDay().toString());
 			dp.setTimingPointDataOwnerCode(DataOwnerCode.ALGEMEEN);
 			dp.setTripStopStatus(TripStopStatus.PLANNED);
 			dp.setLineDirection(journey.getJourneypattern().getDirectiontype());
@@ -978,47 +958,53 @@ public class JourneyProcessor {
 				}
 				if (dp.isForAlighting() && dp.getJourneyStopType() != JourneyStopType.FIRST){
 					stop.setArrivalPlatform(dp.getSideCode());
-					GregorianCalendar cal = new GregorianCalendar();
-					cal.setTimeInMillis((dayEpoch+dp.getTargetArrivalTime())*1000);
-					if (cal.get(Calendar.SECOND) >= 30){
-						cal.add(Calendar.MINUTE, 1);
+					DateTime arrivalDt = _journey.getArrivalDateTime(dp.getUserStopOrderNumber());
+					if (arrivalDt != null) {
+						if (arrivalDt.getSecondOfMinute() >= 30) {
+							arrivalDt.plusMinutes(1);
+						}
+						arrivalDt = arrivalDt.withSecondOfMinute(0);
+
+						int delay = 0; // in Seconds
+						if (dp.getRecordedArrivalTime() > 0 && (dp.getRecordedDepartureTime() > 0 || dp.getRecordedDepartureTime() <= dp.getRecordedArrivalTime())) {
+							//No recorded arrivaltime and either no or >= recorded departuretime
+							delay = dp.getRecordedArrivalTime() - dp.getTargetArrivalTime();
+						} else if (dp.getRecordedArrivalTime() > 0 && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()) {
+							//No recorded arrivaltime fall back to recorded departure time if possible
+							delay = dp.getRecordedDepartureTime() - dp.getTargetArrivalTime();
+						} else {
+							delay = dp.getExpectedArrivalTime() - dp.getTargetArrivalTime();
+						}
+						int delayMin = roundSecondsToMinute(delay);
+						if (delayMin != 0)
+							stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(delayMin * 60 * 1000));
+						stop.setArrival(arrivalDt);
 					}
-					cal.set(Calendar.SECOND, 0);
-					int delay = 0; // in Seconds
-					if (dp.getRecordedArrivalTime() > 0 && (dp.getRecordedDepartureTime() > 0 || dp.getRecordedDepartureTime() <= dp.getRecordedArrivalTime())){
-						//No recorded arrivaltime and either no or >= recorded departuretime
-						delay = dp.getRecordedArrivalTime()-dp.getTargetArrivalTime();
-					}else if (dp.getRecordedArrivalTime() > 0 && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
-						//No recorded arrivaltime fall back to recorded departure time if possible
-						delay = dp.getRecordedDepartureTime()-dp.getTargetArrivalTime();
-					}else{
-						delay = dp.getExpectedArrivalTime()-dp.getTargetArrivalTime();
-					}
-					int delayMin = roundSecondsToMinute(delay);
-					if (delayMin != 0)
-						stop.setArrivalTimeDelay(DatatypeFactory.newInstance().newDuration(delayMin*60*1000));
-					stop.setArrival(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 				}
 				if (dp.isForBoarding() && dp.getJourneyStopType() != JourneyStopType.LAST){
 					stop.setDeparturePlatform(dp.getSideCode());
-					GregorianCalendar cal = new GregorianCalendar();
-					cal.setTimeInMillis((dayEpoch+dp.getTargetDepartureTime())*1000);
-					if (cal.get(Calendar.SECOND) >= 30){
-						cal.add(Calendar.MINUTE, 1);
+
+					DateTime departureDt = _journey.getDepartureDateTime(dp.getUserStopOrderNumber());
+					if (departureDt != null) {
+
+						if (departureDt.getSecondOfMinute() >= 30) {
+							departureDt.plusMinutes(1);
+						}
+						departureDt = departureDt.withSecondOfMinute(0);
+
+						int delay = 0; // in Seconds
+						if (dp.getRecordedDepartureTime() > 0) {
+							delay = dp.getRecordedDepartureTime() - dp.getTargetArrivalTime();
+						} else if (dp.getRecordedArrivalTime() > 0 && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()) {
+							delay = dp.getRecordedArrivalTime() - dp.getTargetArrivalTime();
+						} else {
+							delay = dp.getExpectedDepartureTime() - dp.getTargetArrivalTime();
+						}
+						int delayMin = roundSecondsToMinute(delay);
+						if (delayMin != 0)
+							stop.setDepartureTimeDelay(DatatypeFactory.newInstance().newDuration(delayMin * 60 * 1000));
+						stop.setDeparture(departureDt);
 					}
-					cal.set(Calendar.SECOND, 0);
-					int delay = 0; // in Seconds
-					if (dp.getRecordedDepartureTime() > 0){
-						delay = dp.getRecordedDepartureTime()-dp.getTargetArrivalTime();
-					}else if (dp.getRecordedArrivalTime() > 0 && dp.getTargetArrivalTime() == dp.getTargetDepartureTime()){
-						delay = dp.getRecordedArrivalTime()-dp.getTargetArrivalTime();
-					}else{
-						delay = dp.getExpectedDepartureTime()-dp.getTargetArrivalTime();
-					}
-					int delayMin = roundSecondsToMinute(delay);
-					if (delayMin != 0)
-						stop.setDepartureTimeDelay(DatatypeFactory.newInstance().newDuration(delayMin*60*1000));
-					stop.setDeparture(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 				}
 				serviceInfo.getStopList().getStop().add(stop);
 			}

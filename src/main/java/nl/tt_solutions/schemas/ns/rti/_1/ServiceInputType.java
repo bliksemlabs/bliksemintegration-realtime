@@ -7,9 +7,9 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 import lombok.ToString;
+import org.joda.time.DateTime;
 
 
 /**
@@ -53,7 +53,7 @@ public class ServiceInputType {
     protected String serviceCode;
     @XmlElement(name = "DateTime", required = true)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar dateTime;
+    protected DateTime dateTime;
     @XmlElement(name = "CallerId")
     protected String callerId;
     @XmlAttribute(name = "SearchType")
@@ -112,10 +112,10 @@ public class ServiceInputType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link DateTime }
      *     
      */
-    public XMLGregorianCalendar getDateTime() {
+    public DateTime getDateTime() {
         return dateTime;
     }
 
@@ -124,10 +124,10 @@ public class ServiceInputType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link DateTime }
      *     
      */
-    public void setDateTime(XMLGregorianCalendar value) {
+    public void setDateTime(DateTime value) {
         this.dateTime = value;
     }
 
