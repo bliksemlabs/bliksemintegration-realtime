@@ -17,6 +17,7 @@ package org.onebusaway.gtfs_realtime.exporter;
 
 import com.google.transit.realtime.GtfsRealtime.TranslatedString;
 import com.google.transit.realtime.GtfsRealtime.TranslatedString.Translation;
+import com.google.transit.realtime.GtfsRealtimeConstants;
 import com.google.transit.realtime.GtfsRealtime.FeedHeader;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import com.google.transit.realtime.GtfsRealtime.FeedHeader.Incrementality;

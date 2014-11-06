@@ -30,6 +30,7 @@ import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedHeader;
 import com.google.transit.realtime.GtfsRealtime.FeedHeader.Incrementality;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
+import com.google.transit.realtime.GtfsRealtimeConstants;
 import com.google.transit.realtime.GtfsRealtimeOneBusAway;
 import com.google.transit.realtime.GtfsRealtimeOneBusAway.OneBusAwayFeedHeader;
 
