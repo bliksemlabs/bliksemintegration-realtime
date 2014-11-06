@@ -7,7 +7,7 @@
 	<repositories>
 		<repository>
 			<id>public.onebusaway.org</id>
-			<url>http://developer.onebusaway.org/content/groups/public/</url>
+			<url>http://developer.onebusaway.org/content/</url>
 		</repository>
 		<repository>
 			<id>osgeo</id>
