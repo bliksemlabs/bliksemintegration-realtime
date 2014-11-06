@@ -1,0 +1,2 @@
+Bliksemintegration realtime is a factory to process incoming KV6,15,17 and ARNU and match them to static transit data present in a RID integration database.
+It then proceeds to export this data as ARNU RITinfo, GTFS(realtime) and KV78turbo
